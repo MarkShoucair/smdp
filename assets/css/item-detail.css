@@ -1,0 +1,56 @@
+/* 1) Reset the container to just hold all categories */
+#smdp-item-modal .smdp-modifiers {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.4;
+  /* remove background/border/padding here */
+}
+
+/* 2) Make each category “bubble” */
+/* If you wrapped each in .smdp-mod-category: */
+#smdp-item-modal .smdp-mod-category {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0; /* gap above & below each bubble */
+}
+
+/* 3) If you didn’t wrap, you can fake it by styling h4+ul together: */
+/* Category header as top of bubble */
+#smdp-item-modal .smdp-modifiers h4 {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0 0;  /* gap above each bubble */
+  font-size: 1.2rem;
+}
+
+/* List as bottom of bubble */
+#smdp-item-modal .smdp-modifiers ul {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1rem; /* gap below each bubble */
+  list-style: disc inside;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* 4) List item spacing */
+#smdp-item-modal .smdp-modifiers li {
+  margin-bottom: 0.5rem;
+}
+
+/* 5) Keep your modal sizing */
+#smdp-item-modal .smdp-item-modal-inner {
+  width: 90vw;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+}

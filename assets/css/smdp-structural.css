@@ -1,0 +1,260 @@
+/**
+ * SMDP Structural CSS
+ *
+ * Fixed structural styles for menu app functionality
+ * These styles control layout, scroll behavior, and core structure
+ * and are not customizable through the admin interface
+ *
+ * @package SquareMenuDisplayPWA
+ */
+
+/* ============================================
+   SCROLL BEHAVIOR & OVERSCROLL PREVENTION
+   ============================================ */
+
+/* Stop scroll chaining and bounce on iOS/Safari/Chrome(iOS) */
+html, body {
+	height: 100%;
+	overscroll-behavior: none;
+}
+
+/* ============================================
+   MENU APP CONTAINER
+   ============================================ */
+
+/* Make menu app a fixed-height scrollable container */
+.smdp-menu-app-fe {
+	position: relative;
+	height: 100vh;
+	max-height: 100vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Lock category bar at top */
+.smdp-app-header {
+	position: relative;
+	flex-shrink: 0;
+}
+
+/* Make only the sections area scrollable */
+.smdp-app-sections {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	-webkit-overflow-scrolling: touch;
+	padding: 20px;
+}
+
+/* Prevent body scroll when inside menu app */
+.smdp-menu-app-fe * {
+	overscroll-behavior: contain;
+}
+
+/* Individual sections don't scroll */
+.smdp-app-section {
+	overflow: visible;
+	min-height: auto;
+}
+
+/* ============================================
+   ADMIN BAR ADJUSTMENTS
+   ============================================ */
+
+/* Account for WordPress admin bar */
+body.admin-bar .smdp-menu-app-fe {
+	height: calc(100vh - 32px);
+	max-height: calc(100vh - 32px);
+}
+
+@media screen and (max-width: 782px) {
+	body.admin-bar .smdp-menu-app-fe {
+		height: calc(100vh - 46px);
+		max-height: calc(100vh - 46px);
+	}
+}
+
+/* ============================================
+   LEFT SIDEBAR LAYOUT
+   ============================================ */
+
+/* Left layout adjustments */
+.smdp-menu-app-fe.layout-left {
+	display: grid;
+	grid-template-columns: 260px 1fr;
+	gap: 0;
+}
+
+.smdp-menu-app-fe.layout-left .smdp-app-header {
+	position: sticky;
+	top: 0;
+	align-self: start;
+	max-height: 100vh;
+	overflow-y: auto;
+}
+
+.smdp-menu-app-fe.layout-left .smdp-cat-bar {
+	display: flex;
+	flex-direction: column;
+	max-height: calc(100vh - 40px);
+	overflow-y: auto;
+}
+
+.smdp-menu-app-fe.layout-left .smdp-app-sections {
+	overflow-y: auto;
+}
+
+/* Remove border from left category rail */
+.smdp-menu-app-fe.layout-left .smdp-cat-bar {
+	border-right: none !important;
+	border: none !important;
+}
+
+.smdp-menu-app-fe.layout-left .smdp-app-header {
+	border: none !important;
+}
+
+/* ============================================
+   FULL WIDTH LAYOUT
+   ============================================ */
+
+/* Make menu app full width */
+.smdp-menu-app-fe {
+	width: 100vw !important;
+	max-width: 100vw !important;
+	margin-left: calc(-50vw + 50%) !important;
+	margin-right: calc(-50vw + 50%) !important;
+	padding-left: 0 !important;
+	padding-right: 0 !important;
+}
+
+/* ============================================
+   CATEGORY BUTTON STRUCTURE
+   ============================================ */
+
+/* Make buttons expand with content */
+.smdp-cat-btn {
+	width: auto !important;
+	min-width: fit-content !important;
+	max-width: none !important;
+	white-space: nowrap !important;
+	overflow: visible !important;
+	text-overflow: clip !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+/* Ensure padding actually adds space */
+.smdp-cat-btn {
+	box-sizing: border-box !important;
+}
+
+/* Remove any width constraints from parent */
+.smdp-cat-bar {
+	display: flex !important;
+	flex-wrap: nowrap !important;
+}
+
+/* Allow buttons to grow */
+.smdp-cat-btn {
+	flex-shrink: 0 !important;
+	flex-grow: 0 !important;
+}
+
+/* Left layout - buttons fill width */
+.smdp-menu-app-fe.layout-left .smdp-cat-btn {
+	width: 100% !important;
+	min-width: 100% !important;
+	max-width: 100% !important;
+	text-align: left !important;
+	justify-content: flex-start !important;
+}
+
+/* Override any constraints - force buttons to respect their padding */
+.smdp-cat-btn {
+	width: auto !important;
+	min-width: max-content !important;
+	height: auto !important;
+	line-height: 1.4 !important;
+}
+
+/* When font size increases, button grows */
+.smdp-cat-btn {
+	font-size: inherit !important;
+	padding-top: inherit !important;
+	padding-bottom: inherit !important;
+	padding-left: inherit !important;
+	padding-right: inherit !important;
+}
+
+/* Ensure text doesn't get cut off */
+.smdp-cat-btn {
+	overflow: visible !important;
+	text-overflow: initial !important;
+}
+
+/* Left layout grid adjustment */
+.smdp-menu-app-fe.layout-left {
+	grid-template-columns: auto 1fr !important;
+}
+
+/* Ensure buttons can grow in left layout */
+.smdp-menu-app-fe.layout-left .smdp-cat-btn {
+	width: 100% !important;
+	min-width: 260px !important;
+}
+
+/* ============================================
+   HELP & BILL BUTTON STYLES (HARD-CODED)
+   ============================================ */
+
+.smdp-help-btn,
+.smdp-bill-btn {
+	background-color: #f5fdfc;
+	color: #00649d;
+	border: none;
+	border-radius: 50px;
+	padding: 0.75em 1.5em;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.smdp-help-btn:hover,
+.smdp-help-btn:focus,
+.smdp-bill-btn:hover,
+.smdp-bill-btn:focus {
+	background-color: #f5fdfc;
+	outline: none;
+}
+
+/* Disabled "Help Requested" state */
+.smdp-help-btn.smdp-btn-disabled,
+.smdp-help-btn:disabled,
+.smdp-bill-btn.smdp-bill-disabled,
+.smdp-bill-btn:disabled {
+	background-color: #e74c3c;
+	color: #ffffff;
+	cursor: not-allowed;
+	opacity: 0.8;
+}
+
+/* ============================================
+   CATEGORY BUTTON PADDING & SPACING (HARD-CODED)
+   ============================================ */
+
+.smdp-cat-btn {
+	padding: 10px 14px !important;
+}
+
+.smdp-cat-bar {
+	gap: 8px !important;
+}
+
+/* Left layout - specific padding */
+.smdp-menu-app-fe.layout-left .smdp-cat-btn {
+	padding-left: 20px !important;
+}

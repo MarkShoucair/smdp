@@ -1,0 +1,205 @@
+jQuery(document).ready(function($){
+  // Inject modal HTML & inline styles once
+  if ($('#smdp-item-modal').length === 0) {
+    $('body').append(`
+      <style>
+        /* Modal container - transparent background */
+        #smdp-item-modal {
+          display: none;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          background: transparent !important;
+          z-index: 2147483647 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch;
+          pointer-events: auto !important; /* Catch all clicks */
+        }
+        
+        /* Prevent body scroll when modal is open */
+        body.smdp-modal-open {
+          overflow: hidden !important;
+          touch-action: none;
+          -webkit-overflow-scrolling: none;
+        }
+        
+        /* Modifier bubbles styling */
+        #smdp-item-modal .smdp-mod-category {
+          background: #f5f5f5;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 1rem;
+          margin: 1rem 0;
+        }
+        #smdp-item-modal .smdp-mod-category h4 {
+          font-size: 1.2rem;
+          margin: 0 0 0.5rem;
+        }
+        #smdp-item-modal .smdp-mod-category ul {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.5rem;
+          margin: 0;
+          padding-left: 1.2em;
+          list-style: disc inside;
+        }
+        #smdp-item-modal .smdp-mod-category li {
+          margin-bottom: 0.5rem;
+        }
+        
+        /* Modal content box with thick blue border and gradient glow */
+        #smdp-item-modal .smdp-item-modal-inner {
+          position: relative;
+          width: 85vw;
+          max-width: 600px;
+          max-height: 80vh;
+          margin: 10vh auto;
+          background: #fff;
+          padding: 1.5rem;
+          border-radius: 12px;
+          border: 4px solid #3498db;
+          overflow-y: auto;
+          box-shadow: 
+            0 0 10px 5px rgba(0,0,0,0.5),
+            0 0 20px 10px rgba(0,0,0,0.3),
+            0 0 30px 15px rgba(0,0,0,0.2),
+            0 0 40px 20px rgba(0,0,0,0.1),
+            0 10px 40px rgba(0,0,0,0.4);
+          pointer-events: auto;
+        }
+        
+        /* Responsive sizing for different screens */
+        @media (max-width: 768px) {
+          #smdp-item-modal .smdp-item-modal-inner {
+            width: 90vw;
+            max-width: none;
+            margin: 5vh auto;
+            max-height: 90vh;
+            box-shadow: 
+              0 0 8px 4px rgba(0,0,0,0.5),
+              0 0 16px 8px rgba(0,0,0,0.3),
+              0 0 24px 12px rgba(0,0,0,0.2),
+              0 10px 40px rgba(0,0,0,0.4);
+          }
+        }
+        
+        @media (min-width: 1200px) {
+          #smdp-item-modal .smdp-item-modal-inner {
+            max-width: 700px;
+          }
+        }
+        
+        /* Better image sizing in modal */
+        #smdp-item-modal #smdp-item-img {
+          max-width: 100%;
+          max-height: 300px;
+          width: auto;
+          height: auto;
+          display: block;
+          margin: 0 auto 1rem;
+          border-radius: 8px;
+        }
+        
+        /* Better close button */
+        #smdp-item-modal #smdp-item-close {
+          margin-top: 1.5rem;
+          padding: 0.75rem 2rem;
+          background: #3498db;
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 1rem;
+          font-weight: 600;
+          width: 100%;
+          transition: background 0.2s ease;
+        }
+        
+        #smdp-item-modal #smdp-item-close:hover {
+          background: #2980b9;
+        }
+      </style>
+      <div id="smdp-item-modal">
+        <div class="smdp-item-modal-inner">
+          <img id="smdp-item-img" src="" alt="">
+          <h2 id="smdp-item-name" style="margin:0 0 .5rem; font-size:1.5rem;"></h2>
+          <p id="smdp-item-price" style="font-weight:bold; margin:0 0 .5rem; font-size:1.2rem; color:#27ae60;"></p>
+          <p id="smdp-item-desc" style="margin:0 0 1rem; color:#666; line-height:1.5;"></p>
+          <div class="smdp-modifiers"></div>
+          <button id="smdp-item-close">Close</button>
+        </div>
+      </div>
+    `);
+  }
+
+  // Open popup when an item tile is clicked
+  $(document).on('click', '.smdp-item-tile, .smdp-menu-item', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var $t = $(this);
+
+    // Prevent body scroll
+    $('body').addClass('smdp-modal-open');
+
+    // Populate base fields
+    $('#smdp-item-img').attr('src',   $t.data('img')   || $t.find('img').attr('src'));
+    $('#smdp-item-name').text(        $t.data('name')  || $t.find('h3').text());
+    $('#smdp-item-price').text(       $t.data('price') || $t.find('strong, p').first().text());
+    $('#smdp-item-desc').text(        $t.data('desc')  || '');
+
+    // Inject cached modifiers HTML
+    var modsHtml = $t.find('.smdp-mod-data').html() || '<p style="color:#999; font-style:italic;">No modifiers available</p>';
+    $('#smdp-item-modal').find('.smdp-modifiers').html(modsHtml);
+
+    $('#smdp-item-modal').fadeIn(300);
+  });
+
+  // Close function
+  function closeModal() {
+    // Reset scroll positions BEFORE closing
+    var $inner = $('#smdp-item-modal .smdp-item-modal-inner');
+    $inner.scrollTop(0);
+    $('#smdp-item-modal').scrollTop(0);
+    
+    $('#smdp-item-modal').fadeOut(300, function() {
+      // Restore body scroll
+      $('body').removeClass('smdp-modal-open');
+    });
+  }
+
+  // Close popup when clicking close button
+  $(document).on('click', '#smdp-item-close', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    closeModal();
+  });
+
+  // Click/tap outside modal to close
+  $(document).on('click touchend', '#smdp-item-modal', function(e){
+    // Only close if clicking/tapping the overlay, not the modal content
+    if (e.target.id === 'smdp-item-modal') {
+      e.preventDefault();
+      e.stopPropagation();
+      closeModal();
+    }
+  });
+
+  // Prevent clicks inside modal from closing it
+  $(document).on('click touchend', '.smdp-item-modal-inner', function(e){
+    e.stopPropagation();
+  });
+
+  // Close on ESC key
+  $(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && $('#smdp-item-modal').is(':visible')) {
+      closeModal();
+    }
+  });
+});

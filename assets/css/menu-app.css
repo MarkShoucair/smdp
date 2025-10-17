@@ -1,0 +1,259 @@
+.smdp-menu-app-fe { max-width: 1200px; margin: 0 auto; padding: 12px; }
+.smdp-app-header { position: sticky; top: 0; background: #fff; padding: 10px 0; z-index: 3; }
+.smdp-cat-bar { position: sticky; top: 48px; z-index: 2; display: flex; gap: 8px; overflow-x: auto;
+  padding: 8px 0; background: #fff; -webkit-overflow-scrolling: touch; }
+.smdp-cat-btn { padding: 10px 14px; border-radius: 999px; border: 1px solid #e5e5e5; background:#fff;
+  font-size: 16px; white-space: nowrap; cursor: pointer; }
+.smdp-cat-btn.active { border-color:#333; background:#f3f4f6; }
+.smdp-app-sections { padding-top: 12px; }
+
+/* Left layout rail */
+.smdp-menu-app-fe.layout-left {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+}
+.smdp-menu-app-fe.layout-left .smdp-app-header {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 10px;
+  align-self: start;
+}
+.smdp-menu-app-fe.layout-left .smdp-cat-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  padding-right: 8px;
+  border-right: 1px solid #eee;
+}
+.smdp-menu-app-fe.layout-left .smdp-app-sections {
+  grid-column: 2 / 3;
+}
+@media (max-width: 900px) {
+  .smdp-menu-app-fe.layout-left {
+    display: block;
+  }
+  .smdp-menu-app-fe.layout-left .smdp-app-header {
+    top: 0;
+  }
+  .smdp-menu-app-fe.layout-left .smdp-cat-bar {
+    flex-direction: row;
+    max-height: none;
+    border-right: none;
+    overflow-y: visible;
+  }
+}
+
+/* Prevent scroll chaining / overscroll bouncing inside the app */
+.smdp-menu-app-fe { overscroll-behavior: contain; }
+.smdp-menu-app-fe .smdp-app-sections { overscroll-behavior: contain; }
+.smdp-menu-app-fe.layout-left .smdp-cat-bar {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+/* Smooth category transitions */
+.smdp-app-section {
+  will-change: opacity, transform;
+}
+
+.smdp-menu-grid {
+  /* Prevent flash during transition */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optional: Add a subtle fade to items appearing */
+.smdp-menu-item {
+  animation: fadeInUp 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger the item animations slightly */
+.smdp-menu-item:nth-child(1) { animation-delay: 0.05s; }
+.smdp-menu-item:nth-child(2) { animation-delay: 0.1s; }
+.smdp-menu-item:nth-child(3) { animation-delay: 0.15s; }
+.smdp-menu-item:nth-child(4) { animation-delay: 0.05s; }
+.smdp-menu-item:nth-child(5) { animation-delay: 0.1s; }
+.smdp-menu-item:nth-child(6) { animation-delay: 0.15s; }
+.smdp-menu-item:nth-child(n+7) { animation-delay: 0.05s; }
+
+
+.smdp-menu-app-fe { max-width: 1200px; margin: 0 auto; padding: 12px; }
+.smdp-app-header { position: sticky; top: 0; background: #fff; padding: 10px 0; z-index: 3; }
+
+/* Search bar styles */
+.smdp-search-container {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.smdp-search-bar {
+  width: 100%;
+  padding: 12px 45px 12px 45px;
+  font-size: 16px;
+  border: 2px solid #e5e5e5;
+  border-radius: 25px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.smdp-search-bar:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.smdp-search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  pointer-events: none;
+}
+
+.smdp-search-clear {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #e5e5e5;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+}
+
+.smdp-search-clear.active {
+  display: flex;
+}
+
+.smdp-search-clear:hover {
+  background: #d5d5d5;
+}
+
+/* Search results */
+.smdp-search-results {
+  display: none;
+  padding: 10px 0;
+}
+
+.smdp-search-results.active {
+  display: block;
+}
+
+.smdp-search-results-header {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+  padding: 0 5px;
+}
+
+.smdp-no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+  font-size: 1.1rem;
+}
+
+.smdp-no-results svg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 15px;
+  opacity: 0.3;
+}
+
+/* Highlight matching text */
+.smdp-highlight {
+  background: #fff3cd;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Hide category bar when searching */
+.smdp-menu-app-fe.searching .smdp-cat-bar {
+  display: none;
+}
+
+/* Hide sections when searching */
+.smdp-menu-app-fe.searching .smdp-app-sections {
+  display: none;
+}
+
+.smdp-cat-bar { position: sticky; top: 48px; z-index: 2; display: flex; gap: 8px; overflow-x: auto;
+  padding: 8px 0; background: #fff; -webkit-overflow-scrolling: touch; }
+.smdp-cat-btn { padding: 10px 14px; border-radius: 999px; border: 1px solid #e5e5e5; background:#fff;
+  font-size: 16px; white-space: nowrap; cursor: pointer; }
+.smdp-cat-btn.active { border-color:#333; background:#f3f4f6; }
+.smdp-app-sections { padding-top: 12px; }
+
+/* Left layout rail */
+.smdp-menu-app-fe.layout-left {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+}
+.smdp-menu-app-fe.layout-left .smdp-app-header {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 10px;
+  align-self: start;
+}
+.smdp-menu-app-fe.layout-left .smdp-cat-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  padding-right: 8px;
+  border-right: 1px solid #eee;
+}
+.smdp-menu-app-fe.layout-left .smdp-app-sections {
+  grid-column: 2 / 3;
+}
+@media (max-width: 900px) {
+  .smdp-menu-app-fe.layout-left {
+    display: block;
+  }
+  .smdp-menu-app-fe.layout-left .smdp-app-header {
+    top: 0;
+  }
+  .smdp-menu-app-fe.layout-left .smdp-cat-bar {
+    flex-direction: row;
+    max-height: none;
+    border-right: none;
+    overflow-y: visible;
+  }
+}
+
+/* Prevent scroll chaining / overscroll bouncing inside the app */
+.smdp-menu-app-fe { overscroll-behavior: contain; }
+.smdp-menu-app-fe .smdp-app-sections { overscroll-behavior: contain; }
+.smdp-menu-app-fe.layout-left .smdp-cat-bar {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
