@@ -4,7 +4,7 @@
 **Author:** Mark Shoucair (30%) & Claude AI & ChatGPT (70%)
 **Requires WordPress:** 5.0 or higher
 **Requires PHP:** 7.4 or higher
-**License:** Proprietary
+**License:** GPL-3.0
 
 ---
 
@@ -903,32 +903,72 @@ For issues, questions, or feature requests: **mark@shoucair.ca**
 
 ```
 square-menu-display/
-├── Main.php                        # Plugin entry point
-├── README.md                       # This file
-├── SECURITY-FIXES-APPLIED.md       # Security docs
-├── TESTING-CHECKLIST.md            # Testing guide
-├── admin-webhooks.php              # Webhooks admin
-├── smdp-webhook.php                # Webhook handler
-├── includes/
-│   ├── constants.php               # Helpers & validation
-│   ├── class-admin-pages.php       # Admin pages
-│   ├── class-ajax-handler.php      # AJAX endpoints
-│   ├── class-help-request.php      # Help/Bill system
-│   ├── class-oauth-handler.php     # OAuth 2.0
-│   ├── class-pwa-handler.php       # PWA features
-│   ├── class-shortcode.php         # [square_menu]
-│   ├── class-sync-manager.php      # Catalog sync
-│   └── templates/
-│       └── admin-menu-editor.php   # Menu editor UI
-└── assets/
-    ├── css/
-    │   ├── menu-app.css
-    │   └── smdp-structural.css
-    └── js/
-        ├── help-request.js
-        ├── menu-app-frontend.js
-        └── ...
+├── Main.php                              # Plugin entry point & initialization
+├── README.md                             # Complete user guide (this file)
+├── SECURITY-FIXES-APPLIED.md             # Security audit & fixes documentation
+├── TESTING-CHECKLIST.md                  # QA testing procedures
+├── OAUTH_SETUP.md                        # OAuth 2.0 setup guide
+├── admin-webhooks.php                    # Webhooks admin page UI
+├── smdp-webhook.php                      # Webhook REST API handler
+├── service-worker.js                     # PWA service worker template
+├── test-encryption.php                   # Encryption testing utility
+├── test-rewrite.php                      # URL rewrite testing utility
+│
+├── includes/                             # Core plugin classes
+│   ├── constants.php                     # Constants, helpers, validation functions
+│   ├── class-admin-assets.php            # Admin CSS/JS enqueue manager
+│   ├── class-admin-pages.php             # Admin page renderers (Settings, Categories, etc.)
+│   ├── class-admin-settings.php          # WordPress Settings API registration
+│   ├── class-ajax-handler.php            # AJAX endpoint handlers (sync, refresh, etc.)
+│   ├── class-appearance-manager.php      # Frontend appearance & styling controls
+│   ├── class-debug-panel.php             # PWA debug panel for frontend
+│   ├── class-help-request.php            # Help & Bill request system (shortcodes + AJAX)
+│   ├── class-manifest-generator.php      # PWA manifest.json generator
+│   ├── class-menu-app-builder.php        # Menu app builder & configuration
+│   ├── class-oauth-handler.php           # OAuth 2.0 authentication flow
+│   ├── class-plugin-activation.php       # Activation/deactivation hooks
+│   ├── class-protection-settings.php     # Content protection & access control
+│   ├── class-pwa-handler.php             # PWA service worker registration
+│   ├── class-shortcode.php               # [square_menu] shortcode renderer
+│   ├── class-standalone-menu-app.php     # Standalone menu app functionality
+│   ├── class-sync-manager.php            # Square catalog sync manager
+│   │
+│   └── templates/                        # PHP templates for admin pages
+│       └── admin-menu-editor.php         # Drag-and-drop menu editor UI
+│
+└── assets/                               # Frontend & admin assets
+    │
+    ├── css/                              # Stylesheets
+    │   ├── item-detail.css               # Item detail modal styles
+    │   ├── menu-app.css                  # Main menu app frontend styles
+    │   ├── menu-app-admin.css            # Menu app builder admin styles
+    │   └── smdp-structural.css           # Structural CSS (grid, layout)
+    │
+    └── js/                               # JavaScript files
+        ├── help-admin.js                 # Help & Bill admin page interactions
+        ├── help-request.js               # Help/Bill request frontend AJAX
+        ├── item-detail.js                # Item detail modal functionality
+        ├── menu-app-builder-admin.js     # Menu app builder admin interface
+        ├── menu-app-frontend.js          # Menu app frontend functionality
+        ├── pwa-install.js                # PWA installation prompt handler
+        ├── refresh.js                    # Menu refresh functionality
+        ├── table-setup.js                # Table setup for help/bill system
+        └── view-bill.js                  # View bill functionality
 ```
+
+**Total Files:** 40+ PHP, JS, CSS, and documentation files
+
+**Key Directories:**
+- `includes/` - All PHP classes and core logic (15 classes)
+- `assets/css/` - All stylesheets (4 files)
+- `assets/js/` - All JavaScript (9 files)
+- `includes/templates/` - PHP template files (1 file)
+
+**Documentation:**
+- `README.md` - Complete user & developer guide
+- `SECURITY-FIXES-APPLIED.md` - Security documentation
+- `TESTING-CHECKLIST.md` - Testing procedures
+- `OAUTH_SETUP.md` - OAuth setup reference
 
 ---
 
@@ -958,11 +998,24 @@ square-menu-display/
 
 ## 📜 License
 
-**Proprietary License**
+**GNU General Public License v3.0 (GPL-3.0)**
 
 Copyright (c) 2025 Mark Shoucair
 
-All rights reserved.
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+**What this means:**
+- ✅ You can use this plugin for free
+- ✅ You can modify the code
+- ✅ You can distribute it (original or modified)
+- ✅ You can use it commercially
+- ⚠️ You must keep it under GPL-3.0 license
+- ⚠️ You must include the license and copyright notice
+- ⚠️ You must disclose the source code when distributing
 
 ---
 
