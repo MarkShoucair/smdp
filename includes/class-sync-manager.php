@@ -54,6 +54,9 @@ class SMDP_Sync_Manager {
 
         // Register sync callback
         add_action( SMDP_CRON_HOOK, array( $this, 'sync_items' ) );
+
+        // Display admin notices for sync errors
+        add_action( 'admin_notices', array( $this, 'display_sync_errors' ) );
     }
 
     /**
@@ -72,6 +75,42 @@ class SMDP_Sync_Manager {
     }
 
     /**
+     * Display admin notices for sync errors
+     *
+     * Shows persistent error messages when catalog sync fails
+     */
+    public function display_sync_errors() {
+        // Only show on plugin admin pages
+        if ( ! isset( $_GET['page'] ) || strpos( $_GET['page'], 'smdp' ) !== 0 ) {
+            return;
+        }
+
+        // Check for sync error transient
+        $error_message = get_transient( 'smdp_sync_error' );
+
+        if ( $error_message ) {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p>
+                    <strong>Square Menu Sync Error:</strong> <?php echo esc_html( $error_message ); ?>
+                </p>
+                <p>
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=smdp_main' ) ); ?>" class="button">
+                        Check Settings
+                    </a>
+                    <a href="<?php echo esc_url( admin_url( 'admin.php?page=smdp_api_log' ) ); ?>" class="button">
+                        View API Log
+                    </a>
+                </p>
+            </div>
+            <?php
+
+            // Delete transient after displaying (only show once per error)
+            delete_transient( 'smdp_sync_error' );
+        }
+    }
+
+    /**
      * Sync items from Square API
      *
      * Fetches catalog data (items, images, categories, modifier lists),
@@ -83,6 +122,10 @@ class SMDP_Sync_Manager {
         $access_token = smdp_get_access_token();
         if ( empty( $access_token ) ) {
             error_log('[SMDP Sync] ERROR: No access token found');
+
+            // Store error for admin notice
+            set_transient( 'smdp_sync_error', 'No Square access token configured. Please add your token in settings.', 300 );
+
             return;
         }
 
@@ -95,6 +138,26 @@ class SMDP_Sync_Manager {
 
         // Fetch all catalog objects with pagination
         $all_objects = $this->fetch_catalog( $headers );
+
+        // Check if fetch was successful
+        if ( is_wp_error( $all_objects ) ) {
+            error_log('[SMDP Sync] ERROR: Catalog fetch failed - ' . $all_objects->get_error_message());
+
+            // Store error for admin notice
+            set_transient( 'smdp_sync_error', 'Square API error: ' . $all_objects->get_error_message(), 300 );
+
+            return;
+        }
+
+        if ( empty( $all_objects ) ) {
+            error_log('[SMDP Sync] WARNING: No catalog objects returned from Square');
+
+            // Store warning for admin notice
+            set_transient( 'smdp_sync_error', 'No items returned from Square API. Check your access token permissions.', 300 );
+
+            return;
+        }
+
         error_log('[SMDP Sync] Fetched ' . count($all_objects) . ' catalog objects');
 
         // Remove deleted items
@@ -129,26 +192,64 @@ class SMDP_Sync_Manager {
      * Fetch catalog from Square API with pagination
      *
      * @param array $headers HTTP headers for API request
-     * @return array All catalog objects
+     * @return array|WP_Error All catalog objects or WP_Error on failure
      */
     private function fetch_catalog( $headers ) {
         $all_objects = array();
         $cursor = null;
         $catalog_url = '';
+        $page_count = 0;
+        $max_pages = 100; // Prevent infinite loops
 
         do {
+            $page_count++;
+
+            // Safety: prevent infinite loops
+            if ( $page_count > $max_pages ) {
+                error_log( '[SMDP Sync] WARNING: Reached max pagination limit' );
+                break;
+            }
+
             $catalog_url = 'https://connect.squareup.com/v2/catalog/list?types=ITEM,IMAGE,CATEGORY,MODIFIER_LIST';
             if ( $cursor ) {
                 $catalog_url .= '&cursor=' . urlencode( $cursor );
             }
 
-            $response = wp_remote_get( $catalog_url, array( 'headers' => $headers ) );
+            $response = wp_remote_get( $catalog_url, array( 'headers' => $headers, 'timeout' => 30 ) );
+
             if ( is_wp_error( $response ) ) {
-                break;
+                return new WP_Error(
+                    'api_connection_failed',
+                    'Failed to connect to Square API: ' . $response->get_error_message()
+                );
             }
 
+            $response_code = wp_remote_retrieve_response_code( $response );
             $body = wp_remote_retrieve_body( $response );
+
+            // Check for HTTP errors
+            if ( $response_code !== 200 ) {
+                return new WP_Error(
+                    'api_error',
+                    sprintf( 'Square API returned error code %d', $response_code )
+                );
+            }
+
             $data = json_decode( $body, true );
+
+            // Check for JSON decode errors
+            if ( json_last_error() !== JSON_ERROR_NONE ) {
+                return new WP_Error(
+                    'json_decode_failed',
+                    'Failed to parse Square API response: ' . json_last_error_msg()
+                );
+            }
+
+            // Check for API errors in response
+            if ( isset( $data['errors'] ) && ! empty( $data['errors'] ) ) {
+                $error_msg = $data['errors'][0]['detail'] ?? 'Unknown API error';
+                return new WP_Error( 'square_api_error', $error_msg );
+            }
 
             if ( ! empty( $data['objects'] ) ) {
                 $all_objects = array_merge( $all_objects, $data['objects'] );

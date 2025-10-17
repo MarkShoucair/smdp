@@ -1,304 +1,988 @@
-# Square Menu Display PWA
+# Square Menu Display Premium Deluxe Pro
 
-A powerful WordPress plugin that transforms your Square POS menu into a Progressive Web App (PWA) with built-in protection features and customizable styling.
+**Version:** 3.0 (Security Hardened)
+**Author:** Mark Shoucair (30%) & Claude AI & ChatGPT (70%)
+**Requires WordPress:** 5.0 or higher
+**Requires PHP:** 7.4 or higher
+**License:** Proprietary
 
 ---
 
-## 🤖 AI-Powered Development
+## 📖 Table of Contents
 
-This plugin was developed with assistance from **Claude** (Anthropic) and **ChatGPT** (OpenAI). The entire development process leveraged AI to:
+1. [Overview](#-overview)
+2. [Features](#-features)
+3. [Installation](#-installation)
+4. [Initial Setup](#-initial-setup)
+5. [Square Authentication](#-square-authentication)
+6. [Shortcodes](#-shortcodes)
+7. [Admin Features](#-admin-features)
+8. [Webhook Configuration](#-webhook-configuration)
+9. [PWA Features](#-pwa-features)
+10. [Help & Bill Request System](#-help--bill-request-system)
+11. [Troubleshooting](#-troubleshooting)
+12. [Developer Documentation](#-developer-documentation)
+13. [Security](#-security)
+14. [FAQ](#-faq)
+15. [Support & Resources](#-support--resources)
+16. [Technical Specifications](#-technical-specifications)
+
+---
+
+## 🎯 Overview
+
+**Square Menu Display Premium Deluxe Pro** is a comprehensive WordPress plugin that integrates Square POS with your WordPress website to display dynamic, real-time menu items. Perfect for restaurants, cafes, bars, and any business using Square for point-of-sale.
+
+### What Makes It "Premium Deluxe Pro"?
+
+- ✅ **Real-time catalog sync** from Square to WordPress
+- ✅ **Automatic webhook integration** for instant updates
+- ✅ **Progressive Web App (PWA)** support for offline access
+- ✅ **Sold-out status tracking** with manual overrides
+- ✅ **Drag-and-drop menu editor** with visual organization
+- ✅ **Help & Bill request system** for table service
+- ✅ **OAuth 2.0 authentication** with automatic token refresh
+- ✅ **Category management** with hide/show toggle
+- ✅ **Modifier lists support** with selective display
+- ✅ **Responsive design** works on all devices
+- ✅ **Enterprise-grade security** with encryption and rate limiting
+
+### 🤖 AI-Powered Development
+
+This plugin was developed with assistance from **Claude (Anthropic)** and **ChatGPT (OpenAI)**. The entire development leveraged AI to:
 
 - Architect the plugin structure and file organization
-- Implement complex PWA manifest generation
-- Create hard-coded protection features for iOS and web browsers
-- Design responsive CSS layouts with mobile-first approach
+- Implement complex features like OAuth 2.0, webhooks, and PWA
+- Create security hardening with encryption and rate limiting
+- Design responsive layouts and user interfaces
 - Debug and refine functionality through iterative conversations
 - Ensure WordPress coding standards and best practices
 
-The collaboration between human creativity and AI technical capabilities resulted in a robust, production-ready plugin that would have taken significantly longer to develop manually.
+The collaboration between human creativity and AI technical capabilities resulted in a robust, production-ready plugin with enterprise-grade security.
 
 ---
 
-## Features
+## ✨ Features
 
-### 📱 Progressive Web App (PWA)
-- **Installable**: Users can install your menu as a standalone app on iOS, Android, and desktop
-- **Offline Capable**: Menu data is cached for offline viewing
-- **App-like Experience**: Full-screen display without browser chrome
-- **Custom Icons**: Upload custom app icons (192x192, 512x512, Apple Touch Icon)
-- **App Identity**: Customize app name, short name, and description
-- **Display Options**: Configure display mode (standalone, fullscreen, minimal-ui) and orientation
+### Core Features
 
-### 🔒 Built-in Protection Features
-All protection features are **hard-coded** and automatically enabled on menu app pages:
+#### 1. **Menu Display**
+- Display Square catalog items on your WordPress site
+- Automatic synchronization with Square inventory
+- Real-time sold-out status updates
+- Category-based filtering
+- Responsive grid layout (3 columns by default)
+- Item images, descriptions, and pricing
+- Modifier lists (add-ons/customizations)
 
-- **Pinch Zoom Prevention**: Blocks pinch-to-zoom gestures on iOS and iPad
-- **Text Selection Blocking**: Prevents text selection across the menu app
-- **Right-Click Prevention**: Disables context menu access
-- **Copy/Paste/Cut Blocking**: Prevents content copying via keyboard or menu
-- **Long-Press Menu Prevention**: Blocks iOS long-press menus on images and text
-- **Keyboard Shortcut Blocking**: Disables Ctrl+C, Ctrl+S, Ctrl+U, Ctrl+A, Ctrl+X, Ctrl+P
+#### 2. **Admin Management**
+- Visual drag-and-drop menu editor
+- Category creation and organization
+- Item ordering within categories
+- Hide/show individual images
+- Manual sold-out overrides
+- Category visibility toggle
+- Item-to-category assignment
 
-These features protect your menu content while maintaining usability for legitimate interactions like form inputs.
+#### 3. **Synchronization**
+- Manual sync on-demand
+- Scheduled automatic sync (hourly/daily/custom)
+- Webhook-based instant sync
+- Rate-limited to prevent abuse
+- Error notifications for failed syncs
+- API request/response logging
 
-### 🎨 Hard-Coded Styling
-Professional, responsive design with:
+#### 4. **Authentication Options**
+- **OAuth 2.0** - Merchant-specific tokens (recommended)
+- **Personal Access Token** - Application-level access
+- Automatic token refresh (OAuth)
+- Encrypted token storage (AES-256-CBC)
+- Token expiration monitoring
 
-- **Help & Bill Button Styles**: Rounded buttons with custom colors (#f5fdfc background, #00649d text)
-- **Category Navigation**: Optimized padding (10px 14px) and gap spacing (8px)
-- **Full-Width Layout**: Menu items utilize full available width
-- **Responsive Design**: Mobile-first approach with tablet and desktop breakpoints
-- **Left Sidebar Support**: Special styling for left-aligned category navigation
-- **Smooth Scrolling**: Enhanced scroll behavior for better UX
+#### 5. **Progressive Web App (PWA)**
+- Service worker caching
+- Offline menu access
+- Fast page loads
+- App-like experience on tablets
+- Auto-update detection
+- Debug mode for development
 
-### 🔄 Square POS Integration
-- **Real-time Sync**: Automatically fetches menu data from Square API
-- **Category Management**: Organize items by Square catalog categories
-- **Item Details**: Display descriptions, prices, variations, and modifiers
-- **Image Support**: Show product images from Square catalog
-- **Inventory Tracking**: Display stock status and availability
-
-### ⚙️ Admin Features
-- **Layout Customization**: Choose between different menu layouts
-- **Category Button Styles**: Customize category navigation appearance
-- **Custom CSS Editor**: Add your own CSS for advanced customization
-- **Menu Items Editor**: Manage which items appear in the menu
-- **Promo Screen**: Optional promotional content before menu display
-
----
-
-## Installation
-
-### Manual Installation
-1. Download the plugin ZIP file or clone this repository
-2. Upload the `square-menu-display-pwa` folder to `/wp-content/plugins/`
-3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Navigate to **Square Menu Display** in the admin sidebar
-
-### Fresh Install Consistency
-This plugin is designed to work identically across all WordPress installations:
-- All protection features are hard-coded
-- All structural CSS is hard-coded
-- No additional configuration needed for core functionality
-- Every fresh install will have the same layout and protection
+#### 6. **Table Service Features**
+- Customer help requests
+- Bill requests
+- View current bill
+- Table number assignment
+- Dual lookup methods (Customer ID or Table Item)
 
 ---
 
-## Configuration
+## 📦 Installation
 
-### 1. Square API Setup
-1. Go to **Square Menu Display > Settings**
-2. Enter your Square Access Token
-3. Select your Square Location
-4. Save settings
+### Method 1: Manual Installation
 
-### 2. PWA Customization
-1. Navigate to **Square Menu Display > App Layout**
-2. Under **PWA Settings**:
-   - Upload App Icon (192x192)
-   - Upload Large App Icon (512x512)
-   - Upload Apple Touch Icon (180x180)
-   - Set App Name and Short Name
-   - Add App Description
-   - Choose Display Mode
-   - Set Orientation Lock
+1. Download the plugin ZIP file
+2. Go to **WordPress Admin > Plugins > Add New**
+3. Click **Upload Plugin**
+4. Choose the ZIP file and click **Install Now**
+5. Click **Activate Plugin**
 
-### 3. Display Your Menu
-Add the shortcode to any page or post:
+### Method 2: FTP Installation
 
-```
-[smdp_menu_app]
+1. Unzip the plugin folder
+2. Upload the `square-menu-display` folder to `/wp-content/plugins/`
+3. Go to **WordPress Admin > Plugins**
+4. Find "Square Menu Display Premium Deluxe Pro" and click **Activate**
+
+### Method 3: WP-CLI
+
+```bash
+wp plugin install /path/to/square-menu-display.zip --activate
 ```
 
 ---
 
-## Technical Architecture
+## 🚀 Initial Setup
+
+### Step 1: Access Plugin Settings
+
+After activation, go to **WordPress Admin > Square Menu**
+
+You'll see the following menu items:
+- **Settings** - Main configuration page
+- **Categories** - Manage menu categories
+- **Menu Editor** - Visual drag-and-drop interface
+- **Items** - List view with manual overrides
+- **Help & Bill** - Table service configuration
+- **Webhooks** - Automatic sync setup
+- **Modifiers** - Control which add-ons appear
+- **API Log** - View Square API communication
+
+### Step 2: Choose Authentication Method
+
+You have two options:
+
+#### **Option A: OAuth 2.0** (Recommended for merchants)
+
+✅ **Pros:**
+- Merchant-specific access
+- Automatic token refresh
+- More secure for multi-user environments
+- Easier to revoke access
+
+❌ **Cons:**
+- Webhooks not supported (OAuth tokens are merchant-level)
+- Requires Square Developer account
+- Multi-step setup
+
+#### **Option B: Personal Access Token** (Recommended for webhooks)
+
+✅ **Pros:**
+- Full webhook support
+- Application-level features
+- Simpler setup
+- Works with scheduled/manual sync
+
+❌ **Cons:**
+- Manual token management
+- No automatic refresh
+- Single token for all merchants
+
+---
+
+## 🔐 Square Authentication
+
+### Method 1: OAuth 2.0 Setup
+
+#### Prerequisites
+- Square Developer account
+- Registered Square Application
+
+#### Steps
+
+**1. Create Square Application**
+- Go to [Square Developer Dashboard](https://developer.squareup.com/apps)
+- Click **Create App** or select existing app
+- Note your **Application ID** (starts with `sq0idp-`)
+- Generate a **Secret** (starts with `sq0csp-`)
+
+**2. Configure OAuth Credentials**
+- Go to **Square Menu > Settings**
+- Scroll to "Square Connection" section
+- Click **Update OAuth credentials** (if already configured)
+- Enter your **Application ID**
+- Enter your **Application Secret**
+- Click **Save OAuth Credentials**
+
+**3. Set Redirect URI in Square**
+- Copy the redirect URI shown: `https://yoursite.com/wp-admin/admin.php?page=smdp_main&oauth_callback=1`
+- Go to your Square app settings
+- Add this URI to **Redirect URLs**
+- Save in Square Developer Dashboard
+
+**4. Connect Your Square Account**
+- Click **Connect with Square** button
+- Authorize the connection in Square
+- You'll be redirected back to WordPress
+- Success message will appear
+
+**5. Verify Connection**
+- Check for green checkmark: "✓ Connected to Square"
+- Token status shows days remaining
+- Test with **Sync Now** button
+
+---
+
+### Method 2: Personal Access Token Setup
+
+#### Steps
+
+**1. Generate Personal Access Token**
+- Go to [Square Developer Dashboard](https://developer.squareup.com/apps)
+- Select your application (or create one)
+- Go to **Credentials** tab
+- Copy **Access Token** (Production or Sandbox)
+
+**2. Enter Token in WordPress**
+- Go to **Square Menu > Settings**
+- Scroll to "Square Access Token" field
+- Paste your access token
+- Click **Save Settings**
+
+**3. Configure Location ID**
+- Go to **Square Menu > Help & Bill**
+- Enter your Square **Location ID**
+  - Find in Square Dashboard > Locations
+  - Or use Square API Explorer
+- Click **Save Help & Bill Settings**
+
+**4. Test Connection**
+- Click **Sync Now** on Settings page
+- Check for success message
+- Verify items appear in **Items** page
+
+---
+
+## 📋 Shortcodes
+
+### Primary Shortcode: `[square_menu]`
+
+Displays menu items from a specific category.
+
+#### Basic Usage
+
+```php
+[square_menu category="lunch-menu"]
+```
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `category` | string | Yes | Category slug (lowercase, hyphenated) |
+
+#### Examples
+
+**Display Lunch Menu:**
+```php
+[square_menu category="lunch-menu"]
+```
+
+**Display Drinks Menu:**
+```php
+[square_menu category="drinks"]
+```
+
+**Display Dinner Specials:**
+```php
+[square_menu category="dinner-specials"]
+```
+
+#### How to Get Category Slugs
+
+1. Go to **Square Menu > Categories**
+2. Look at the "Slug" column
+3. Use the slug in your shortcode
+
+Example:
+- **Category Name:** "Lunch Menu"
+- **Slug:** `lunch-menu`
+- **Shortcode:** `[square_menu category="lunch-menu"]`
+
+---
+
+### Help Request Shortcodes
+
+Used for table service in restaurants.
+
+#### `[smdp_request_help]`
+
+Creates a "Request Help" button for customers to notify staff.
+
+**Usage:**
+```php
+[smdp_request_help table="5"]
+```
+
+**Parameters:**
+- `table` - Table number (required)
+
+**What It Does:**
+- Creates $0 order in Square with "Request Help" item
+- Staff sees notification in Square POS
+- Table number appears in order notes
+
+---
+
+#### `[smdp_request_bill]`
+
+Creates a "Request Bill" button for customers.
+
+**Usage:**
+```php
+[smdp_request_bill table="5"]
+```
+
+**Parameters:**
+- `table` - Table number (required)
+
+**What It Does:**
+- Creates $0 order in Square with "Request Bill" item
+- Staff sees bill request in Square POS
+- Table number included in order
+
+---
+
+### Example: Complete Table Service Page
+
+```html
+<h1>Table 5 - Menu</h1>
+
+<!-- Display the menu -->
+[square_menu category="dinner-menu"]
+
+<!-- Service buttons -->
+<div style="margin-top: 20px;">
+  [smdp_request_help table="5"]
+  [smdp_request_bill table="5"]
+</div>
+```
+
+---
+
+## 🎨 Admin Features
+
+### 1. Settings Page (`Square Menu > Settings`)
+
+#### Square Connection
+- OAuth connection status
+- Token expiration date
+- Connect/Disconnect buttons
+- Manual token entry (alternative to OAuth)
+
+#### Sync Configuration
+- **Sync Interval:** Choose hourly, 6 hours, 12 hours, or daily
+- **Manual Sync Only:** Disable automatic syncing
+- **Sync Now Button:** Trigger immediate sync
+
+#### PWA Debug Mode
+- **Enable Debug Mode:** Bypass caching during development
+- **Cache Version:** Force clients to reload assets
+- Shows debug panel on frontend
+- Logs service worker activity
+
+#### Actions
+- **Sync Now** - Manually trigger catalog sync
+- **Clear All Cached Data** - Remove all cached items (keeps token)
+
+---
+
+### 2. Categories Page (`Square Menu > Categories`)
+
+Manage menu categories independently of Square.
+
+#### Features
+- **Add New Category:** Create custom categories
+- **Delete Category:** Remove unused categories
+- **Category List:** View name, slug, order
+
+#### Usage
+
+**Add Category:**
+1. Enter category name (e.g., "Lunch Specials")
+2. Click **Add Category**
+3. Slug is auto-generated (`lunch-specials`)
+
+**Delete Category:**
+1. Click **Delete** next to category
+2. Confirm deletion
+3. Items remain but become "unassigned"
+
+---
+
+### 3. Menu Editor Page (`Square Menu > Menu Editor`)
+
+Visual drag-and-drop interface for organizing items.
+
+#### Features
+- **Drag & Drop:** Reorder items within categories
+- **Category Sections:** Collapsible category groups
+- **Item Thumbnails:** Visual preview of items
+- **Hide Image Toggle:** Show/hide specific item images
+- **Bulk Actions:** Move multiple items at once
+
+#### Usage
+
+**Reorder Items:**
+1. Drag item to new position
+2. Items auto-sort within category
+3. Click **Save** to persist order
+
+**Hide Item Image:**
+1. Click eye icon next to item
+2. Image won't display on frontend
+3. Item still shows name, description, price
+
+**Move Item to Category:**
+1. Drag item to different category section
+2. Item immediately moves
+3. Click **Save** to confirm
+
+---
+
+### 4. Items List Page (`Square Menu > Items`)
+
+List view with advanced controls.
+
+#### Features
+- **Thumbnails:** See item images
+- **Square Category:** View reporting category from Square
+- **Menu Category:** Assign plugin category
+- **Sold Out Status:** View Square status and plugin override
+- **Bulk Actions:** Update multiple items at once
+
+#### Actions
+
+**Match Square Categories:**
+- Copies reporting categories from Square to plugin
+- Useful after Square catalog reorganization
+
+**Sync Sold Out Status:**
+- Copies sold-out status from Square
+- Creates overrides in plugin
+- Updates all items at once
+
+**Manual Override:**
+- Dropdown: "Sold Out" / "Available"
+- Overrides Square status
+- Persists across syncs
+
+---
+
+### 5. Help & Bill Page (`Square Menu > Help & Bill`)
+
+Configure table service features.
+
+#### Settings
+
+**Help Item:**
+- Square catalog item used for help requests
+- Usually a $0 "Request Help" item
+- Searchable dropdown with all items
+
+**Bill Item:**
+- Square catalog item used for bill requests
+- Usually a $0 "Request Bill" item
+- Separate from help item
+
+**Location ID:**
+- Your Square location ID
+- Required for order creation
+
+**Bill Lookup Method:**
+- **Customer ID Method:** Match by Square customer
+- **Table Item Method:** Match by catalog item on order
+
+---
+
+### 6. Webhooks Page (`Square Menu > Webhooks`)
+
+Configure automatic catalog syncing.
+
+#### Requirements
+- ✅ Personal Access Token (not OAuth)
+- ✅ Valid Square credentials
+- ✅ HTTPS enabled on WordPress site
+- ✅ REST API accessible publicly
+
+#### Features
+
+**Activate Webhooks:**
+- One-time setup button
+- Automatically creates webhook subscription in Square
+- Syncs signature key securely
+
+**Refresh Webhooks:**
+- Updates signature keys without creating new subscriptions
+- Safe to run multiple times
+
+**Webhook List:**
+- Shows all webhook subscriptions
+- Displays event types and URLs
+
+---
+
+### 7. Modifiers Page (`Square Menu > Modifiers`)
+
+Control which modifier lists appear on frontend.
+
+#### Features
+- **Checkbox List:** All modifier lists from Square
+- **Show/Hide:** Toggle visibility
+- **Bulk Update:** Save all changes at once
+
+---
+
+### 8. API Log Page (`Square Menu > API Log`)
+
+View recent Square API communications.
+
+#### Information Displayed
+- **Timestamp:** When request was made
+- **API Request:** Full URL and parameters
+- **API Response:** Raw JSON response (formatted)
+- **Last 10 Requests:** Most recent kept
+
+---
+
+## 🔔 Webhook Configuration
+
+### Quick Setup (Recommended)
+
+**1. Go to Webhooks Page**
+```
+WordPress Admin > Square Menu > Webhooks
+```
+
+**2. Click "Activate Webhooks"**
+- Automatically creates webhook subscription
+- Syncs signature key
+- Configures event type: `catalog.version.updated`
+
+**3. Verify Setup**
+- Check "Existing Subscriptions" list
+- Confirm signature key is stored
+- Test by updating item in Square
+
+### How It Works
+
+1. Square sends webhook when catalog changes
+2. Plugin verifies HMAC-SHA256 signature
+3. If valid, triggers immediate catalog sync
+4. Menu updates automatically on frontend
+5. Invalid signatures are rejected (security)
+
+---
+
+## 📱 PWA Features
+
+### What is PWA?
+
+Progressive Web App technology allows your menu to:
+- Work offline (cached data)
+- Load instantly (service worker)
+- Update automatically (background sync)
+- Feel like a native app (no browser chrome)
+- Install on device home screen
+
+### Debug Mode
+
+**Enable:**
+1. Go to **Square Menu > Settings**
+2. Check **Enable Debug Mode**
+3. Click **Save Settings**
+
+**What It Does:**
+- Bypasses service worker caching
+- Shows debug panel on frontend
+- Logs all cache operations to console
+
+**Disable in Production!**
+
+### Cache Version Management
+
+**When to Increment:**
+- After plugin update
+- After CSS/JavaScript changes
+- When items appear outdated on tablets
+
+**How:**
+1. Go to **Settings** page
+2. Find **Cache Version** field
+3. Click **Increment Version** button
+4. Click **Save Settings**
+
+---
+
+## 🍽️ Help & Bill Request System
+
+### Setup Guide
+
+#### Step 1: Create Square Items
+
+**Help Request Item:**
+1. Go to Square Dashboard > Items
+2. Create new item: "Request Help"
+3. Set price: $0.00
+
+**Bill Request Item:**
+1. Create another item: "Request Bill"
+2. Set price: $0.00
+
+#### Step 2: Configure in WordPress
+
+1. Go to **Help & Bill** page
+2. Search and select Help item
+3. Search and select Bill item
+4. Enter Location ID
+5. Choose lookup method (Customer ID or Table Item)
+
+#### Step 3: Create Table Pages
+
+Example page for Table 5:
+
+```php
+<h1>Table 5</h1>
+
+[square_menu category="dinner"]
+
+<div class="service-buttons">
+  [smdp_request_help table="5"]
+  [smdp_request_bill table="5"]
+</div>
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Issue: Menu Not Displaying
+
+**Solutions:**
+1. Check category slug matches shortcode
+2. Run manual sync
+3. Verify access token is valid
+4. Assign items to categories
+
+#### Issue: Items Not Syncing
+
+**Solutions:**
+1. Check sync mode is not "Manual Only"
+2. Verify webhooks are active
+3. Check API permissions
+4. Force sync manually
+
+#### Issue: Webhooks Not Working
+
+**Solutions:**
+1. Verify using Personal Access Token (not OAuth)
+2. Ensure HTTPS is enabled
+3. Check signature key is stored
+4. Test webhook endpoint
+
+#### Issue: OAuth Connection Fails
+
+**Solutions:**
+1. Verify credentials are correct
+2. Check redirect URI matches exactly
+3. Clear browser cache
+4. Enable debug mode
+
+---
+
+## 👨‍💻 Developer Documentation
+
+### Hooks & Filters
+
+#### Actions
+
+**`smdp_after_sync`**
+```php
+add_action('smdp_after_sync', function($items_count) {
+    error_log("Synced {$items_count} items");
+});
+```
+
+**`smdp_before_sync`**
+```php
+add_action('smdp_before_sync', function() {
+    wp_cache_flush();
+});
+```
+
+#### Filters
+
+**`smdp_menu_items`**
+```php
+add_filter('smdp_menu_items', function($items, $category_id) {
+    // Modify items before display
+    return $items;
+}, 10, 2);
+```
+
+**`smdp_item_price`**
+```php
+add_filter('smdp_item_price', function($price, $item_id) {
+    return $price * 1.10; // Add 10% service charge
+}, 10, 2);
+```
+
+### REST API Endpoints
+
+**GET `/wp-json/smdp/v1/webhook`**
+```bash
+curl https://yoursite.com/wp-json/smdp/v1/webhook
+# Returns: {"alive":true}
+```
+
+**POST `/wp-json/smdp/v1/webhook`**
+Receives Square webhooks with signature verification.
+
+### Encryption
+
+**Encrypt Data:**
+```php
+$encrypted = smdp_encrypt('sensitive data');
+update_option('my_encrypted_option', $encrypted);
+```
+
+**Decrypt Data:**
+```php
+$encrypted = get_option('my_encrypted_option');
+$decrypted = smdp_decrypt($encrypted);
+```
+
+---
+
+## 🔒 Security
+
+### Security Features
+
+- ✅ **AES-256-CBC encryption** for sensitive data
+- ✅ **OAuth 2.0** with automatic token refresh
+- ✅ **HMAC-SHA256** webhook signature verification
+- ✅ **Multi-factor rate limiting** (IP + User-Agent + User ID)
+- ✅ **Input validation** for Square IDs
+- ✅ **CSRF protection** with nonces
+- ✅ **SQL injection prevention** (Options API)
+- ✅ **Output escaping** (esc_html, esc_attr, esc_url)
+- ✅ **Capability checks** (manage_options)
+
+### Security Best Practices
+
+**For Administrators:**
+1. Use HTTPS (required for webhooks/PWA)
+2. Keep WordPress updated
+3. Disable WP_DEBUG in production
+4. Restrict plugin access to admins
+5. Monitor logs regularly
+
+**For Developers:**
+1. Never hardcode credentials
+2. Always validate input
+3. Use nonces for forms
+4. Check capabilities before actions
+5. Rate limit custom endpoints
+
+### Security Audit Checklist
+
+- [ ] HTTPS enabled site-wide
+- [ ] WordPress core is up-to-date
+- [ ] PHP version is 7.4+
+- [ ] WP_DEBUG disabled in production
+- [ ] Access tokens are encrypted
+- [ ] Webhook signatures verified
+- [ ] Rate limiting active
+- [ ] Admin access restricted
+
+---
+
+## ❓ FAQ
+
+### General Questions
+
+**Q: Does this work with Square Sandbox?**
+A: Yes! Define in wp-config.php: `define('SMDP_ENVIRONMENT', 'sandbox');`
+
+**Q: Can I use multiple locations?**
+A: Plugin supports one location per installation. For multiple locations, use multisite.
+
+**Q: Does it work with WooCommerce?**
+A: This plugin displays menus only. It can coexist with WooCommerce.
+
+**Q: Can customers order through the website?**
+A: No. This displays menus. Orders must be placed through Square POS.
+
+### Sync Questions
+
+**Q: How often does it sync?**
+A: Configurable: hourly, 6 hours, 12 hours, daily, or manual only.
+
+**Q: Can I sync on demand?**
+A: Yes. Settings > Sync Now button.
+
+**Q: What if Square API is down?**
+A: Plugin uses cached data. Menu continues to work.
+
+### Authentication Questions
+
+**Q: OAuth vs Personal Token - which is better?**
+A:
+- **OAuth:** Better security, auto-refresh, no webhooks
+- **Personal Token:** Required for webhooks, simpler
+
+### PWA Questions
+
+**Q: Do I need PWA features?**
+A: Only if you want offline access or app installation.
+
+**Q: Does PWA work on iOS?**
+A: Yes, iOS 11.3+ supports service workers.
+
+---
+
+## 📞 Support & Resources
+
+### Documentation
+- **Plugin README:** You're reading it!
+- **Security Fixes:** See `SECURITY-FIXES-APPLIED.md`
+- **Testing Guide:** See `TESTING-CHECKLIST.md`
+
+### Square Resources
+- [Square Developer Portal](https://developer.squareup.com/)
+- [Square API Reference](https://developer.squareup.com/reference/square)
+- [OAuth Guide](https://developer.squareup.com/docs/oauth-api/overview)
+- [Webhooks Documentation](https://developer.squareup.com/docs/webhooks/overview)
+
+### Contact
+For issues, questions, or feature requests: **mark@shoucair.ca**
+
+---
+
+## 📄 Technical Specifications
+
+### System Requirements
+
+**WordPress:**
+- Version 5.0+
+- PHP 7.4+ (8.0+ recommended)
+- MySQL 5.6+
+- HTTPS required (webhooks/PWA)
+
+**Square:**
+- Square account
+- API access enabled
+- OAuth app or Personal token
+
+**Server:**
+- `allow_url_fopen` enabled
+- `cURL` extension
+- `OpenSSL` extension
+- `JSON` extension
+- 64MB+ PHP memory
+
+**Browser Support:**
+- Chrome 45+
+- Firefox 40+
+- Safari 11.1+
+- Edge 17+
+- iOS Safari 11.3+
 
 ### File Structure
+
 ```
-square-menu-display-pwa/
-├── Main.php                              # Main plugin file
+square-menu-display/
+├── Main.php                        # Plugin entry point
+├── README.md                       # This file
+├── SECURITY-FIXES-APPLIED.md       # Security docs
+├── TESTING-CHECKLIST.md            # Testing guide
+├── admin-webhooks.php              # Webhooks admin
+├── smdp-webhook.php                # Webhook handler
 ├── includes/
-│   ├── class-menu-app-builder.php        # Admin UI and settings
-│   ├── class-manifest-generator.php      # PWA manifest generation
-│   ├── class-protection-settings.php     # Hard-coded protection features
-│   ├── class-appearance-manager.php      # CSS loading
-│   ├── class-square-api.php              # Square API integration
-│   └── ...
-├── assets/
-│   ├── css/
-│   │   ├── smdp-structural.css           # Hard-coded styles
-│   │   ├── menu-app.css                  # Menu app styles
-│   │   └── menu-app-admin.css            # Admin UI styles
-│   └── js/
-│       └── ...
-└── README.md                             # This file
+│   ├── constants.php               # Helpers & validation
+│   ├── class-admin-pages.php       # Admin pages
+│   ├── class-ajax-handler.php      # AJAX endpoints
+│   ├── class-help-request.php      # Help/Bill system
+│   ├── class-oauth-handler.php     # OAuth 2.0
+│   ├── class-pwa-handler.php       # PWA features
+│   ├── class-shortcode.php         # [square_menu]
+│   ├── class-sync-manager.php      # Catalog sync
+│   └── templates/
+│       └── admin-menu-editor.php   # Menu editor UI
+└── assets/
+    ├── css/
+    │   ├── menu-app.css
+    │   └── smdp-structural.css
+    └── js/
+        ├── help-request.js
+        ├── menu-app-frontend.js
+        └── ...
 ```
 
-### Key Classes
+---
 
-#### `SMDP_Protection_Settings`
-- Automatically injects protection scripts on menu app pages
-- No settings or toggles - always enabled
-- Detects menu app pages via `SMDP_MENU_APP_RENDERED` constant
-- Methods:
-  - `inject_protection()` - Main injection point
-  - `inject_protection_styles()` - Injects CSS for protection
-  - `inject_protection_scripts()` - Injects JavaScript for protection
+## 📝 Changelog
 
-#### `SMDP_Appearance_Manager`
-- Enqueues structural CSS file
-- No dynamic CSS generation - all styles are hard-coded
-- Methods:
-  - `enqueue_structural_css()` - Loads CSS file on menu app pages
+### Version 3.0 (Security Hardened) - 2025-01-17
 
-#### `SMDP_Manifest_Generator`
-- Generates PWA manifest.json dynamically
-- Uses custom settings from admin panel
-- Injects manifest link and Apple Touch Icon
-- Handles icon fallbacks to default assets
+**🔒 Security Enhancements:**
+- Fixed critical webhook authentication bypass
+- Added comprehensive Square ID validation
+- Implemented multi-factor rate limiting
+- Secured debug logging
+- Enhanced CSRF protection
+
+**✨ New Features:**
+- Admin error notifications
+- Real-time sync monitoring
+- Token format validation
+- Improved error handling
+
+**📚 Documentation:**
+- Complete comprehensive README
+- Security fixes documentation
+- Testing checklist
 
 ---
 
-## Development Notes
+## 📜 License
 
-### AI Collaboration Process
-The development of this plugin involved iterative conversations with Claude and ChatGPT:
+**Proprietary License**
 
-1. **Initial Planning**: AI helped architect the plugin structure and identify necessary WordPress hooks
-2. **Implementation**: AI generated initial code implementations following WordPress standards
-3. **Debugging**: AI assisted in identifying and fixing issues like:
-   - Shortcode name mismatches
-   - Page detection timing problems
-   - CSS specificity conflicts
-4. **Refactoring**: AI helped transition from dynamic settings to hard-coded values based on user feedback
-5. **Optimization**: AI suggested performance improvements and code organization
+Copyright (c) 2025 Mark Shoucair
 
-### Design Decisions
-
-#### Hard-Coded vs. Customizable
-Initially, protection and appearance features were designed to be customizable via admin toggles. However, the final implementation hard-codes everything to ensure:
-- **Consistency**: Every installation looks and behaves identically
-- **Simplicity**: No configuration needed for core features
-- **Performance**: No database lookups for settings
-- **Reliability**: No risk of misconfiguration
-
-#### Protection Implementation
-Protection features only apply to menu app pages (not entire site) to:
-- Avoid interfering with WordPress admin
-- Allow normal browsing on other pages
-- Focus protection on menu content
-
-#### CSS Organization
-Structural CSS is separated from menu app CSS to:
-- Make updates easier
-- Distinguish core layout from theme styling
-- Allow custom CSS additions without conflicts
+All rights reserved.
 
 ---
 
-## Browser Compatibility
+## 🙏 Credits
 
-### Tested Browsers
-- ✅ Chrome (Desktop & Mobile)
-- ✅ Safari (Desktop, iOS, iPadOS)
-- ✅ Firefox (Desktop & Mobile)
-- ✅ Edge (Desktop & Mobile)
-- ✅ Samsung Internet
+**Development Team:**
+- **Mark Shoucair** - 30% (Project concept, requirements, testing)
+- **Claude (Anthropic)** - 40% (Security hardening, documentation)
+- **ChatGPT (OpenAI)** - 30% (Initial development, features)
 
-### PWA Support
-- ✅ iOS/iPadOS 16.4+ (Add to Home Screen)
-- ✅ Android (Chrome, Samsung Internet)
-- ✅ Desktop Chrome/Edge (Install App)
-- ✅ Desktop Safari 17+ (Add to Dock)
-
-### Protection Features
-- iOS/iPadOS: All protection features work
-- Android: All protection features work
-- Desktop: Most protection features work (pinch zoom N/A)
-
----
-
-## Frequently Asked Questions
-
-### Can I customize the protection features?
-No, protection features are hard-coded and always enabled on menu app pages. This ensures consistent behavior across all installations.
-
-### Can I change the Help/Bill button colors?
-The button colors are hard-coded in `assets/css/smdp-structural.css`. You can modify the CSS file directly if needed, but changes will be overwritten on plugin updates.
-
-### Does this work with other page builders?
-Yes, as long as you can add the `[smdp_menu_app]` shortcode, it will work with any page builder (Elementor, Divi, WPBakery, Gutenberg, etc.).
-
-### Will protection features break my site?
-No, protection features only apply to pages containing the `[smdp_menu_app]` shortcode. Other pages function normally.
-
-### Can I use this for multiple locations?
-Currently, the plugin is designed for single-location use. Multi-location support may be added in future versions.
-
-### What happens if I don't upload custom PWA icons?
-The plugin will fall back to default icons included with the plugin.
-
----
-
-## Changelog
-
-### Version 3.0
-- ✨ Complete rewrite with AI assistance
-- ✨ Added PWA manifest generation
-- ✨ Added custom icon upload functionality
-- ✨ Hard-coded protection features
-- ✨ Hard-coded appearance styling
-- ✨ Simplified admin interface
-- ✨ Improved Square API integration
-- 🐛 Fixed shortcode detection issues
-- 🐛 Fixed page detection timing problems
-- ⚡ Performance improvements
-
-### Version 2.4.4
-- Previous stable version
-
----
-
-## Credits
-
-### Development Team
-- **Developer**: Mark (Human)
-- **AI Assistants**: Claude (Anthropic), ChatGPT (OpenAI)
-
-### Technologies Used
-- WordPress 5.8+
-- PHP 7.4+
-- Square API v2
-- Progressive Web App APIs
+**Technologies:**
+- WordPress Plugin API
+- Square REST API
+- OAuth 2.0
+- Progressive Web Apps
 - Service Workers
-- Web Manifest Specification
-
-### AI Tools
-- **Claude** (Anthropic): Primary development assistant for code generation, debugging, and architecture
-- **ChatGPT** (OpenAI): Additional development support and code review
+- AES-256-CBC Encryption
 
 ---
 
-## License
+**Last Updated:** January 17, 2025
 
-This plugin is proprietary software. All rights reserved.
-
----
-
-## Support
-
-For issues, questions, or feature requests, please contact the plugin developer  mark@shoucair.ca
----
-
-## Future Enhancements
-
-Potential features for future versions:
-- Multi-location support
-- Order integration with Square
-- Customer accounts and order history
-- Enhanced analytics
-- A/B testing for menu layouts
-- Customizable protection toggles (optional)
-- Theme presets for styling
-- Integration with other POS systems
+**END OF README**

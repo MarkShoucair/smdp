@@ -155,21 +155,61 @@ class SMDP_Help_Request {
   /* ══════════════════  AJAX  ══════════════════ */
   public function ajax_help(): void {
     check_ajax_referer('smdp_request_help','security');
-    $ok = $this->create_square_order( get_option($this->opt_help), smdp_sanitize_text_field($_POST['table']??'', 10) );
+
+    // SECURITY: Rate limit help requests (5 per minute per IP)
+    if ( smdp_is_rate_limited( 'request_help', 5, 60 ) ) {
+        wp_send_json_error( 'Too many requests. Please wait a moment.' );
+    }
+
+    $table = smdp_sanitize_text_field($_POST['table']??'', 10);
+
+    // SECURITY: Validate table number format
+    if ( ! preg_match( '/^[A-Za-z0-9]{1,10}$/', $table ) ) {
+        error_log( '[SMDP Security] Invalid table number in help request: ' . $table );
+        wp_send_json_error( 'Invalid table number' );
+    }
+
+    $ok = $this->create_square_order( get_option($this->opt_help), $table );
     $ok ? wp_send_json_success() : wp_send_json_error();
   }
+
   public function ajax_bill(): void {
     check_ajax_referer('smdp_request_bill','security');
-    $ok = $this->create_square_order( get_option($this->opt_bill), smdp_sanitize_text_field($_POST['table']??'', 10) );
+
+    // SECURITY: Rate limit bill requests (5 per minute per IP)
+    if ( smdp_is_rate_limited( 'request_bill', 5, 60 ) ) {
+        wp_send_json_error( 'Too many requests. Please wait a moment.' );
+    }
+
+    $table = smdp_sanitize_text_field($_POST['table']??'', 10);
+
+    // SECURITY: Validate table number format
+    if ( ! preg_match( '/^[A-Za-z0-9]{1,10}$/', $table ) ) {
+        error_log( '[SMDP Security] Invalid table number in bill request: ' . $table );
+        wp_send_json_error( 'Invalid table number' );
+    }
+
+    $ok = $this->create_square_order( get_option($this->opt_bill), $table );
     $ok ? wp_send_json_success() : wp_send_json_error();
   }
 
   public function ajax_get_bill(): void {
     check_ajax_referer('smdp_get_bill','security');
 
+    // SECURITY: Rate limit bill lookups to prevent abuse
+    if ( smdp_is_rate_limited( 'get_bill', 10, 60 ) ) {
+        wp_send_json_error( 'Too many requests. Please wait a moment.', 429 );
+    }
+
     $table = smdp_sanitize_text_field($_POST['table'] ?? '', 10); // Table numbers
     if (empty($table)) {
         wp_send_json_error('No table specified');
+    }
+
+    // SECURITY: Validate table number format (should be numeric/alphanumeric)
+    if ( ! preg_match( '/^[A-Za-z0-9]{1,10}$/', $table ) ) {
+        error_log( '[SMDP Security] Invalid table number format attempted: ' . $table );
+        wp_send_json_error( 'Invalid table number format' );
     }
 
     $token = smdp_get_access_token(); // Use encrypted token helper
@@ -354,19 +394,42 @@ class SMDP_Help_Request {
       $location = smdp_sanitize_text_field($_POST['smdp_location_id'] ?? '', 100); // Square location IDs
       $lookup_method = smdp_sanitize_text_field($_POST['smdp_bill_lookup_method'] ?? 'customer', 20); // customer/item
 
-      // Save all values
-      update_option($this->opt_help, $help_item);
-      update_option($this->opt_bill, $bill_item);
-      update_option($this->opt_loc, $location);
-      update_option($this->opt_bill_lookup_method, $lookup_method);
+      // SECURITY: Validate Square IDs before saving
+      $validation_error = false;
 
-      // Debug logging
-      error_log('[SMDP] Save button clicked - POST data: ' . print_r($_POST, true));
-      error_log('[SMDP] Help & Bill settings saved - Help: "' . $help_item . '", Bill: "' . $bill_item . '", Location: "' . $location . '"');
+      if ( ! empty( $help_item ) && ! smdp_validate_catalog_id( $help_item ) ) {
+          echo '<div class="notice notice-error is-dismissible"><p>Invalid Help Item ID format.</p></div>';
+          $validation_error = true;
+      }
 
-      // Redirect to prevent form resubmission and reload fresh data
-      wp_redirect(add_query_arg(['page' => 'smdp-help-tables', 'updated' => 'true'], admin_url('admin.php')));
-      exit;
+      if ( ! empty( $bill_item ) && ! smdp_validate_catalog_id( $bill_item ) ) {
+          echo '<div class="notice notice-error is-dismissible"><p>Invalid Bill Item ID format.</p></div>';
+          $validation_error = true;
+      }
+
+      if ( ! empty( $location ) && ! smdp_validate_location_id( $location ) ) {
+          echo '<div class="notice notice-error is-dismissible"><p>Invalid Location ID format.</p></div>';
+          $validation_error = true;
+      }
+
+      // Validate lookup method is one of the allowed values
+      if ( ! in_array( $lookup_method, ['customer', 'item'], true ) ) {
+          $lookup_method = 'customer'; // Default to safe value
+      }
+
+      if ( ! $validation_error ) {
+          // Save all values
+          update_option($this->opt_help, $help_item);
+          update_option($this->opt_bill, $bill_item);
+          update_option($this->opt_loc, $location);
+          update_option($this->opt_bill_lookup_method, $lookup_method);
+
+          error_log('[SMDP] Help & Bill settings saved successfully');
+
+          // Redirect to prevent form resubmission and reload fresh data
+          wp_redirect(add_query_arg(['page' => 'smdp-help-tables', 'updated' => 'true'], admin_url('admin.php')));
+          exit;
+      }
     }
     
     // Handle adding table items

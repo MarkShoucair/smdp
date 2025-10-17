@@ -205,19 +205,19 @@ class SMDP_Admin_Pages {
             check_admin_referer( 'smdp_settings_save', 'smdp_nonce' );
             $token = smdp_sanitize_text_field( $_POST['smdp_access_token'], 500 ); // Square tokens ~200 chars
 
-            // Debug logging
-            error_log( '[SMDP Token Save] Raw POST value: ' . substr( $_POST['smdp_access_token'], 0, 20 ) . '...' );
-            error_log( '[SMDP Token Save] Sanitized value: ' . substr( $token, 0, 20 ) . '...' );
-            error_log( '[SMDP Token Save] Is empty: ' . ( empty( $token ) ? 'YES' : 'NO' ) );
-            error_log( '[SMDP Token Save] Contains bullets: ' . ( strpos( $token, '••••' ) !== false ? 'YES' : 'NO' ) );
-
             // Only update token if it's not the masked placeholder
             if ( ! empty( $token ) && strpos( $token, '••••' ) === false ) {
-                error_log( '[SMDP Token Save] Attempting to save token...' );
-                $result = smdp_store_access_token( $token );
-                error_log( '[SMDP Token Save] Save result: ' . ( $result ? 'SUCCESS' : 'FAILED' ) );
-            } else {
-                error_log( '[SMDP Token Save] Skipped - token is masked or empty' );
+                // SECURITY: Validate token format before storing
+                $validated_token = smdp_validate_access_token( $token );
+                if ( $validated_token !== false ) {
+                    $result = smdp_store_access_token( $validated_token );
+                    if ( ! $result ) {
+                        echo '<div class="error"><p><strong>Error:</strong> Failed to save access token.</p></div>';
+                    }
+                } else {
+                    echo '<div class="error"><p><strong>Error:</strong> Invalid access token format. Please check your token and try again.</p></div>';
+                    error_log( '[SMDP Security] Invalid access token format rejected' );
+                }
             }
 
             $interval = intval( $_POST['smdp_sync_interval'] );

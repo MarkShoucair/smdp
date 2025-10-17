@@ -35,13 +35,12 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
     $body      = $request->get_body();
     $signature = $request->get_header( 'x-square-hmacsha256-signature' );
 
-    // Log headers for debugging
-    error_log( '[SMDP] Received signature: ' . $signature );
+    // Log headers for debugging (truncated for security)
+    error_log( '[SMDP] Received signature: ' . substr( $signature, 0, 20 ) . '...' );
 
-    // Build the exact URL that was called
-    $protocol = ( ( ! empty( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] !== 'off' )
-                || $_SERVER['SERVER_PORT'] == 443 ) ? 'https' : 'http';
-    $url = rtrim( $protocol . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], '/' );
+    // Use the canonical webhook URL for signature verification
+    // This prevents HTTP Host header injection attacks
+    $url = rtrim( rest_url( 'smdp/v1/webhook' ), '/' );
 
     error_log( '[SMDP] Webhook URL: ' . $url );
     error_log( '[SMDP] Request body length: ' . strlen($body) );
@@ -49,17 +48,28 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
     // Verify the webhook signature
     $sig_key = smdp_get_webhook_key();
     if ( empty( $sig_key ) ) {
-        error_log( '[SMDP] WARNING: No signature key stored. Skipping verification.' );
-        // Continue anyway to accept the webhook
-    } elseif ( ! smdp_verify_square_signature( $signature, $body, $url ) ) {
-        error_log( '[SMDP] Webhook signature verification FAILED!' );
-        error_log( '[SMDP] Header signature: ' . $signature );
-        error_log( '[SMDP] Signing URL: ' . $url );
-        // Don't return error - accept the webhook anyway for now
-        error_log( '[SMDP] Continuing despite signature failure for debugging...' );
-    } else {
-        error_log( '[SMDP] Webhook signature verified successfully' );
+        error_log( '[SMDP] ERROR: No signature key stored. Rejecting webhook.' );
+        $response = rest_ensure_response( [
+            'success' => false,
+            'error' => 'Webhook not configured'
+        ] );
+        $response->set_status( 500 );
+        return $response;
     }
+
+    if ( ! smdp_verify_square_signature( $signature, $body, $url ) ) {
+        error_log( '[SMDP] SECURITY: Webhook signature verification FAILED!' );
+        error_log( '[SMDP] Header signature: ' . substr( $signature, 0, 20 ) . '...' );
+        error_log( '[SMDP] Signing URL: ' . $url );
+        $response = rest_ensure_response( [
+            'success' => false,
+            'error' => 'Invalid signature'
+        ] );
+        $response->set_status( 403 );
+        return $response;
+    }
+
+    error_log( '[SMDP] Webhook signature verified successfully' );
 
     $payload = json_decode( $body, true );
     $type    = $payload['type'] ?? '(none)';

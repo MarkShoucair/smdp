@@ -169,10 +169,12 @@ class SMDP_OAuth_Handler {
         $app_id = $this->get_app_id();
         $app_secret = $this->get_app_secret();
 
-        error_log( '[SMDP OAuth] App ID retrieved: ' . ( $app_id ? 'YES (' . substr($app_id, 0, 15) . '...)' : 'NO' ) );
-        error_log( '[SMDP OAuth] App Secret retrieved: ' . ( $app_secret ? 'YES (length: ' . strlen($app_secret) . ')' : 'NO' ) );
-        error_log( '[SMDP OAuth] Authorization code: ' . substr( $code, 0, 20 ) . '...' );
-        error_log( '[SMDP OAuth] Redirect URI: ' . $this->get_callback_url() );
+        // SECURITY: Only log sensitive data in debug mode
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( '[SMDP OAuth] App ID retrieved: ' . ( $app_id ? 'YES' : 'NO' ) );
+            error_log( '[SMDP OAuth] App Secret retrieved: ' . ( $app_secret ? 'YES (length: ' . strlen($app_secret) . ')' : 'NO' ) );
+            error_log( '[SMDP OAuth] Redirect URI: ' . $this->get_callback_url() );
+        }
 
         if ( empty( $app_id ) || empty( $app_secret ) ) {
             error_log( '[SMDP OAuth] ERROR: Missing credentials! App ID or Secret not configured' );
@@ -202,8 +204,10 @@ class SMDP_OAuth_Handler {
         $response_code = wp_remote_retrieve_response_code( $response );
         $response_body = wp_remote_retrieve_body( $response );
 
-        error_log( '[SMDP OAuth] Square API Response Code: ' . $response_code );
-        error_log( '[SMDP OAuth] Square API Response Body: ' . substr( $response_body, 0, 500 ) ); // First 500 chars
+        // SECURITY: Only log API responses in debug mode
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( '[SMDP OAuth] Square API Response Code: ' . $response_code );
+        }
 
         $body = json_decode( $response_body, true );
 
@@ -222,31 +226,36 @@ class SMDP_OAuth_Handler {
 
         // Store tokens securely
         if ( isset( $body['access_token'] ) ) {
-            error_log( '[SMDP OAuth] About to store access token, length: ' . strlen( $body['access_token'] ) );
-            error_log( '[SMDP OAuth] Calling smdp_store_encrypted_option with option name: ' . self::OPT_ACCESS_TOKEN );
             $store_result = smdp_store_encrypted_option( self::OPT_ACCESS_TOKEN, $body['access_token'] );
-            error_log( '[SMDP OAuth] Access token stored: ' . ( $store_result ? 'SUCCESS' : 'FAILED' ) );
-            error_log( '[SMDP OAuth] Access token preview: ' . substr( $body['access_token'], 0, 20 ) . '...' );
+
+            if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                error_log( '[SMDP OAuth] Access token stored: ' . ( $store_result ? 'SUCCESS' : 'FAILED' ) );
+            }
+
+            if ( ! $store_result ) {
+                error_log( '[SMDP OAuth] CRITICAL: Failed to store access token!' );
+            }
         } else {
             error_log( '[SMDP OAuth] ERROR: No access_token in response body!' );
         }
 
         if ( isset( $body['refresh_token'] ) ) {
             $store_result = smdp_store_encrypted_option( self::OPT_REFRESH_TOKEN, $body['refresh_token'] );
-            error_log( '[SMDP OAuth] Refresh token stored: ' . ( $store_result ? 'SUCCESS' : 'FAILED' ) );
+
+            if ( ! $store_result ) {
+                error_log( '[SMDP OAuth] WARNING: Failed to store refresh token' );
+            }
         }
 
         if ( isset( $body['expires_at'] ) ) {
             update_option( self::OPT_TOKEN_EXPIRES, $body['expires_at'] );
-            error_log( '[SMDP OAuth] Token expires at: ' . $body['expires_at'] );
         }
 
         if ( isset( $body['merchant_id'] ) ) {
             update_option( self::OPT_MERCHANT_ID, $body['merchant_id'] );
-            error_log( '[SMDP OAuth] Merchant ID: ' . $body['merchant_id'] );
         }
 
-        error_log( '[SMDP OAuth] Token exchange successful - all data stored' );
+        error_log( '[SMDP OAuth] Token exchange successful' );
         return true;
     }
 
@@ -470,27 +479,29 @@ if ( ! function_exists( 'smdp_store_encrypted_option' ) ) {
      */
     function smdp_store_encrypted_option( $option_name, $value ) {
         if ( empty( $value ) ) {
-            error_log( "[SMDP OAuth] smdp_store_encrypted_option: Deleting option $option_name (empty value)" );
             return delete_option( $option_name );
         }
 
         // Use existing encryption function if available
         if ( function_exists( 'smdp_encrypt' ) ) {
-            error_log( "[SMDP OAuth] smdp_store_encrypted_option: Encrypting value for $option_name (length: " . strlen($value) . ")" );
             $encrypted = smdp_encrypt( $value );
 
             if ( $encrypted === false ) {
-                error_log( "[SMDP OAuth] smdp_store_encrypted_option: Encryption FAILED for $option_name" );
+                error_log( "[SMDP OAuth] CRITICAL: Encryption failed for $option_name" );
                 return false;
             }
 
-            error_log( "[SMDP OAuth] smdp_store_encrypted_option: Encrypted successfully (length: " . strlen($encrypted) . "), storing..." );
             $result = update_option( $option_name, $encrypted );
-            error_log( "[SMDP OAuth] smdp_store_encrypted_option: update_option returned: " . ( $result ? 'TRUE' : 'FALSE' ) );
+
+            // Only log failures, not successes (reduce log noise)
+            if ( ! $result && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+                error_log( "[SMDP OAuth] WARNING: Failed to update option $option_name" );
+            }
+
             return $result;
         }
 
-        error_log( "[SMDP OAuth] smdp_store_encrypted_option: smdp_encrypt function not found, storing plain text" );
+        error_log( "[SMDP OAuth] WARNING: Encryption function not available, storing plain text for $option_name" );
         return update_option( $option_name, $value ); // Fallback to plain text
     }
 }

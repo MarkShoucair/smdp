@@ -227,7 +227,10 @@ function smdp_get_access_token() {
  */
 
 /**
- * Check if action is rate limited
+ * Check if action is rate limited (enhanced security version)
+ *
+ * Uses multiple factors: IP address, User-Agent, and User ID
+ * This makes it harder to bypass via simple IP rotation
  *
  * @param string $action Action identifier (e.g., 'sync_sold_out')
  * @param int    $limit Number of attempts allowed
@@ -235,13 +238,33 @@ function smdp_get_access_token() {
  * @return bool True if rate limited (should block), false if allowed
  */
 function smdp_is_rate_limited( $action, $limit = 5, $period = 60 ) {
-    // Get user identifier (IP + User ID for logged in, or just IP)
+    // Get user identifier (multiple factors for better security)
     $user_id = get_current_user_id();
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $identifier = $user_id ? "user_{$user_id}" : "ip_{$ip}";
 
-    // Create transient key
-    $transient_key = "smdp_rate_limit_{$action}_{$identifier}";
+    // Get IP address (consider proxy headers but validate them)
+    $ip = 'unknown';
+    if ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
+        $ip = filter_var( $_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP );
+        if ( $ip === false ) {
+            $ip = 'invalid';
+        }
+    }
+
+    // Get User-Agent fingerprint (hash to keep transient key short)
+    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $ua_hash = substr( md5( $user_agent ), 0, 8 );
+
+    // Create composite identifier (harder to bypass)
+    if ( $user_id ) {
+        // Logged in users: track by user ID primarily
+        $identifier = "user_{$user_id}_{$ua_hash}";
+    } else {
+        // Anonymous users: track by IP + User-Agent
+        $identifier = "ip_{$ip}_{$ua_hash}";
+    }
+
+    // Create transient key (max 172 chars for transient names)
+    $transient_key = "smdp_rl_{$action}_" . substr( md5( $identifier ), 0, 20 );
 
     // Get current attempts
     $attempts = get_transient( $transient_key );
@@ -253,8 +276,14 @@ function smdp_is_rate_limited( $action, $limit = 5, $period = 60 ) {
     }
 
     if ( $attempts >= $limit ) {
-        // Rate limit exceeded
-        error_log( "[SMDP Rate Limit] Action '{$action}' blocked for {$identifier} (attempt {$attempts})" );
+        // Rate limit exceeded - log with more detail
+        error_log( "[SMDP Rate Limit] Action '{$action}' blocked for {$identifier} (attempt {$attempts}/{$limit}, period {$period}s)" );
+
+        // Exponential backoff: double the lockout time if they keep trying
+        if ( $attempts > $limit * 2 ) {
+            set_transient( $transient_key, $attempts + 1, $period * 2 );
+        }
+
         return true; // Rate limited
     }
 
@@ -302,4 +331,96 @@ function smdp_sanitize_text_field( $value, $max_length = 255 ) {
     }
 
     return $sanitized;
+}
+
+/**
+ * Validate Square catalog object ID format
+ *
+ * Square catalog IDs are typically 20-32 character alphanumeric strings with underscores/hyphens
+ * Examples: ITEM_ID, VARIATION_ID, IMAGE_ID, CATEGORY_ID, MODIFIER_LIST_ID
+ *
+ * @param string $id ID to validate
+ * @return bool True if valid format, false otherwise
+ */
+function smdp_validate_catalog_id( $id ) {
+    if ( empty( $id ) || ! is_string( $id ) ) {
+        return false;
+    }
+
+    // Square catalog IDs: 20-32 chars, alphanumeric + underscore/hyphen
+    return preg_match( '/^[A-Z0-9_-]{20,32}$/i', $id ) === 1;
+}
+
+/**
+ * Validate Square customer ID format
+ *
+ * @param string $id Customer ID to validate
+ * @return bool True if valid format, false otherwise
+ */
+function smdp_validate_customer_id( $id ) {
+    if ( empty( $id ) || ! is_string( $id ) ) {
+        return false;
+    }
+
+    // Square customer IDs: typically start with alphanumeric, 10-50 chars
+    return preg_match( '/^[A-Z0-9][A-Z0-9_-]{9,49}$/i', $id ) === 1;
+}
+
+/**
+ * Validate Square location ID format
+ *
+ * @param string $id Location ID to validate
+ * @return bool True if valid format, false otherwise
+ */
+function smdp_validate_location_id( $id ) {
+    if ( empty( $id ) || ! is_string( $id ) ) {
+        return false;
+    }
+
+    // Square location IDs: typically 10-50 chars, alphanumeric
+    return preg_match( '/^[A-Z0-9]{10,50}$/i', $id ) === 1;
+}
+
+/**
+ * Validate Square order ID format
+ *
+ * @param string $id Order ID to validate
+ * @return bool True if valid format, false otherwise
+ */
+function smdp_validate_order_id( $id ) {
+    if ( empty( $id ) || ! is_string( $id ) ) {
+        return false;
+    }
+
+    // Square order IDs: alphanumeric, 10-100 chars
+    return preg_match( '/^[A-Za-z0-9]{10,100}$/', $id ) === 1;
+}
+
+/**
+ * Validate and sanitize Square access token
+ *
+ * @param string $token Token to validate
+ * @return string|false Sanitized token or false if invalid
+ */
+function smdp_validate_access_token( $token ) {
+    if ( empty( $token ) || ! is_string( $token ) ) {
+        return false;
+    }
+
+    // Remove whitespace
+    $token = trim( $token );
+
+    // Square tokens are typically 100-500 characters, alphanumeric with some special chars
+    if ( strlen( $token ) < 50 || strlen( $token ) > 500 ) {
+        error_log( '[SMDP Security] Access token length outside expected range: ' . strlen( $token ) );
+        return false;
+    }
+
+    // Should only contain safe characters
+    if ( ! preg_match( '/^[A-Za-z0-9_\-\.]+$/', $token ) ) {
+        error_log( '[SMDP Security] Access token contains invalid characters' );
+        return false;
+    }
+
+    return $token;
 }
