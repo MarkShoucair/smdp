@@ -582,6 +582,14 @@ class SMDP_Admin_Pages {
                 <?php wp_nonce_field( 'smdp_clear_all_data', 'smdp_clear_data_nonce' ); ?>
                 <?php submit_button( 'Clear All Cached Data', 'secondary', 'clear_all_data' ); ?>
             </form>
+
+            <hr>
+            <!-- Advanced Settings Section -->
+            <h2>Advanced Settings</h2>
+            <?php
+            // Display advanced settings registered in class-admin-settings.php
+            do_settings_sections( 'smdp_settings_page' );
+            ?>
         </div>
         <?php
     }
