@@ -621,7 +621,7 @@ class SMDP_Menu_App_Builder {
       $('.smdp-pwa-color-picker').wpColorPicker();
 
       var mediaUploader;
-      var iconUploader;
+      var iconUploaders = {}; // Store separate uploaders for each icon
 
       // Parse promo images safely
       var promoImagesData = <?php echo wp_json_encode($promo_images); ?>;
@@ -722,20 +722,22 @@ class SMDP_Menu_App_Builder {
         var targetId = $button.data('target');
         var previewId = $button.data('preview');
 
-        if (iconUploader) {
-          iconUploader.open();
+        // Check if we already have an uploader for this specific icon
+        if (iconUploaders[targetId]) {
+          iconUploaders[targetId].open();
           return;
         }
 
-        iconUploader = wp.media({
+        // Create a new uploader instance for this specific icon
+        iconUploaders[targetId] = wp.media({
           title: 'Select PWA Icon',
           button: { text: 'Use this icon' },
           multiple: false,
           library: { type: 'image' }
         });
 
-        iconUploader.on('select', function() {
-          var attachment = iconUploader.state().get('selection').first().toJSON();
+        iconUploaders[targetId].on('select', function() {
+          var attachment = iconUploaders[targetId].state().get('selection').first().toJSON();
           var url = attachment.url;
 
           // Update hidden field
@@ -748,7 +750,7 @@ class SMDP_Menu_App_Builder {
           $button.next('.smdp-clear-icon').show();
         });
 
-        iconUploader.open();
+        iconUploaders[targetId].open();
       });
 
       // PWA Icon Clear Handlers
