@@ -257,8 +257,8 @@ class SMDP_Standalone_Menu_App {
     public function show_menu_app_url_notice() {
         $screen = get_current_screen();
 
-        // Only show on plugin admin pages
-        if ( ! $screen || strpos( $screen->id, 'smdp' ) === false ) {
+        // Only show on Menu App Builder page
+        if ( ! $screen || $screen->id !== 'toplevel_page_smdp_menu_app_builder' ) {
             return;
         }
 

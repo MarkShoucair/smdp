@@ -205,11 +205,11 @@ class SMDP_Menu_App_Builder {
   // Generate CSS from style settings
   private static function generate_button_css($styles) {
     $css = array();
-    
+
     // Default button styles
     $default_css = array();
     $active_css = array();
-    
+
     if (!empty($styles['bg_color'])) {
       $default_css[] = 'background: ' . sanitize_hex_color($styles['bg_color']) . ' !important';
     }
@@ -239,7 +239,13 @@ class SMDP_Menu_App_Builder {
     if (!empty($styles['font_family'])) {
       $default_css[] = 'font-family: ' . sanitize_text_field($styles['font_family']) . ' !important';
     }
-    
+
+    // IMPORTANT: Ensure buttons maintain white-space: nowrap for single-line display
+    // and min-width to prevent text cutoff
+    $default_css[] = 'white-space: nowrap !important';
+    $default_css[] = 'min-width: fit-content !important';
+    $default_css[] = 'flex-shrink: 0 !important';
+
     // Active button styles
     if (!empty($styles['active_bg_color'])) {
       $active_css[] = 'background: ' . sanitize_hex_color($styles['active_bg_color']) . ' !important';
@@ -250,7 +256,7 @@ class SMDP_Menu_App_Builder {
     if (!empty($styles['active_border_color'])) {
       $active_css[] = 'border-color: ' . sanitize_hex_color($styles['active_border_color']) . ' !important';
     }
-    
+
     $output = '';
     if (!empty($default_css)) {
       $output .= '.smdp-cat-btn { ' . implode('; ', $default_css) . '; }';
@@ -258,7 +264,7 @@ class SMDP_Menu_App_Builder {
     if (!empty($active_css)) {
       $output .= '.smdp-cat-btn.active { ' . implode('; ', $active_css) . '; }';
     }
-    
+
     return $output;
   }
 
