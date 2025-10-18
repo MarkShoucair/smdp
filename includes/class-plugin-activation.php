@@ -174,8 +174,34 @@ class SMDP_Plugin_Activation {
             wp_schedule_event( time(), 'smdp_custom_interval', SMDP_CRON_HOOK );
         }
 
+        // IMPORTANT: Register rewrite rules before flushing
+        // The standalone menu app class adds rules on 'init' hook, but that has already fired during activation
+        // So we need to manually register them here before flushing
+        self::register_menu_app_rewrite_rules();
+
         // Flush rewrite rules for standalone menu app URL
         flush_rewrite_rules();
+    }
+
+    /**
+     * Register menu app rewrite rules
+     *
+     * This is called during activation to ensure rewrite rules exist before flushing.
+     * Also used by SMDP_Standalone_Menu_App class on 'init' hook.
+     */
+    public static function register_menu_app_rewrite_rules() {
+        // Add rewrite rule: /menu-app/ or /menu-app/table/5/
+        add_rewrite_rule(
+            '^menu-app/?$',
+            'index.php?smdp_menu_app=1',
+            'top'
+        );
+
+        add_rewrite_rule(
+            '^menu-app/table/([0-9]+)/?$',
+            'index.php?smdp_menu_app=1&smdp_table=$matches[1]',
+            'top'
+        );
     }
 
     /**

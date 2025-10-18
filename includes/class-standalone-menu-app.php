@@ -60,18 +60,23 @@ class SMDP_Standalone_Menu_App {
      * Add rewrite rules for menu app
      */
     public function add_rewrite_rules() {
-        // Add rewrite rule: /menu-app/ or /menu-app/table/5/
-        add_rewrite_rule(
-            '^menu-app/?$',
-            'index.php?smdp_menu_app=1',
-            'top'
-        );
+        // Use centralized method from activation class to ensure consistency
+        if ( class_exists( 'SMDP_Plugin_Activation' ) ) {
+            SMDP_Plugin_Activation::register_menu_app_rewrite_rules();
+        } else {
+            // Fallback: Register directly if activation class not loaded
+            add_rewrite_rule(
+                '^menu-app/?$',
+                'index.php?smdp_menu_app=1',
+                'top'
+            );
 
-        add_rewrite_rule(
-            '^menu-app/table/([0-9]+)/?$',
-            'index.php?smdp_menu_app=1&smdp_table=$matches[1]',
-            'top'
-        );
+            add_rewrite_rule(
+                '^menu-app/table/([0-9]+)/?$',
+                'index.php?smdp_menu_app=1&smdp_table=$matches[1]',
+                'top'
+            );
+        }
     }
 
     /**

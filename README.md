@@ -369,6 +369,320 @@ Creates a "Request Bill" button for customers.
 
 ---
 
+### Menu App Builder Shortcode: `[smdp_menu_app]`
+
+**Alternative menu display with enhanced tablet/PWA features.**
+
+#### What is the Menu App?
+
+The Menu App Builder creates a **tablet-optimized, app-like menu experience** with:
+- Category navigation bar (top or left layout)
+- Automatic category switching
+- Promo screen with idle timeout
+- PWA installation support
+- Customizable button styles
+- Full-screen idle promo images
+
+#### Usage
+
+```php
+[smdp_menu_app id="default"]
+```
+
+#### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | string | `default` | Menu configuration ID |
+| `layout` | string | `top` | Layout: `top` or `left` |
+
+#### Examples
+
+**Basic Usage:**
+```php
+[smdp_menu_app id="default"]
+```
+
+**Left Layout (for landscape tablets):**
+```php
+[smdp_menu_app id="default" layout="left"]
+```
+
+#### Key Differences from `[square_menu]`
+
+| Feature | `[square_menu]` | `[smdp_menu_app]` |
+|---------|-----------------|-------------------|
+| **Purpose** | Display single category | Display all categories with tabs |
+| **Navigation** | None (manual page switching) | Automatic category tabs |
+| **Layout** | Simple grid | App-like with navigation bar |
+| **PWA Support** | Basic | Full (icons, manifest, offline) |
+| **Promo Screen** | No | Yes (idle timeout) |
+| **Tablet Optimized** | No | Yes |
+| **Best For** | Website pages | Dedicated tablet kiosks |
+
+#### Configuration
+
+All menu app settings are managed in **WordPress Admin > Menu App Builder**:
+
+##### 1. App Layout Tab
+
+**Category Layout:**
+- **Top Layout** - Horizontal category buttons across the top (best for portrait tablets)
+- **Left Layout** - Vertical category sidebar on the left (best for landscape tablets)
+
+**Promo Screen Settings:**
+- **Idle Timeout** - Number of seconds of inactivity before showing promo screen (default: 30)
+- **Promo Images** - Upload multiple images for slideshow rotation
+- **Image Upload** - Drag-and-drop or click to upload
+- **Remove Images** - Click X to remove uploaded images
+
+**PWA Configuration:**
+- **PWA Name** - App name shown on home screen (e.g., "Our Restaurant Menu")
+- **PWA Short Name** - Abbreviated name (e.g., "Menu")
+- **Theme Color** - Browser toolbar color (hex code)
+- **Background Color** - Splash screen background (hex code)
+- **PWA Icon** - Upload 512x512px icon for home screen
+
+**Custom CSS:**
+- Add custom CSS to override default menu app styles
+- Supports all standard CSS properties
+- Applied only to menu app pages (not regular shortcode)
+
+##### 2. Styles Tab
+
+**Category Button Appearance:**
+- **Background Color** - Button background (default: #333)
+- **Text Color** - Button text color (default: #fff)
+- **Active Background** - Selected button background (default: #007cba)
+- **Active Text Color** - Selected button text (default: #fff)
+- **Border Radius** - Button corner rounding in pixels
+- **Padding** - Button internal spacing
+- **Margin** - Space between buttons
+
+**Typography:**
+- **Font Family** - Choose from system fonts or web fonts
+- **Font Size** - Category button text size
+- **Font Weight** - Normal, bold, etc.
+
+**Live Preview:**
+- See changes in real-time as you adjust settings
+- Preview shows actual button appearance
+- No need to save to see preview
+
+##### 3. Items Tab
+
+**Functionality:**
+- Embedded version of main Menu Editor
+- Full drag-and-drop support
+- Organize items within categories
+- Hide/show item images
+- Move items between categories
+- All changes saved to main catalog
+
+**Note:** Changes made here affect both `[square_menu]` and `[smdp_menu_app]` displays.
+
+##### 4. Categories Tab
+
+**Category Management:**
+- **Reorder Categories** - Drag to reorder display sequence
+- **Hide Categories** - Checkbox to exclude from menu app
+- **Category Name** - Display name (editable)
+- **Slug** - URL-friendly identifier (auto-generated)
+
+**Embedded Manager:**
+- Same functionality as main Categories page
+- Add new categories
+- Delete categories
+- Changes sync across plugin
+
+---
+
+#### Setup Guide
+
+**Complete setup walkthrough for Menu App Builder:**
+
+**Step 1: Initial Configuration**
+1. Go to **WordPress Admin > Menu App Builder**
+2. Click **App Layout** tab
+3. Choose layout (top or left)
+4. Set idle timeout (e.g., 30 seconds)
+5. Upload at least one promo image
+6. Click **Save Settings**
+
+**Step 2: Customize Appearance**
+1. Click **Styles** tab
+2. Set category button colors
+3. Adjust font size and weight
+4. Use live preview to verify appearance
+5. Click **Save Settings**
+
+**Step 3: Configure PWA**
+1. Return to **App Layout** tab
+2. Scroll to PWA Configuration
+3. Enter PWA name (e.g., "Our Menu")
+4. Enter short name (e.g., "Menu")
+5. Set theme and background colors
+6. Upload 512x512px icon (PNG format)
+7. Click **Save Settings**
+
+**Step 4: Organize Content**
+1. Click **Items** tab
+2. Drag items to reorder within categories
+3. Hide unwanted item images
+4. Click **Save**
+
+**Step 5: Manage Categories**
+1. Click **Categories** tab
+2. Drag categories to desired order
+3. Hide categories you don't want in menu app
+4. Click **Save**
+
+**Step 6: Add to Page**
+1. Create new WordPress page (e.g., "Menu")
+2. Add shortcode: `[smdp_menu_app id="default"]`
+3. Publish page
+4. Visit page to test
+
+---
+
+#### Use Cases
+
+**1. Restaurant Tablet Kiosks**
+```php
+[smdp_menu_app id="default" layout="top"]
+```
+- Customers browse entire menu on table-mounted tablets
+- Idle timeout shows promotional content
+- PWA enables offline access
+- Category tabs for easy navigation
+
+**2. Bar Menu Display**
+```php
+[smdp_menu_app id="default" layout="left"]
+```
+- Landscape-oriented tablets behind bar
+- Staff can quickly navigate categories
+- No page reloads between sections
+- Promo screen shows drink specials
+
+**3. Coffee Shop Self-Service**
+```php
+[smdp_menu_app id="default"]
+```
+- Counter-top tablet for customer browsing
+- Automatic return to promo screen after 30 seconds
+- PWA installation on device home screen
+- Works offline during internet outages
+
+**4. Food Truck Menu Board**
+```php
+[smdp_menu_app id="default" layout="top"]
+```
+- Mounted tablet visible to customers
+- Quick category switching
+- Large, readable buttons
+- Weather-resistant tablet enclosure
+
+---
+
+#### PWA Installation Guide
+
+**For Customers (Adding to Home Screen):**
+
+**On iOS (iPhone/iPad):**
+1. Open menu page in Safari
+2. Tap Share button (box with arrow)
+3. Scroll and tap "Add to Home Screen"
+4. Edit name if desired
+5. Tap "Add"
+6. Icon appears on home screen
+
+**On Android:**
+1. Open menu page in Chrome
+2. Tap three-dot menu
+3. Tap "Add to Home Screen"
+4. Confirm app name
+5. Tap "Add"
+6. Icon appears on home screen
+
+**On Desktop (Chrome/Edge):**
+1. Visit menu page
+2. Look for install icon in address bar
+3. Click "Install"
+4. App opens in standalone window
+
+---
+
+#### Advanced Customization
+
+**Custom CSS Examples:**
+
+**Make Category Buttons Larger:**
+```css
+.menu-app-category-button {
+    font-size: 20px !important;
+    padding: 15px 30px !important;
+}
+```
+
+**Change Item Card Style:**
+```css
+.menu-app-item-card {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+}
+```
+
+**Customize Promo Screen:**
+```css
+.menu-app-promo-screen {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+```
+
+**Hide Prices on Display:**
+```css
+.menu-app-item-price {
+    display: none !important;
+}
+```
+
+---
+
+#### Troubleshooting Menu App
+
+**Issue: Promo screen not appearing**
+- **Solution:** Check idle timeout setting is > 0
+- **Solution:** Verify promo image is uploaded
+- **Solution:** Ensure JavaScript is enabled
+- **Solution:** Clear browser cache
+
+**Issue: Categories not showing**
+- **Solution:** Go to Categories tab and verify categories aren't hidden
+- **Solution:** Ensure categories have items assigned
+- **Solution:** Check items are not all sold out
+- **Solution:** Run catalog sync
+
+**Issue: PWA won't install**
+- **Solution:** Ensure site uses HTTPS
+- **Solution:** Verify service worker is registered (check browser console)
+- **Solution:** Upload valid PWA icon (512x512px PNG)
+- **Solution:** Check manifest.json is accessible
+
+**Issue: Styles not applying**
+- **Solution:** Clear browser cache
+- **Solution:** Hard refresh (Ctrl+Shift+R / Cmd+Shift+R)
+- **Solution:** Increment cache version in Settings
+- **Solution:** Check custom CSS for syntax errors
+
+**Issue: Items showing wrong order**
+- **Solution:** Go to Items tab and reorganize
+- **Solution:** Click Save after reordering
+- **Solution:** Clear PWA cache (Settings > Increment Cache Version)
+- **Solution:** Hard refresh browser
+
+---
+
 ## 🎨 Admin Features
 
 ### 1. Settings Page (`Square Menu > Settings`)

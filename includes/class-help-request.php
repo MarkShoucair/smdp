@@ -156,9 +156,10 @@ class SMDP_Help_Request {
   public function ajax_help(): void {
     check_ajax_referer('smdp_request_help','security');
 
-    // SECURITY: Rate limit help requests (5 per minute per IP)
-    if ( smdp_is_rate_limited( 'request_help', 5, 60 ) ) {
+    // SECURITY: Rate limit help requests (10 per minute is reasonable for busy restaurants)
+    if ( smdp_is_rate_limited( 'request_help', 10, 60 ) ) {
         wp_send_json_error( 'Too many requests. Please wait a moment.' );
+        return;
     }
 
     $table = smdp_sanitize_text_field($_POST['table']??'', 10);
@@ -176,9 +177,10 @@ class SMDP_Help_Request {
   public function ajax_bill(): void {
     check_ajax_referer('smdp_request_bill','security');
 
-    // SECURITY: Rate limit bill requests (5 per minute per IP)
-    if ( smdp_is_rate_limited( 'request_bill', 5, 60 ) ) {
+    // SECURITY: Rate limit bill requests (10 per minute is reasonable for busy restaurants)
+    if ( smdp_is_rate_limited( 'request_bill', 10, 60 ) ) {
         wp_send_json_error( 'Too many requests. Please wait a moment.' );
+        return;
     }
 
     $table = smdp_sanitize_text_field($_POST['table']??'', 10);
@@ -196,9 +198,10 @@ class SMDP_Help_Request {
   public function ajax_get_bill(): void {
     check_ajax_referer('smdp_get_bill','security');
 
-    // SECURITY: Rate limit bill lookups to prevent abuse
-    if ( smdp_is_rate_limited( 'get_bill', 10, 60 ) ) {
-        wp_send_json_error( 'Too many requests. Please wait a moment.', 429 );
+    // SECURITY: Rate limit bill lookups to prevent abuse (20 per minute is more reasonable)
+    if ( smdp_is_rate_limited( 'get_bill', 20, 60 ) ) {
+        wp_send_json_error( 'Too many requests. Please wait a moment.' );
+        return;
     }
 
     $table = smdp_sanitize_text_field($_POST['table'] ?? '', 10); // Table numbers
