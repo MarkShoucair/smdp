@@ -189,16 +189,24 @@ class SMDP_Menu_App_Builder {
     add_action('wp_footer', array(__CLASS__, 'output_button_styles'));
   }
 
-  // Output custom button styles
+  // Output custom button styles AND custom CSS
   public static function output_button_styles() {
     if (!wp_style_is('smdp-menu-app', 'enqueued')) return;
-    
+
     $styles = get_option(self::OPT_STYLES, array());
-    if (empty($styles)) return;
-    
-    $css = self::generate_button_css($styles);
-    if ($css) {
-      echo '<style id="smdp-custom-button-styles">' . $css . '</style>';
+    $custom_css = get_option(self::OPT_CSS, '');
+
+    // Output button styles
+    if (!empty($styles)) {
+      $css = self::generate_button_css($styles);
+      if ($css) {
+        echo '<style id="smdp-custom-button-styles">' . $css . '</style>';
+      }
+    }
+
+    // Output custom CSS
+    if (!empty($custom_css) && trim($custom_css) !== '' && trim($custom_css) !== '/* Button & card style overrides here */') {
+      echo '<style id="smdp-user-custom-css">' . wp_strip_all_tags($custom_css) . '</style>';
     }
   }
 

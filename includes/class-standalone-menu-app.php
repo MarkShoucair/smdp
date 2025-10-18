@@ -200,12 +200,13 @@ class SMDP_Standalone_Menu_App {
             padding: 0 !important;
         }
 
-        /* Force menu app to be full width */
+        /* Force menu app to be full width but preserve horizontal padding */
         .smdp-menu-app-fe {
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 0 !important;
+            padding: 0 12px !important; /* Preserve horizontal padding for category bar */
+            box-sizing: border-box !important;
         }
 
         /* iOS safe area handling */
