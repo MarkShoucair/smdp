@@ -98,11 +98,11 @@ class SMDP_Admin_Pages {
 
         add_submenu_page(
             'smdp_main',
-            'Categories',
-            'Categories',
+            'Menu Management',
+            'Menu Management',
             'manage_options',
-            'smdp_categories',
-            array( $this, 'render_categories_page' )
+            'smdp_menu_management',
+            array( $this, 'render_menu_management_page' )
         );
 
         add_submenu_page(
@@ -112,24 +112,6 @@ class SMDP_Admin_Pages {
             'manage_options',
             'smdp_menu_editor',
             array( $this, 'render_items_page' )
-        );
-
-        add_submenu_page(
-            'smdp_main',
-            'Items',
-            'Items',
-            'manage_options',
-            'smdp_items_list',
-            array( $this, 'render_items_list' )
-        );
-
-        add_submenu_page(
-            'smdp_main',
-            'Webhooks',
-            'Webhooks',
-            'manage_options',
-            'smdp-webhooks',
-            'smdp_render_webhooks_page'
         );
 
         add_submenu_page(
@@ -309,9 +291,8 @@ class SMDP_Admin_Pages {
             <!-- Tab Navigation -->
             <h2 class="nav-tab-wrapper">
                 <a href="#tab-connection" class="nav-tab nav-tab-active">Square Connection</a>
-                <a href="#tab-pwa" class="nav-tab">PWA Debug</a>
-                <a href="#tab-advanced" class="nav-tab">Advanced Settings</a>
                 <a href="#tab-reset" class="nav-tab">Reset & Clear</a>
+                <a href="#tab-docs" class="nav-tab">Documentation</a>
             </h2>
 
             <!-- Tab: Square Connection -->
@@ -543,66 +524,6 @@ class SMDP_Admin_Pages {
 
             </div><!-- End Tab: Connection -->
 
-            <!-- Tab: PWA Debug -->
-            <div id="tab-pwa" class="smdp-settings-tab" style="display:none;">
-                <h2>PWA Debug Mode</h2>
-                <p>Enable debug mode to help with tablet testing and development. This will bypass PWA caching and show a debug panel on the frontend.</p>
-
-                <form method="post">
-                    <?php wp_nonce_field( 'smdp_settings_save', 'smdp_nonce' ); ?>
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row">Enable Debug Mode</th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
-                                    Enable PWA Debug Mode (bypass caching, show debug tools)
-                                </label>
-                                <p class="description">When enabled, tablets will always load the latest version of files and display a debug panel with cache-clearing tools.</p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Cache Version</th>
-                            <td>
-                                <input type="number" name="smdp_cache_version" id="smdp_cache_version" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:100px;">
-                                <button type="button" class="button" id="smdp-increment-version">Increment Version</button>
-                                <p class="description">
-                                    Current version: <strong>v<?php echo $cache_version; ?></strong><br>
-                                    Increment this number to force all tablets to reload assets, even without debug mode enabled.
-                                </p>
-                                <script>
-                                    jQuery(document).ready(function($){
-                                        $('#smdp-increment-version').click(function(){
-                                            var $input = $('#smdp_cache_version');
-                                            $input.val(parseInt($input.val()) + 1);
-                                        });
-                                    });
-                                </script>
-                            </td>
-                        </tr>
-                        <!-- Hidden fields to preserve other settings -->
-                        <tr style="display:none;">
-                            <td>
-                                <input type="text" name="smdp_access_token" value="<?php echo esc_attr( $display_token ); ?>">
-                                <input type="text" name="smdp_sync_interval" value="<?php echo esc_attr($interval); ?>">
-                                <input type="checkbox" name="smdp_sync_mode" value="1" <?php checked( $sync_mode, 1 ); ?>>
-                            </td>
-                        </tr>
-                    </table>
-                    <?php submit_button( 'Save PWA Debug Settings', 'primary', 'smdp_save_settings' ); ?>
-                </form>
-            </div><!-- End Tab: PWA Debug -->
-
-            <!-- Tab: Advanced Settings -->
-            <div id="tab-advanced" class="smdp-settings-tab" style="display:none;">
-                <h2>Advanced Settings</h2>
-                <p>Advanced configuration options for menu app URL flushing, rate limiting, and help request settings.</p>
-                <?php
-                // Display advanced settings registered in class-admin-settings.php
-                do_settings_sections( 'smdp_settings_page' );
-                ?>
-            </div><!-- End Tab: Advanced -->
-
             <!-- Tab: Reset & Clear -->
             <div id="tab-reset" class="smdp-settings-tab" style="display:none;">
                 <h2>Reset & Clear Cached Data</h2>
@@ -616,6 +537,135 @@ class SMDP_Admin_Pages {
                     </form>
                 </div>
             </div><!-- End Tab: Reset -->
+
+            <!-- Tab: Documentation -->
+            <div id="tab-docs" class="smdp-settings-tab" style="display:none;">
+                <h2>Documentation & Quick Start Guide</h2>
+
+                <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+
+                    <h3>🚀 Quick Start Guide</h3>
+                    <ol style="line-height:2;">
+                        <li><strong>Connect to Square:</strong> Use the "Square Connection" tab to authenticate with OAuth or enter a manual access token.</li>
+                        <li><strong>Sync Your Menu:</strong> Click "Sync Now" to import your items, categories, and catalog from Square.</li>
+                        <li><strong>Build Your Menu App:</strong> Go to <strong>Menu App Builder</strong> to configure the tablet-friendly menu interface.</li>
+                        <li><strong>Configure Help & Bill:</strong> Set up table management in <strong>Help & Bill</strong> for customer service features.</li>
+                        <li><strong>Display Your Menu:</strong> Use the shortcode <code>[smdp_menu_app]</code> or visit the standalone URL at <code><?php echo home_url('/menu-app/'); ?></code></li>
+                    </ol>
+
+                    <hr style="margin:30px 0;">
+
+                    <h3>📱 Menu App Features</h3>
+                    <ul style="line-height:1.8;">
+                        <li><strong>Tablet-Optimized Interface:</strong> Designed for touch screens with large buttons and smooth scrolling</li>
+                        <li><strong>Category Navigation:</strong> Top or left sidebar layout options</li>
+                        <li><strong>PWA Support:</strong> Install as a Progressive Web App on tablets</li>
+                        <li><strong>Custom CSS:</strong> Override default styles with your own CSS</li>
+                        <li><strong>Promo Screen:</strong> Display promotional images during inactivity</li>
+                        <li><strong>Search Functionality:</strong> Built-in search to find menu items quickly</li>
+                    </ul>
+
+                    <hr style="margin:30px 0;">
+
+                    <h3>⚙️ Where to Find Settings</h3>
+                    <div style="background:#f9f9f9;padding:15px;border-radius:4px;margin-top:10px;">
+                        <p><strong>Square Menu Settings</strong> (this page):</p>
+                        <ul style="margin-left:20px;">
+                            <li>✅ OAuth connection & token management</li>
+                            <li>✅ Sync settings & manual sync</li>
+                            <li>✅ Clear cached data</li>
+                        </ul>
+                    </div>
+
+                    <div style="background:#f9f9f9;padding:15px;border-radius:4px;margin-top:10px;">
+                        <p><strong>Menu App Builder:</strong></p>
+                        <ul style="margin-left:20px;">
+                            <li>✅ App layout (top/left sidebar)</li>
+                            <li>✅ Custom CSS styles</li>
+                            <li>✅ PWA & Debug settings</li>
+                            <li>✅ Menu app URL management</li>
+                            <li>✅ Promo screen configuration</li>
+                        </ul>
+                    </div>
+
+                    <div style="background:#f9f9f9;padding:15px;border-radius:4px;margin-top:10px;">
+                        <p><strong>Help & Bill:</strong></p>
+                        <ul style="margin-left:20px;">
+                            <li>✅ Help & Bill item configuration</li>
+                            <li>✅ Table setup & customer IDs</li>
+                            <li>✅ Rate limiting controls</li>
+                        </ul>
+                    </div>
+
+                    <div style="background:#f9f9f9;padding:15px;border-radius:4px;margin-top:10px;">
+                        <p><strong>Categories:</strong></p>
+                        <ul style="margin-left:20px;">
+                            <li>✅ Create & manage menu categories</li>
+                            <li>✅ Category visibility settings</li>
+                        </ul>
+                    </div>
+
+                    <div style="background:#f9f9f9;padding:15px;border-radius:4px;margin-top:10px;">
+                        <p><strong>Menu Editor:</strong></p>
+                        <ul style="margin-left:20px;">
+                            <li>✅ Assign items to categories</li>
+                            <li>✅ Set item visibility</li>
+                            <li>✅ Configure sold-out status</li>
+                            <li>✅ Manage modifiers</li>
+                        </ul>
+                    </div>
+
+                    <hr style="margin:30px 0;">
+
+                    <h3>🔧 Troubleshooting</h3>
+
+                    <details style="margin:10px 0;border:1px solid #ddd;padding:10px;border-radius:4px;">
+                        <summary style="cursor:pointer;font-weight:600;">Menu app URL returns 404</summary>
+                        <p style="margin:10px 0;">Go to <strong>Menu App Builder → Advanced</strong> and click "Fix Menu App URL (Flush Rewrite Rules)"</p>
+                    </details>
+
+                    <details style="margin:10px 0;border:1px solid #ddd;padding:10px;border-radius:4px;">
+                        <summary style="cursor:pointer;font-weight:600;">Items not showing up</summary>
+                        <p style="margin:10px 0;">
+                            1. Check that items are assigned to categories in <strong>Menu Editor</strong><br>
+                            2. Ensure categories are not hidden in <strong>Categories</strong><br>
+                            3. Click "Sync Now" in <strong>Settings → Square Connection</strong> to refresh data
+                        </p>
+                    </details>
+
+                    <details style="margin:10px 0;border:1px solid #ddd;padding:10px;border-radius:4px;">
+                        <summary style="cursor:pointer;font-weight:600;">Help/Bill buttons showing "Too many requests"</summary>
+                        <p style="margin:10px 0;">Go to <strong>Help & Bill → Rate Limiting</strong> and click "Clear All Rate Limits"</p>
+                    </details>
+
+                    <details style="margin:10px 0;border:1px solid #ddd;padding:10px;border-radius:4px;">
+                        <summary style="cursor:pointer;font-weight:600;">Tablets not showing latest updates</summary>
+                        <p style="margin:10px 0;">
+                            1. Go to <strong>Menu App Builder → PWA & Debug</strong><br>
+                            2. Click "Increment Version" button<br>
+                            3. Save settings<br>
+                            4. Refresh the tablet browser
+                        </p>
+                    </details>
+
+                    <details style="margin:10px 0;border:1px solid #ddd;padding:10px;border-radius:4px;">
+                        <summary style="cursor:pointer;font-weight:600;">CSS changes not appearing</summary>
+                        <p style="margin:10px 0;">
+                            Custom CSS in <strong>Menu App Builder → App Layout</strong> loads last and can override hardcoded styles. Make sure your CSS selectors are specific enough.
+                        </p>
+                    </details>
+
+                    <hr style="margin:30px 0;">
+
+                    <h3>📚 Additional Resources</h3>
+                    <ul style="line-height:1.8;">
+                        <li><a href="https://developer.squareup.com/docs" target="_blank">Square API Documentation</a></li>
+                        <li><a href="https://developer.squareup.com/apps" target="_blank">Square Developer Dashboard</a></li>
+                        <li>Plugin Version: <strong>3.1</strong></li>
+                    </ul>
+
+                </div>
+            </div><!-- End Tab: Documentation -->
 
             <script>
             jQuery(document).ready(function($) {
@@ -648,6 +698,76 @@ class SMDP_Admin_Pages {
             }
             </style>
 
+        </div>
+        <?php
+    }
+
+    /**
+     * Render the consolidated Menu Management page with tabs
+     */
+    public function render_menu_management_page() {
+        ?>
+        <div class="wrap">
+            <h1>Menu Management</h1>
+            <p>Manage your menu categories, items, modifiers, and webhook subscriptions.</p>
+
+            <!-- Tab Navigation -->
+            <h2 class="nav-tab-wrapper">
+                <a href="#tab-categories" class="nav-tab nav-tab-active">Categories</a>
+                <a href="#tab-items" class="nav-tab">Items</a>
+                <a href="#tab-modifiers" class="nav-tab">Modifiers</a>
+                <a href="#tab-webhooks" class="nav-tab">Webhooks</a>
+            </h2>
+
+            <!-- Tab: Categories -->
+            <div id="tab-categories" class="smdp-menu-mgmt-tab active" style="display:block;">
+                <?php $this->render_categories_page(); ?>
+            </div>
+
+            <!-- Tab: Items -->
+            <div id="tab-items" class="smdp-menu-mgmt-tab" style="display:none;">
+                <?php $this->render_items_list(); ?>
+            </div>
+
+            <!-- Tab: Modifiers -->
+            <div id="tab-modifiers" class="smdp-menu-mgmt-tab" style="display:none;">
+                <?php $this->render_modifiers_list(); ?>
+            </div>
+
+            <!-- Tab: Webhooks -->
+            <div id="tab-webhooks" class="smdp-menu-mgmt-tab" style="display:none;">
+                <?php
+                if (function_exists('smdp_render_webhooks_page')) {
+                    smdp_render_webhooks_page();
+                } else {
+                    echo '<p>Webhooks functionality not available.</p>';
+                }
+                ?>
+            </div>
+
+            <!-- Tab switching CSS and JavaScript -->
+            <style>
+                .smdp-menu-mgmt-tab { display:none; }
+                .smdp-menu-mgmt-tab.active { display:block; }
+                .nav-tab-wrapper { margin-top: 12px; margin-bottom: 20px; }
+            </style>
+            <script>
+            jQuery(document).ready(function($) {
+                // Tab switching
+                $('.nav-tab').on('click', function(e) {
+                    e.preventDefault();
+                    var target = $(this).attr('href');
+
+                    // Update nav tabs
+                    $('.nav-tab').removeClass('nav-tab-active');
+                    $(this).addClass('nav-tab-active');
+
+                    // Update tab content
+                    $('.smdp-menu-mgmt-tab').hide().removeClass('active');
+                    $(target).show().addClass('active');
+                });
+            });
+            </script>
         </div>
         <?php
     }
@@ -687,9 +807,9 @@ class SMDP_Admin_Pages {
         }
         $categories = get_option( SMDP_CATEGORIES_OPTION, array() );
         ?>
-        <div class="wrap">
-            <h1>Square Menu Categories</h1>
-            <h2>Add New Category</h2>
+            <h2>Categories</h2>
+            <p>Create and manage menu categories that organize your items.</p>
+            <h3>Add New Category</h3>
             <form method="post">
                 <?php wp_nonce_field( 'smdp_category_save', 'smdp_cat_nonce' ); ?>
                 <input type="text" name="smdp_cat_name" placeholder="Category Name" required>
@@ -720,7 +840,6 @@ class SMDP_Admin_Pages {
                     <?php endif; ?>
                 </tbody>
             </table>
-        </div>
         <?php
     }
 
@@ -761,8 +880,7 @@ class SMDP_Admin_Pages {
 
         // 4) Render table
         ?>
-        <div class="wrap">
-          <h1>Items List</h1>
+          <h2>Items List</h2>
           <p>
             <button id="smdp-match-categories-btn" class="button button-secondary">
               Match Square Categories
@@ -862,7 +980,6 @@ class SMDP_Admin_Pages {
 
             <?php submit_button('Save Changes'); ?>
           </form>
-        </div>
 
         <script>
         jQuery(function($){
@@ -894,6 +1011,103 @@ class SMDP_Admin_Pages {
         <style>
           .wp-list-table th, .wp-list-table td { vertical-align: middle; }
         </style>
+        <?php
+    }
+
+    /**
+     * Render the modifiers list page
+     */
+    public function render_modifiers_list() {
+        // Load cached data
+        $all_items = get_option( SMDP_ITEMS_OPTION, [] );
+
+        // Build list of modifier lists
+        $modifier_lists = [];
+        foreach ( $all_items as $obj ) {
+            if ( empty( $obj['type'] ) || $obj['type'] !== 'MODIFIER_LIST' ) {
+                continue;
+            }
+            $modifier_lists[] = $obj;
+        }
+
+        // Sort by name
+        usort( $modifier_lists, function( $a, $b ) {
+            $name_a = $a['modifier_list_data']['name'] ?? '';
+            $name_b = $b['modifier_list_data']['name'] ?? '';
+            return strcasecmp( $name_a, $name_b );
+        });
+
+        ?>
+          <h2>Modifier Lists</h2>
+          <p>View all modifier lists synced from Square. Modifiers are automatically applied to items based on your Square configuration.</p>
+
+          <?php if ( $modifier_lists ): ?>
+            <table class="wp-list-table widefat striped">
+              <thead>
+                <tr>
+                  <th>Modifier List Name</th>
+                  <th>Selection Type</th>
+                  <th>Modifiers</th>
+                  <th>Items Using This List</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ( $modifier_lists as $mod_list_obj ):
+                    $mod_list_data = $mod_list_obj['modifier_list_data'];
+                    $list_name = $mod_list_data['name'] ?? 'Unnamed';
+                    $selection_type = $mod_list_data['selection_type'] ?? 'SINGLE';
+                    $modifiers = $mod_list_data['modifiers'] ?? [];
+
+                    // Count items using this modifier list
+                    $items_using = 0;
+                    foreach ( $all_items as $item ) {
+                        if ( $item['type'] === 'ITEM' && ! empty( $item['item_data']['modifier_list_info'] ) ) {
+                            foreach ( $item['item_data']['modifier_list_info'] as $ml_info ) {
+                                if ( $ml_info['modifier_list_id'] === $mod_list_obj['id'] ) {
+                                    $items_using++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                ?>
+                <tr>
+                  <td><strong><?php echo esc_html( $list_name ); ?></strong></td>
+                  <td><?php echo esc_html( $selection_type ); ?></td>
+                  <td>
+                    <?php if ( $modifiers ): ?>
+                      <ul style="margin:0; padding-left:20px;">
+                        <?php foreach ( $modifiers as $modifier ):
+                            $mod_name = $modifier['modifier_data']['name'] ?? 'Unnamed';
+                            $mod_price = 0;
+                            if ( ! empty( $modifier['modifier_data']['price_money']['amount'] ) ) {
+                                $mod_price = $modifier['modifier_data']['price_money']['amount'] / 100;
+                            }
+                        ?>
+                          <li>
+                            <?php echo esc_html( $mod_name ); ?>
+                            <?php if ( $mod_price > 0 ): ?>
+                              <span style="color:#666;">(+$<?php echo number_format( $mod_price, 2 ); ?>)</span>
+                            <?php endif; ?>
+                          </li>
+                        <?php endforeach; ?>
+                      </ul>
+                    <?php else: ?>
+                      <em>No modifiers</em>
+                    <?php endif; ?>
+                  </td>
+                  <td><?php echo esc_html( $items_using ); ?> item(s)</td>
+                </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          <?php else: ?>
+            <p>No modifier lists found. Make sure you've synced your catalog from Square.</p>
+          <?php endif; ?>
+
+          <style>
+            .wp-list-table th, .wp-list-table td { vertical-align: top; }
+          </style>
         <?php
     }
 

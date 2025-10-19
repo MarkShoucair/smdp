@@ -386,6 +386,46 @@ class SMDP_Help_Request {
     $parent='smdp_main'; $slug='smdp-help-tables'; global $submenu;
     if(isset($submenu[$parent])){foreach($submenu[$parent] as $it){if($it[2]===$slug) return;}}
     add_submenu_page($parent,'Help & Bill','Help & Bill','manage_options',$slug,[ $this,'render_admin' ]);
+
+    // Add rate limit clearing handler
+    add_action('admin_init', [$this, 'handle_clear_rate_limits']);
+  }
+
+  /**
+   * Handle clear rate limits action
+   */
+  public function handle_clear_rate_limits(): void {
+    // Check if we're on the help & bill page with the clear action
+    if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'smdp-help-tables' ) {
+      return;
+    }
+
+    if ( ! isset( $_GET['action'] ) || $_GET['action'] !== 'clear_rate_limits' ) {
+      return;
+    }
+
+    // Verify nonce
+    if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'smdp_clear_rate_limits' ) ) {
+      wp_die( 'Security check failed' );
+    }
+
+    // Check user capabilities
+    if ( ! current_user_can( 'manage_options' ) ) {
+      wp_die( 'Insufficient permissions' );
+    }
+
+    // Clear all rate limit transients
+    global $wpdb;
+    $deleted = $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_smdp_rl_%' OR option_name LIKE '_transient_timeout_smdp_rl_%'" );
+
+    error_log( "[SMDP] Cleared {$deleted} rate limit transients" );
+
+    // Set transient to show success message
+    set_transient( 'smdp_rate_limits_cleared', true, 30 );
+
+    // Redirect back to help & bill page
+    wp_safe_redirect( admin_url( 'admin.php?page=smdp-help-tables#tab-rate-limit' ) );
+    exit;
   }
 
   public function handle_admin_form(): void {
@@ -532,6 +572,16 @@ class SMDP_Help_Request {
     if (isset($_GET['updated']) && $_GET['updated'] === 'true') {
         echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully!</p></div>';
     }
+
+    // Tab Navigation
+    echo '<h2 class="nav-tab-wrapper">';
+    echo '<a href="#tab-config" class="nav-tab nav-tab-active">Configuration</a>';
+    echo '<a href="#tab-tables" class="nav-tab">Table Setup</a>';
+    echo '<a href="#tab-rate-limit" class="nav-tab">Rate Limiting</a>';
+    echo '</h2>';
+
+    // Tab: Configuration
+    echo '<div id="tab-config" class="smdp-help-tab active" style="display:block;">';
 
     // Add some inline styles for better UI
     echo '<style>
@@ -716,10 +766,17 @@ class SMDP_Help_Request {
     echo '</div>';
 
     submit_button('Save Help & Bill Settings', 'primary', 'smdp_save');
-    echo '</form><hr />';
+    echo '</form>';
+
+    echo '</div><!-- End Tab: Configuration -->';
+
+    // Tab: Table Setup
+    echo '<div id="tab-tables" class="smdp-help-tab" style="display:none;">';
+    echo '<h2>Table Setup</h2>';
+    echo '<p>Configure table numbers and associate them with Square customers or items for order tracking.</p>';
 
     // Table Items Configuration (for item method)
-    echo '<h2>Table Items (for Item Lookup Method)</h2>';
+    echo '<h3>Table Items (for Item Lookup Method)</h3>';
     echo '<p class="description">These are the catalog items that will be added to orders in Square POS to identify which table the order belongs to.</p>';
     echo '<form method="post">';
     wp_nonce_field( $this->nonce_action, 'smdp_help_admin_nonce' );
@@ -836,6 +893,52 @@ class SMDP_Help_Request {
     } else {
         echo '<p><em>No tables configured yet.</em></p>';
     }
+
+    echo '</div><!-- End Tab: Table Setup -->';
+
+    // Tab: Rate Limiting
+    echo '<div id="tab-rate-limit" class="smdp-help-tab" style="display:none;">';
+    echo '<h2>Rate Limiting</h2>';
+    echo '<p>Manage rate limits for help and bill requests to prevent abuse.</p>';
+
+    $cleared = get_transient( 'smdp_rate_limits_cleared' );
+
+    if ( $cleared ) {
+        echo '<div class="notice notice-success inline" style="margin: 10px 0; padding: 10px;"><p><strong>Success!</strong> All rate limits have been cleared.</p></div>';
+    }
+
+    echo '<div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">';
+    echo '<h3>Clear All Rate Limits</h3>';
+    echo '<p class="description">If help/bill buttons are showing "Too many requests" errors, clear the rate limits:</p>';
+    echo '<a href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=smdp-help-tables&action=clear_rate_limits' ), 'smdp_clear_rate_limits' ) ) . '" class="button button-secondary">Clear All Rate Limits</a>';
+    echo '<p class="description" style="margin-top: 10px;"><em>This removes all rate limiting blocks. Safe to click if legitimate users are being blocked during testing.</em></p>';
+    echo '</div>';
+
+    echo '</div><!-- End Tab: Rate Limiting -->';
+
+    // Tab switching CSS and JavaScript
+    echo '<style>
+        .smdp-help-tab { display:none; }
+        .smdp-help-tab.active { display:block; }
+        .nav-tab-wrapper { margin-top: 12px; margin-bottom: 20px; }
+    </style>';
+    echo '<script>
+    jQuery(document).ready(function($) {
+        // Tab switching
+        $(".nav-tab").on("click", function(e) {
+            e.preventDefault();
+            var target = $(this).attr("href");
+
+            // Update nav tabs
+            $(".nav-tab").removeClass("nav-tab-active");
+            $(this).addClass("nav-tab-active");
+
+            // Update tab content
+            $(".smdp-help-tab").hide().removeClass("active");
+            $(target).show().addClass("active");
+        });
+    });
+    </script>';
 
     echo '</div>';
   }

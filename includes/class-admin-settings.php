@@ -42,11 +42,15 @@ class SMDP_Admin_Settings {
      * Constructor
      */
     private function __construct() {
-        add_action( 'admin_init', array( $this, 'register_help_settings' ) );
-        add_action( 'admin_init', array( $this, 'register_debug_settings' ) );
+        // Help settings moved to Help & Bill → Configuration tab
+        // add_action( 'admin_init', array( $this, 'register_help_settings' ) );
+        // PWA debug settings moved to Menu App Builder → PWA & Debug tab
+        // add_action( 'admin_init', array( $this, 'register_debug_settings' ) );
         add_action( 'admin_init', array( $this, 'register_advanced_settings' ) );
-        add_action( 'admin_init', array( $this, 'handle_flush_rewrite_rules' ) );
-        add_action( 'admin_init', array( $this, 'handle_clear_rate_limits' ) );
+        // Flush rewrite rules moved to Menu App Builder → Advanced tab
+        // add_action( 'admin_init', array( $this, 'handle_flush_rewrite_rules' ) );
+        // Rate limit clearing moved to Help & Bill → Rate Limiting tab
+        // add_action( 'admin_init', array( $this, 'handle_clear_rate_limits' ) );
     }
 
     /**
@@ -165,46 +169,9 @@ class SMDP_Admin_Settings {
             'smdp_settings_page'
         );
 
-        // Add flush rewrite rules field
-        add_settings_field(
-            'smdp_flush_rewrite_rules',
-            'Menu App URL',
-            function() {
-                $menu_app_url = home_url( '/menu-app/' );
-                $flushed = get_transient( 'smdp_rewrite_rules_flushed' );
-
-                echo '<p class="description">Standalone menu app URL: <strong><a href="' . esc_url( $menu_app_url ) . '" target="_blank">' . esc_html( $menu_app_url ) . '</a></strong></p>';
-
-                if ( $flushed ) {
-                    echo '<div class="notice notice-success inline" style="margin: 10px 0; padding: 10px;"><p><strong>Success!</strong> Rewrite rules have been flushed. The menu app URL should now work.</p></div>';
-                }
-
-                echo '<p class="description">If the menu app URL returns a 404 error, click the button below to fix it:</p>';
-                echo '<a href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=smdp_main&action=flush_rewrite_rules' ), 'smdp_flush_rewrite_rules' ) ) . '" class="button button-secondary">Fix Menu App URL (Flush Rewrite Rules)</a>';
-                echo '<p class="description" style="margin-top: 10px;"><em>This re-registers WordPress URL routing rules. Safe to click anytime the menu app URL isn\'t working.</em></p>';
-            },
-            'smdp_settings_page',
-            'smdp_advanced_section'
-        );
-
-        // Add rate limit clearing field
-        add_settings_field(
-            'smdp_clear_rate_limits',
-            'Rate Limit Reset',
-            function() {
-                $cleared = get_transient( 'smdp_rate_limits_cleared' );
-
-                if ( $cleared ) {
-                    echo '<div class="notice notice-success inline" style="margin: 10px 0; padding: 10px;"><p><strong>Success!</strong> All rate limits have been cleared.</p></div>';
-                }
-
-                echo '<p class="description">If help/bill buttons are showing "Too many requests" errors, clear the rate limits:</p>';
-                echo '<a href="' . esc_url( wp_nonce_url( admin_url( 'admin.php?page=smdp_main&action=clear_rate_limits' ), 'smdp_clear_rate_limits' ) ) . '" class="button button-secondary">Clear All Rate Limits</a>';
-                echo '<p class="description" style="margin-top: 10px;"><em>This removes all rate limiting blocks. Safe to click if legitimate users are being blocked during testing.</em></p>';
-            },
-            'smdp_settings_page',
-            'smdp_advanced_section'
-        );
+        // Menu App URL flush moved to Menu App Builder → Advanced tab
+        // Rate limit clearing moved to Help & Bill → Rate Limiting tab
+        // This keeps settings logically grouped with their related features
     }
 
     /**

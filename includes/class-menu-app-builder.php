@@ -13,6 +13,8 @@ class SMDP_Menu_App_Builder {
     add_action('admin_init', array(__CLASS__, 'register_settings'));
     add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_admin'));
     add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend'));
+    add_action('admin_post_smdp_save_pwa_settings', array(__CLASS__, 'handle_pwa_settings_save'));
+    add_action('admin_init', array(__CLASS__, 'handle_flush_rewrite_rules'));
     add_shortcode('smdp_menu_app', array(__CLASS__, 'shortcode_render'));
 
     add_action('rest_api_init', function() {
@@ -255,6 +257,8 @@ class SMDP_Menu_App_Builder {
         <a href="#tab-styles" class="nav-tab">Styles</a>
         <a href="#tab-items" class="nav-tab">Items</a>
         <a href="#tab-categories" class="nav-tab">Categories</a>
+        <a href="#tab-pwa" class="nav-tab">PWA & Debug</a>
+        <a href="#tab-advanced" class="nav-tab">Advanced</a>
       </h2>
 
       <div id="tab-layout" class="smdp-tab active">
@@ -330,6 +334,121 @@ class SMDP_Menu_App_Builder {
 
         <?php echo self::render_categories_editor_embed(); ?>
       </div>
+
+      <!-- Tab: PWA & Debug -->
+      <div id="tab-pwa" class="smdp-tab">
+        <h2>PWA & Debug Settings</h2>
+        <p>Control Progressive Web App features, caching behavior, and debug tools for the menu app.</p>
+
+        <?php
+        $debug_mode = get_option( 'smdp_pwa_debug_mode', 0 );
+        $cache_version = get_option( 'smdp_cache_version', 1 );
+        $settings = get_option(self::OPT_SETTINGS, array());
+        if (!is_array($settings)) $settings = array();
+
+        $theme_color = isset($settings['theme_color']) ? $settings['theme_color'] : '#5C7BA6';
+        $background_color = isset($settings['background_color']) ? $settings['background_color'] : '#ffffff';
+        $icon_192 = isset($settings['icon_192']) ? $settings['icon_192'] : '';
+        $icon_512 = isset($settings['icon_512']) ? $settings['icon_512'] : '';
+        $apple_touch_icon = isset($settings['apple_touch_icon']) ? $settings['apple_touch_icon'] : '';
+        $app_name = isset($settings['app_name']) ? $settings['app_name'] : '';
+        $app_short_name = isset($settings['app_short_name']) ? $settings['app_short_name'] : '';
+        $app_description = isset($settings['app_description']) ? $settings['app_description'] : '';
+        $display_mode = isset($settings['display_mode']) ? $settings['display_mode'] : 'standalone';
+        $orientation = isset($settings['orientation']) ? $settings['orientation'] : 'any';
+        ?>
+
+        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+          <input type="hidden" name="action" value="smdp_save_pwa_settings">
+          <?php wp_nonce_field( 'smdp_pwa_settings_save', 'smdp_pwa_nonce' ); ?>
+
+          <h3>Debug Mode</h3>
+          <table class="form-table">
+            <tr>
+              <th scope="row">Enable Debug Mode</th>
+              <td>
+                <label>
+                  <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
+                  Enable PWA Debug Mode (bypass caching, show debug panel)
+                </label>
+                <p class="description">When enabled, tablets will always load the latest version of files and display a debug panel with cache-clearing tools.</p>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Cache Version</th>
+              <td>
+                <input type="number" name="smdp_cache_version" id="smdp_cache_version_pwa" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:100px;">
+                <button type="button" class="button" id="smdp-increment-version-pwa">Increment Version</button>
+                <p class="description">
+                  Current version: <strong>v<?php echo $cache_version; ?></strong><br>
+                  Increment this number to force all tablets to reload assets, even without debug mode enabled.
+                </p>
+                <script>
+                  jQuery(document).ready(function($){
+                    $('#smdp-increment-version-pwa').click(function(){
+                      var $input = $('#smdp_cache_version_pwa');
+                      $input.val(parseInt($input.val()) + 1);
+                    });
+                  });
+                </script>
+              </td>
+            </tr>
+          </table>
+
+          <h3>PWA Manifest Settings</h3>
+          <p>These settings control how the menu app appears when installed as a Progressive Web App on tablets and phones.</p>
+
+          <table class="form-table">
+            <tr>
+              <th scope="row">
+                <label for="smdp_pwa_theme_color">Theme Color</label>
+              </th>
+              <td>
+                <input type="text" name="smdp_pwa_theme_color" value="<?php echo esc_attr($theme_color); ?>" class="smdp-pwa-color-picker" />
+                <p class="description">Color for the browser's address bar and splash screen when installed as PWA</p>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <label for="smdp_pwa_background_color">Background Color</label>
+              </th>
+              <td>
+                <input type="text" name="smdp_pwa_background_color" value="<?php echo esc_attr($background_color); ?>" class="smdp-pwa-color-picker" />
+                <p class="description">Background color for the splash screen when launching PWA</p>
+              </td>
+            </tr>
+          </table>
+
+          <?php submit_button( 'Save PWA & Debug Settings', 'primary', 'smdp_save_pwa' ); ?>
+        </form>
+      </div>
+
+      <!-- Tab: Advanced -->
+      <div id="tab-advanced" class="smdp-tab">
+        <h2>Advanced Settings</h2>
+        <p>Advanced configuration and troubleshooting tools for the menu app.</p>
+
+        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+          <h3>Menu App URL</h3>
+          <?php
+          $menu_app_url = home_url( '/menu-app/' );
+          $flushed = get_transient( 'smdp_rewrite_rules_flushed' );
+          ?>
+
+          <p class="description">Standalone menu app URL: <strong><a href="<?php echo esc_url( $menu_app_url ); ?>" target="_blank"><?php echo esc_html( $menu_app_url ); ?></a></strong></p>
+
+          <?php if ( $flushed ): ?>
+            <div class="notice notice-success inline" style="margin: 10px 0; padding: 10px;">
+              <p><strong>Success!</strong> Rewrite rules have been flushed. The menu app URL should now work.</p>
+            </div>
+          <?php endif; ?>
+
+          <p class="description">If the menu app URL returns a 404 error, click the button below to fix it:</p>
+          <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=smdp_menu_app_builder&action=flush_rewrite_rules' ), 'smdp_flush_rewrite_rules' ) ); ?>" class="button button-secondary">Fix Menu App URL (Flush Rewrite Rules)</a>
+          <p class="description" style="margin-top: 10px;"><em>This re-registers WordPress URL routing rules. Safe to click anytime the menu app URL isn't working.</em></p>
+        </div>
+      </div>
+
     </div>
     <style>
       .smdp-tab { display:none; }
@@ -1507,5 +1626,89 @@ class SMDP_Menu_App_Builder {
       <?php endif; ?>
     <?php
     return ob_get_clean();
+  }
+
+  /**
+   * Handle PWA settings save from the PWA & Debug tab
+   */
+  public static function handle_pwa_settings_save() {
+    // Verify nonce
+    if ( ! isset( $_POST['smdp_pwa_nonce'] ) || ! wp_verify_nonce( $_POST['smdp_pwa_nonce'], 'smdp_pwa_settings_save' ) ) {
+      wp_die( 'Security check failed' );
+    }
+
+    // Check user capabilities
+    if ( ! current_user_can( 'manage_options' ) ) {
+      wp_die( 'Insufficient permissions' );
+    }
+
+    // Save debug mode
+    $debug_mode = isset( $_POST['smdp_pwa_debug_mode'] ) ? 1 : 0;
+    update_option( 'smdp_pwa_debug_mode', $debug_mode );
+
+    // Save cache version
+    $cache_version = isset( $_POST['smdp_cache_version'] ) ? intval( $_POST['smdp_cache_version'] ) : 1;
+    update_option( 'smdp_cache_version', $cache_version );
+
+    // Save PWA manifest settings to the existing settings option
+    $settings = get_option( self::OPT_SETTINGS, array() );
+    if ( ! is_array( $settings ) ) {
+      $settings = array();
+    }
+
+    if ( isset( $_POST['smdp_pwa_theme_color'] ) ) {
+      $settings['theme_color'] = sanitize_hex_color( $_POST['smdp_pwa_theme_color'] );
+    }
+    if ( isset( $_POST['smdp_pwa_background_color'] ) ) {
+      $settings['background_color'] = sanitize_hex_color( $_POST['smdp_pwa_background_color'] );
+    }
+
+    update_option( self::OPT_SETTINGS, $settings );
+
+    // Redirect back with success message
+    wp_safe_redirect( add_query_arg( array(
+      'page' => 'smdp_menu_app_builder',
+      'pwa_saved' => '1'
+    ), admin_url( 'admin.php' ) ) );
+    exit;
+  }
+
+  /**
+   * Handle flush rewrite rules action for menu app URL
+   */
+  public static function handle_flush_rewrite_rules() {
+    // Check if we're on the menu app builder page with the flush action
+    if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'smdp_menu_app_builder' ) {
+      return;
+    }
+
+    if ( ! isset( $_GET['action'] ) || $_GET['action'] !== 'flush_rewrite_rules' ) {
+      return;
+    }
+
+    // Verify nonce
+    if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( $_GET['_wpnonce'], 'smdp_flush_rewrite_rules' ) ) {
+      wp_die( 'Security check failed' );
+    }
+
+    // Check user capabilities
+    if ( ! current_user_can( 'manage_options' ) ) {
+      wp_die( 'Insufficient permissions' );
+    }
+
+    // Register rewrite rules before flushing
+    if ( class_exists( 'SMDP_Plugin_Activation' ) ) {
+      SMDP_Plugin_Activation::register_menu_app_rewrite_rules();
+    }
+
+    // Flush rewrite rules
+    flush_rewrite_rules();
+
+    // Set transient to show success message
+    set_transient( 'smdp_rewrite_rules_flushed', true, 30 );
+
+    // Redirect back to menu app builder page
+    wp_safe_redirect( admin_url( 'admin.php?page=smdp_menu_app_builder#tab-advanced' ) );
+    exit;
   }
 }
