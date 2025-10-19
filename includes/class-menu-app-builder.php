@@ -191,15 +191,40 @@ class SMDP_Menu_App_Builder {
     wp_register_script('smdp-menu-app', $base_url . '/assets/js/menu-app-frontend.js', array(), $ver, true);
     wp_register_script('smdp-pwa-install', $base_url . '/assets/js/pwa-install.js', array(), $ver, true);
 
-    // REMOVED: Custom CSS output - all styles are now hardcoded in CSS files
-    // No more dynamic inline styles
+    // Hook to output user's custom CSS (if any)
+    add_action('wp_footer', array(__CLASS__, 'output_custom_css'), 100);
   }
 
   /**
-   * DEPRECATED: Custom CSS output removed
-   * All styles are now hardcoded in:
-   * - assets/css/smdp-structural.css (structural & layout styles)
-   * - assets/css/menu-app.css (visual styles)
+   * Output user's custom CSS from admin textarea
+   * This runs in wp_footer to allow users to override hardcoded styles
+   */
+  public static function output_custom_css() {
+    // Only output if menu app CSS is enqueued (menu app is on the page)
+    if (!wp_style_is('smdp-menu-app', 'enqueued')) {
+      return;
+    }
+
+    // Get custom CSS from settings
+    $custom_css = get_option(self::OPT_CSS, '');
+
+    // Don't output if empty or just the default placeholder
+    if (empty($custom_css) || trim($custom_css) === '' || trim($custom_css) === '/* Button & card style overrides here */') {
+      return;
+    }
+
+    // Sanitize and output custom CSS
+    $sanitized_css = wp_strip_all_tags($custom_css);
+
+    if (!empty($sanitized_css)) {
+      echo "\n<style id=\"smdp-user-custom-css\">\n/* User Custom CSS */\n" . $sanitized_css . "\n</style>\n";
+    }
+  }
+
+  /**
+   * DEPRECATED: Old dynamic button CSS generation removed
+   * All default styles are now hardcoded in CSS files
+   * Users can override via Custom CSS textarea
    */
   private static function output_button_styles_DEPRECATED() {
     // This method is no longer used
@@ -378,8 +403,28 @@ class SMDP_Menu_App_Builder {
   }
 
   public static function field_css() {
-    $css = get_option(self::OPT_CSS, "/* Button & card style overrides here */");
-    echo '<textarea name="'.esc_attr(self::OPT_CSS).'" rows="10" style="width:100%;font-family:monospace;">'.esc_textarea($css).'</textarea>';
+    $css = get_option(self::OPT_CSS, "/* Add your custom CSS here to override default styles */");
+    ?>
+    <textarea name="<?php echo esc_attr(self::OPT_CSS); ?>" rows="15" style="width:100%;font-family:monospace;font-size:13px;"><?php echo esc_textarea($css); ?></textarea>
+    <p class="description">
+      <strong>Custom CSS Override:</strong> Add your own CSS here to customize the menu app appearance.<br>
+      This CSS will load <em>after</em> the hardcoded styles, allowing you to override any default styling.<br><br>
+      <strong>Common selectors:</strong><br>
+      • <code>.smdp-cat-btn</code> - Category buttons<br>
+      • <code>.smdp-cat-btn.active</code> - Active category button<br>
+      • <code>.smdp-help-btn</code> - Help button<br>
+      • <code>.smdp-bill-btn</code> - Bill button<br>
+      • <code>.smdp-menu-app-fe</code> - Main container<br>
+      • <code>.smdp-app-header</code> - Header area<br>
+      • <code>.smdp-app-sections</code> - Content area<br>
+      <br>
+      <strong>Example:</strong><br>
+      <code>
+        .smdp-cat-btn { background: #ff0000; color: white; }<br>
+        .smdp-help-btn { border-radius: 10px; }
+      </code>
+    </p>
+    <?php
   }
 
   public static function field_settings() {
