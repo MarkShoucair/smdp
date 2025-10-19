@@ -95,11 +95,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                 $hidden_class = (isset($cat['hidden']) && $cat['hidden']) ? 'hidden-category' : '';
                 $shortcode = '[square_menu category="' . esc_attr($cat['slug']) . '"]';
                 ?>
-                <div class="smdp-category-group <?php echo $hidden_class; ?>" data-category="<?php echo esc_attr($cat['id']); ?>" style="margin-bottom:30px; border:1px solid #ccc; padding:5px; background:#f6f6f6;">
+                <div class="smdp-category-group <?php echo $hidden_class; ?>" data-category="<?php echo esc_attr($cat['id']); ?>" style="margin-bottom:30px; border:1px solid #ddd; padding:15px; background:#ffffff; border-radius:4px;">
                   <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                        <h2 style="margin:5px 0; display:inline-block;"><?php echo esc_html($cat['name']); ?></h2>
-                       <span class="smdp-shortcode" data-shortcode="<?php echo esc_attr($shortcode); ?>" style="cursor:pointer; background:#f0f0f0; padding:2px 5px; border:1px solid #0073aa; border-radius:3px; margin-left:10px;">Copy Shortcode</span>
+                       <button type="button" class="smdp-shortcode button button-secondary" data-shortcode="<?php echo esc_attr($shortcode); ?>" style="margin-left:10px;vertical-align:middle;">
+                         <span class="dashicons dashicons-clipboard" style="vertical-align:middle;margin-right:3px;"></span>
+                         Copy Shortcode
+                       </button>
                     </div>
                     <div>
                        <button type="button" class="smdp-add-item-btn" data-target="<?php echo esc_attr($cat['id']); ?>" style="display:inline-block; margin-right:5px; padding:5px 10px; background:#0073aa; color:#fff; border:none; border-radius:3px; cursor:pointer;">Add Item</button>
@@ -108,7 +111,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                        </button>
                     </div>
                   </div>
-                  <ul class="smdp-sortable-group" style="display:flex; flex-wrap:wrap; gap:10px; list-style:none; margin:0; padding:0; min-height:220px;">
+                  <ul class="smdp-sortable-group" style="display:flex; flex-wrap:wrap; gap:10px; list-style:none; margin:10px 0; padding:10px; min-height:220px; background:#fafafa; border-radius:4px;">
                      <?php
                      if (isset($grouped_items[$cat['id']]) && count($grouped_items[$cat['id']]) > 0) {
                          foreach ($grouped_items[$cat['id']] as $item) {
@@ -171,6 +174,14 @@ if ( ! defined( 'ABSPATH' ) ) {
      <input type="hidden" name="mapping_json" id="mapping_json" value="">
      <?php submit_button('Save Mappings'); ?>
   </form>
+
+  <!-- Floating Save Button -->
+  <div id="smdp-floating-save" style="position:fixed;bottom:30px;right:30px;z-index:9999;display:none;">
+    <button type="button" class="button button-primary button-hero" id="smdp-floating-save-btn" style="box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:16px;padding:12px 24px;">
+      <span class="dashicons dashicons-saved" style="vertical-align:middle;margin-right:5px;"></span>
+      Save Mappings
+    </button>
+  </div>
 
   <!-- Modal Dialog for Adding Items -->
   <div id="smdp-add-item-dialog" title="Add Items" style="display:none;">
@@ -420,14 +431,47 @@ jQuery(document).ready(function($) {
        });
    });
 
-   // Shortcode copy handler.
+   // Floating save button functionality
+   var $floatingSave = $("#smdp-floating-save");
+   var $regularSave = $("#smdp-items-form .submit");
+
+   // Show/hide floating button based on scroll
+   $(window).on("scroll", function() {
+       if ($(window).scrollTop() > 300) {
+           $floatingSave.fadeIn(200);
+       } else {
+           $floatingSave.fadeOut(200);
+       }
+   });
+
+   // Floating save button click
+   $("#smdp-floating-save-btn").on("click", function() {
+       // Scroll to top smoothly
+       $("html, body").animate({ scrollTop: 0 }, 400, function() {
+           // Then submit the form
+           $("#smdp-items-form").submit();
+       });
+   });
+
+   // Shortcode copy handler with improved feedback
    $(".smdp-shortcode").on("click", function() {
-       var shortcodeText = $(this).data("shortcode");
+       var $btn = $(this);
+       var shortcodeText = $btn.data("shortcode");
+       var originalHtml = $btn.html();
+
        if(navigator.clipboard) {
            navigator.clipboard.writeText(shortcodeText).then(function() {
-               alert("Shortcode copied to clipboard: " + shortcodeText);
+               $btn.html('<span class="dashicons dashicons-yes" style="vertical-align:middle;margin-right:3px;"></span>Copied!');
+               $btn.css("background-color", "#46b450");
+               setTimeout(function() {
+                   $btn.html(originalHtml);
+                   $btn.css("background-color", "");
+               }, 2000);
            }, function(err) {
-               alert("Failed to copy: " + err);
+               $btn.html('<span class="dashicons dashicons-no" style="vertical-align:middle;margin-right:3px;"></span>Failed');
+               setTimeout(function() {
+                   $btn.html(originalHtml);
+               }, 2000);
            });
        } else {
            var tempInput = $("<textarea>");
@@ -435,7 +479,12 @@ jQuery(document).ready(function($) {
            tempInput.val(shortcodeText).select();
            document.execCommand("copy");
            tempInput.remove();
-           alert("Shortcode copied to clipboard: " + shortcodeText);
+           $btn.html('<span class="dashicons dashicons-yes" style="vertical-align:middle;margin-right:3px;"></span>Copied!');
+           $btn.css("background-color", "#46b450");
+           setTimeout(function() {
+               $btn.html(originalHtml);
+               $btn.css("background-color", "");
+           }, 2000);
        }
    });
 
