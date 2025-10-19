@@ -260,6 +260,7 @@ class SMDP_Menu_App_Builder {
       </h2>
 
       <div id="tab-layout" class="smdp-tab active">
+        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
         <form method="post" action="options.php">
           <?php settings_fields('smdp_menu_app_layout_group'); ?>
           <table class="form-table" role="presentation">
@@ -279,22 +280,26 @@ class SMDP_Menu_App_Builder {
           <?php submit_button('Save Settings'); ?>
         </form>
         <p><strong>Display on a page</strong> with: <code>[smdp_menu_app id="default"]</code> &nbsp; Optional: <code>layout="left"</code>.</p>
+        </div>
       </div>
 
       <div id="tab-styles" class="smdp-tab">
+        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
         <form method="post" action="options.php">
           <?php settings_fields('smdp_menu_app_styles_group'); ?>
           <h2>Category Button Styles</h2>
           <?php self::field_styles(); ?>
           <?php submit_button('Save Button Styles'); ?>
         </form>
+        </div>
       </div>
 
       <!-- Items and Categories tabs moved to Menu Management → Menu Editor -->
 
       <!-- Tab: PWA & Debug -->
       <div id="tab-pwa" class="smdp-tab">
-        <h2>PWA & Debug Settings</h2>
+        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+        <h2 style="margin-top:0;">PWA & Debug Settings</h2>
         <p>Control Progressive Web App features, caching behavior, and debug tools for the menu app.</p>
 
         <?php
@@ -378,14 +383,15 @@ class SMDP_Menu_App_Builder {
 
           <?php submit_button( 'Save PWA & Debug Settings', 'primary', 'smdp_save_pwa' ); ?>
         </form>
+        </div>
       </div>
 
       <!-- Tab: Advanced -->
       <div id="tab-advanced" class="smdp-tab">
-        <h2>Advanced Settings</h2>
+        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+        <h2 style="margin-top:0;">Advanced Settings</h2>
         <p>Advanced configuration and troubleshooting tools for the menu app.</p>
 
-        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
           <h3>Menu App URL</h3>
           <?php
           $menu_app_url = home_url( '/menu-app/' );

@@ -909,7 +909,8 @@ class SMDP_Admin_Pages {
 
         // 4) Render table
         ?>
-          <h2>Items List</h2>
+          <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+          <h2 style="margin-top:0;">Items List</h2>
           <p>
             <button id="smdp-match-categories-btn" class="button button-secondary">
               Match Square Categories
@@ -1009,6 +1010,7 @@ class SMDP_Admin_Pages {
 
             <?php submit_button('Save Changes'); ?>
           </form>
+          </div>
 
         <script>
         jQuery(function($){
@@ -1093,7 +1095,8 @@ class SMDP_Admin_Pages {
         });
 
         ?>
-          <h2>Modifier Lists</h2>
+          <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+          <h2 style="margin-top:0;">Modifier Lists</h2>
           <p>Manage modifier visibility and view all modifier lists synced from Square. Unchecked modifiers will be hidden from the menu app.</p>
 
           <form method="post">
@@ -1174,6 +1177,7 @@ class SMDP_Admin_Pages {
           <?php endif; ?>
 
           </form>
+          </div>
 
           <style>
             .wp-list-table th, .wp-list-table td { vertical-align: top; }

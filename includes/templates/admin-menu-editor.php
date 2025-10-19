@@ -95,7 +95,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                 $hidden_class = (isset($cat['hidden']) && $cat['hidden']) ? 'hidden-category' : '';
                 $shortcode = '[square_menu category="' . esc_attr($cat['slug']) . '"]';
                 ?>
-                <div class="smdp-category-group <?php echo $hidden_class; ?>" data-category="<?php echo esc_attr($cat['id']); ?>" style="margin-bottom:30px; border:1px solid #ddd; padding:15px; background:#ffffff; border-radius:4px;">
+                <div class="smdp-category-group <?php echo $hidden_class; ?>" data-category="<?php echo esc_attr($cat['id']); ?>" style="margin-bottom:30px; border:1px solid #ddd; padding:15px; background:#f5f5f5; border-radius:4px;">
                   <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                        <h2 style="margin:5px 0; display:inline-block;"><?php echo esc_html($cat['name']); ?></h2>
@@ -111,7 +111,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                        </button>
                     </div>
                   </div>
-                  <ul class="smdp-sortable-group" style="display:flex; flex-wrap:wrap; gap:10px; list-style:none; margin:10px 0; padding:10px; min-height:220px; background:#fafafa; border-radius:4px;">
+                  <ul class="smdp-sortable-group" style="display:flex; flex-wrap:wrap; gap:10px; list-style:none; margin:10px 0; padding:10px; min-height:220px; background:#ffffff; border-radius:4px;">
                      <?php
                      if (isset($grouped_items[$cat['id']]) && count($grouped_items[$cat['id']]) > 0) {
                          foreach ($grouped_items[$cat['id']] as $item) {
@@ -446,11 +446,8 @@ jQuery(document).ready(function($) {
 
    // Floating save button click
    $("#smdp-floating-save-btn").on("click", function() {
-       // Scroll to top smoothly
-       $("html, body").animate({ scrollTop: 0 }, 400, function() {
-           // Then submit the form
-           $("#smdp-items-form").submit();
-       });
+       // Trigger form submission directly (the form's submit handler will build the mapping)
+       $("#smdp-items-form").submit();
    });
 
    // Shortcode copy handler with improved feedback
