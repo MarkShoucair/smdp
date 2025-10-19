@@ -117,14 +117,47 @@ class SMDP_Shortcode {
     private function get_category_items( $all_items, $mapping, $cat_id ) {
         $items_to_show = array();
 
-        foreach ( $all_items as $obj ) {
-            if ( empty( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
-                continue;
+        // Check if this is old-style mapping or new-style mapping
+        $is_new_style = false;
+        foreach ($mapping as $key => $data) {
+            if (isset($data['instance_id'])) {
+                $is_new_style = true;
+                break;
             }
-            $id = $obj['id'];
-            if ( isset( $mapping[$id]['category'] ) && $mapping[$id]['category'] === $cat_id ) {
-                $obj['order'] = $mapping[$id]['order'];
-                $items_to_show[] = $obj;
+        }
+
+        if ($is_new_style) {
+            // New-style mapping: instance_id => {item_id, instance_id, category, order, hide_image}
+            // Build a lookup of item_id => item_obj
+            $items_by_id = array();
+            foreach ( $all_items as $obj ) {
+                if ( empty( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
+                    continue;
+                }
+                $items_by_id[$obj['id']] = $obj;
+            }
+
+            // Collect items that belong to this category
+            foreach ($mapping as $instance_id => $map_data) {
+                if ($map_data['category'] === $cat_id && isset($items_by_id[$map_data['item_id']])) {
+                    $obj = $items_by_id[$map_data['item_id']];
+                    $obj['order'] = $map_data['order'];
+                    $obj['instance_id'] = $instance_id;
+                    $obj['hide_image'] = $map_data['hide_image'];
+                    $items_to_show[] = $obj;
+                }
+            }
+        } else {
+            // Old-style mapping: item_id => {category, order, hide_image}
+            foreach ( $all_items as $obj ) {
+                if ( empty( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
+                    continue;
+                }
+                $id = $obj['id'];
+                if ( isset( $mapping[$id]['category'] ) && $mapping[$id]['category'] === $cat_id ) {
+                    $obj['order'] = $mapping[$id]['order'];
+                    $items_to_show[] = $obj;
+                }
             }
         }
 
@@ -155,7 +188,14 @@ class SMDP_Shortcode {
             // Get item details
             $price = $this->get_item_price( $item );
             $is_sold = $this->is_item_sold_out( $item_id, $item, $mapping );
-            $hide_image = ! empty( $mapping[$item_id]['hide_image'] );
+
+            // Check if hide_image is stored in the object (new-style) or mapping (old-style)
+            if (isset($obj['hide_image'])) {
+                $hide_image = ! empty( $obj['hide_image'] );
+            } else {
+                $hide_image = ! empty( $mapping[$item_id]['hide_image'] );
+            }
+
             $img_url = $this->get_item_image_url( $item, $all_items );
 
             // Build item tile

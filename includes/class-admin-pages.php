@@ -1205,24 +1205,26 @@ class SMDP_Admin_Pages {
             echo '<div class="error"><p>Invalid mapping data: Expected an array.</p></div>';
             error_log( '[SMDP JSON Validation] Mapping data is not an array' );
         } else {
-            // Validate structure of each item
+            // Validate structure - now expecting array of mapping objects
             $valid = true;
-            foreach( $posted as $item_id => $data ) {
+            foreach( $posted as $index => $data ) {
                 if ( ! is_array( $data ) ||
+                     ! isset( $data['item_id'] ) ||
                      ! isset( $data['category'] ) ||
                      ! isset( $data['order'] ) ||
                      ! isset( $data['hide_image'] ) ) {
                     $valid = false;
-                    error_log( "[SMDP JSON Validation] Invalid item structure for ID: {$item_id}" );
+                    error_log( "[SMDP JSON Validation] Invalid item structure at index: {$index}" );
                     break;
                 }
 
                 // Validate data types
-                if ( ! is_string( $data['category'] ) ||
+                if ( ! is_string( $data['item_id'] ) ||
+                     ! is_string( $data['category'] ) ||
                      ! is_numeric( $data['order'] ) ||
                      ! in_array( $data['hide_image'], array( 0, 1, '0', '1', true, false ), true ) ) {
                     $valid = false;
-                    error_log( "[SMDP JSON Validation] Invalid data types for ID: {$item_id}" );
+                    error_log( "[SMDP JSON Validation] Invalid data types at index: {$index}" );
                     break;
                 }
             }
@@ -1230,26 +1232,34 @@ class SMDP_Admin_Pages {
             if ( ! $valid ) {
                 echo '<div class="error"><p>Invalid mapping structure. Please try again.</p></div>';
             } else {
-                // Process valid data
+                // Process valid data - build new mapping structure
+                // We need to preserve sold_out_override from existing mappings
                 $existing = get_option( SMDP_MAPPING_OPTION, array() );
-                foreach( $posted as $item_id => $data ) {
-                    // ensure the item exists in existing mapping
-                    if ( ! isset( $existing[$item_id] ) ) {
-                        $existing[$item_id] = array(
-                            'category'         => '',
-                            'order'            => 0,
-                            'hide_image'       => 0,
-                            'sold_out_override'=> '',   // default if missing
-                        );
+                $new_mapping = array();
+
+                // Build mapping: instance_id => mapping data
+                foreach( $posted as $data ) {
+                    $item_id = $data['item_id'];
+                    $instance_id = isset($data['instance_id']) ? $data['instance_id'] : $item_id;
+
+                    // Preserve sold_out_override if it exists in old mapping
+                    $sold_out_override = '';
+                    if ( isset($existing[$item_id]['sold_out_override']) ) {
+                        $sold_out_override = $existing[$item_id]['sold_out_override'];
                     }
-                    // only overwrite these three fields
-                    $existing[$item_id]['category']   = sanitize_text_field( $data['category'] );
-                    $existing[$item_id]['order']      = intval( $data['order'] );
-                    $existing[$item_id]['hide_image'] = (int) $data['hide_image'];
-                    // sold_out_override stays untouched
+
+                    $new_mapping[$instance_id] = array(
+                        'item_id'          => sanitize_text_field( $item_id ),
+                        'instance_id'      => sanitize_text_field( $instance_id ),
+                        'category'         => sanitize_text_field( $data['category'] ),
+                        'order'            => intval( $data['order'] ),
+                        'hide_image'       => (int) $data['hide_image'],
+                        'sold_out_override'=> $sold_out_override,
+                    );
                 }
-                update_option( SMDP_MAPPING_OPTION, $existing );
-                echo '<div class="updated"><p>Mappings updated (overrides preserved).</p></div>';
+
+                update_option( SMDP_MAPPING_OPTION, $new_mapping );
+                echo '<div class="updated"><p>Mappings updated (overrides preserved). Items can now appear in multiple categories.</p></div>';
             }
         }
     }
@@ -1292,34 +1302,108 @@ class SMDP_Admin_Pages {
             return $a_hidden - $b_hidden;
         });
 
-        // Group items by category
+        // Group items by category - now supports multiple instances per item
         $grouped_items = array();
         foreach ($cat_array as $cat) {
             $grouped_items[$cat['id']] = array();
         }
         $grouped_items['unassigned'] = array();
 
+        // Build a lookup of item_id => item_obj for quick access
+        $items_by_id = array();
         foreach ( $items as $item_obj ) {
-            $item_id = $item_obj['id'];
-            if ( isset($mapping[$item_id]) && $mapping[$item_id]['category'] !== '' ) {
-                $cat = $mapping[$item_id]['category'];
-            } else {
-                $cat = 'unassigned';
+            $items_by_id[$item_obj['id']] = $item_obj;
+        }
+
+        // Check if this is old-style mapping (item_id => data) or new-style (instance_id => data)
+        $is_new_style = false;
+        foreach ($mapping as $key => $data) {
+            if (isset($data['instance_id'])) {
+                $is_new_style = true;
+                break;
             }
-            $thumbnail = '';
-            if ( isset($item_obj['item_data']['image_ids']) && is_array($item_obj['item_data']['image_ids']) && !empty($item_obj['item_data']['image_ids'][0]) ) {
-                $first_img_id = $item_obj['item_data']['image_ids'][0];
-                if ( isset($image_lookup[$first_img_id]) ) {
-                    $thumbnail = $image_lookup[$first_img_id];
+        }
+
+        if ($is_new_style) {
+            // New-style mapping: instance_id => {item_id, instance_id, category, order, hide_image}
+            foreach ( $mapping as $instance_id => $map_data ) {
+                $item_id = $map_data['item_id'];
+                if (!isset($items_by_id[$item_id])) continue;
+
+                $item_obj = $items_by_id[$item_id];
+                $cat = !empty($map_data['category']) ? $map_data['category'] : 'unassigned';
+
+                $thumbnail = '';
+                if ( isset($item_obj['item_data']['image_ids']) && is_array($item_obj['item_data']['image_ids']) && !empty($item_obj['item_data']['image_ids'][0]) ) {
+                    $first_img_id = $item_obj['item_data']['image_ids'][0];
+                    if ( isset($image_lookup[$first_img_id]) ) {
+                        $thumbnail = $image_lookup[$first_img_id];
+                    }
+                }
+
+                $grouped_items[$cat][] = array(
+                    'id'          => $item_id,
+                    'instance_id' => $instance_id,
+                    'name'        => $item_obj['item_data']['name'],
+                    'thumbnail'   => $thumbnail,
+                    'hide_image'  => isset($map_data['hide_image']) ? $map_data['hide_image'] : 0,
+                    'order'       => isset($map_data['order']) ? $map_data['order'] : 0,
+                );
+            }
+
+            // Add any items that aren't in the mapping at all to unassigned
+            foreach ( $items_by_id as $item_id => $item_obj ) {
+                $found = false;
+                foreach ($mapping as $map_data) {
+                    if ($map_data['item_id'] === $item_id) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $thumbnail = '';
+                    if ( isset($item_obj['item_data']['image_ids']) && is_array($item_obj['item_data']['image_ids']) && !empty($item_obj['item_data']['image_ids'][0]) ) {
+                        $first_img_id = $item_obj['item_data']['image_ids'][0];
+                        if ( isset($image_lookup[$first_img_id]) ) {
+                            $thumbnail = $image_lookup[$first_img_id];
+                        }
+                    }
+                    $grouped_items['unassigned'][] = array(
+                        'id'          => $item_id,
+                        'instance_id' => $item_id, // Use item_id as instance_id for unmapped items
+                        'name'        => $item_obj['item_data']['name'],
+                        'thumbnail'   => $thumbnail,
+                        'hide_image'  => 0,
+                        'order'       => 0,
+                    );
                 }
             }
-            $grouped_items[$cat][] = array(
-                'id'         => $item_id,
-                'name'       => $item_obj['item_data']['name'],
-                'thumbnail'  => $thumbnail,
-                'hide_image' => isset($mapping[$item_id]['hide_image']) ? $mapping[$item_id]['hide_image'] : 0,
-                'order'      => isset($mapping[$item_id]['order']) ? $mapping[$item_id]['order'] : 0,
-            );
+        } else {
+            // Old-style mapping: item_id => {category, order, hide_image}
+            // Convert to new style on the fly
+            foreach ( $items as $item_obj ) {
+                $item_id = $item_obj['id'];
+                if ( isset($mapping[$item_id]) && $mapping[$item_id]['category'] !== '' ) {
+                    $cat = $mapping[$item_id]['category'];
+                } else {
+                    $cat = 'unassigned';
+                }
+                $thumbnail = '';
+                if ( isset($item_obj['item_data']['image_ids']) && is_array($item_obj['item_data']['image_ids']) && !empty($item_obj['item_data']['image_ids'][0]) ) {
+                    $first_img_id = $item_obj['item_data']['image_ids'][0];
+                    if ( isset($image_lookup[$first_img_id]) ) {
+                        $thumbnail = $image_lookup[$first_img_id];
+                    }
+                }
+                $grouped_items[$cat][] = array(
+                    'id'          => $item_id,
+                    'instance_id' => $item_id, // Use item_id as instance_id for old-style
+                    'name'        => $item_obj['item_data']['name'],
+                    'thumbnail'   => $thumbnail,
+                    'hide_image'  => isset($mapping[$item_id]['hide_image']) ? $mapping[$item_id]['hide_image'] : 0,
+                    'order'       => isset($mapping[$item_id]['order']) ? $mapping[$item_id]['order'] : 0,
+                );
+            }
         }
 
         // Sort items in each group by order

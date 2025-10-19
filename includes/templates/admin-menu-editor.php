@@ -115,18 +115,19 @@ if ( ! defined( 'ABSPATH' ) ) {
                      <?php
                      if (isset($grouped_items[$cat['id']]) && count($grouped_items[$cat['id']]) > 0) {
                          foreach ($grouped_items[$cat['id']] as $item) {
+                             $instance_id = isset($item['instance_id']) ? $item['instance_id'] : $item['id'];
                              ?>
-                             <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" style="width:200px; height:200px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                             <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="width:200px; height:200px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
                                  <?php if (!empty($item['thumbnail'])) : ?>
                                      <img src="<?php echo esc_url($item['thumbnail']); ?>" alt="<?php echo esc_attr($item['name']); ?>" style="max-width:80px; margin-bottom:10px;">
                                  <?php endif; ?>
                                  <div style="text-align:center;">
                                      <span class="smdp-item-name" style="font-size:1.1em; display:block; margin-bottom:5px;"><?php echo esc_html($item['name']); ?></span>
                                      <label style="font-size:0.9em;">
-                                         <input type="checkbox" class="smdp-hide-image" data-item-id="<?php echo esc_attr($item['id']); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
+                                         <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                          Hide Image
                                      </label>
-                                     <button type="button" class="smdp-remove-item" data-item-id="<?php echo esc_attr($item['id']); ?>" style="margin-top:5px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.8em;">Remove</button>
+                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="margin-top:5px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.8em;">Remove</button>
                                  </div>
                              </li>
                              <?php
@@ -148,18 +149,19 @@ if ( ! defined( 'ABSPATH' ) ) {
                  <?php
                  if (isset($grouped_items['unassigned']) && count($grouped_items['unassigned']) > 0) {
                      foreach ($grouped_items['unassigned'] as $item) {
+                         $instance_id = isset($item['instance_id']) ? $item['instance_id'] : $item['id'];
                          ?>
-                         <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" style="width:200px; height:200px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                         <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="width:200px; height:200px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
                              <?php if (!empty($item['thumbnail'])) : ?>
                                  <img src="<?php echo esc_url($item['thumbnail']); ?>" alt="<?php echo esc_attr($item['name']); ?>" style="max-width:80px; margin-bottom:10px;">
                              <?php endif; ?>
                              <div style="text-align:center;">
                                  <span class="smdp-item-name" style="font-size:1.1em; display:block; margin-bottom:5px;"><?php echo esc_html($item['name']); ?></span>
                                  <label style="font-size:0.9em;">
-                                     <input type="checkbox" class="smdp-hide-image" data-item-id="<?php echo esc_attr($item['id']); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
+                                     <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                      Hide Image
                                  </label>
-                                 <button type="button" class="smdp-remove-item" data-item-id="<?php echo esc_attr($item['id']); ?>" style="margin-top:5px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.8em;">Remove</button>
+                                 <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="margin-top:5px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.8em;">Remove</button>
                              </div>
                          </li>
                          <?php
@@ -322,24 +324,36 @@ jQuery(document).ready(function($) {
       helper: "clone"
    }).disableSelection();
 
-   // Build mapping on form submit.
+   // Build mapping on form submit - supports items in multiple categories
    $("#smdp-items-form").on("submit", function(e) {
-      var mapping = {};
+      var mappingArray = [];
       $(".smdp-sortable-item").each(function() {
          var itemId = $(this).data("item-id");
+         var instanceId = $(this).data("instance-id"); // Unique ID for this specific instance
          var parentCategory = $(this).closest(".smdp-category-group").data("category") || "unassigned";
          var order = $(this).index();
          var hideImage = $(this).find(".smdp-hide-image").is(":checked") ? 1 : 0;
-         mapping[itemId] = { category: parentCategory, order: order, hide_image: hideImage };
+
+         mappingArray.push({
+            item_id: itemId,
+            instance_id: instanceId,
+            category: parentCategory,
+            order: order,
+            hide_image: hideImage
+         });
       });
-      $("#mapping_json").val(JSON.stringify(mapping));
+      $("#mapping_json").val(JSON.stringify(mappingArray));
       return true;
    });
 
-   // Remove Item: move item to Unassigned.
+   // Remove Item: delete this instance (since items can now appear in multiple categories)
    $("#smdp-items-container").on("click", ".smdp-remove-item", function() {
       var $item = $(this).closest(".smdp-sortable-item");
-      $("#smdp-items-container .smdp-category-group[data-category='unassigned'] ul.smdp-sortable-group").append($item);
+      var itemName = $item.find(".smdp-item-name").text();
+
+      if (confirm("Remove '" + itemName + "' from this category? (The item will still exist in other categories and can be re-added later)")) {
+         $item.remove();
+      }
    });
 
    // "Add Item" handler.
@@ -389,9 +403,22 @@ jQuery(document).ready(function($) {
                   selectedOptions.each(function() {
                       var selectedId = $(this).data("id");
                       if ( selectedId ) {
-                          var $item = $("#smdp-items-container .smdp-category-group[data-category='unassigned'] .smdp-sortable-item[data-item-id='" + selectedId + "']");
-                          if ( $item.length ) {
-                              $("#smdp-items-container .smdp-category-group[data-category='" + $("#smdp-add-item-dialog").data("targetCategory") + "'] ul.smdp-sortable-group").append($item);
+                          // Look for ANY instance of this item (not just in unassigned)
+                          var $sourceItem = $(".smdp-sortable-item[data-item-id='" + selectedId + "']").first();
+                          if ( $sourceItem.length ) {
+                              // Clone the item instead of moving it
+                              var $clone = $sourceItem.clone(true);
+
+                              // Generate a unique instance ID: item_id + timestamp + random
+                              var newInstanceId = selectedId + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                              $clone.attr("data-instance-id", newInstanceId);
+
+                              // Update data-instance-id on child elements too
+                              $clone.find(".smdp-hide-image").attr("data-instance-id", newInstanceId);
+                              $clone.find(".smdp-remove-item").attr("data-instance-id", newInstanceId);
+
+                              // Append clone to target category
+                              $("#smdp-items-container .smdp-category-group[data-category='" + $("#smdp-add-item-dialog").data("targetCategory") + "'] ul.smdp-sortable-group").append($clone);
                           }
                       }
                   });
@@ -446,16 +473,24 @@ jQuery(document).ready(function($) {
 
    // Floating save button click
    $("#smdp-floating-save-btn").on("click", function() {
-       // Manually build the mapping JSON before submitting
-       var mapping = {};
+       // Manually build the mapping JSON before submitting - array-based for multi-category support
+       var mappingArray = [];
        $(".smdp-sortable-item").each(function() {
           var itemId = $(this).data("item-id");
+          var instanceId = $(this).data("instance-id"); // Unique ID for this instance
           var parentCategory = $(this).closest(".smdp-category-group").data("category") || "unassigned";
           var order = $(this).index();
           var hideImage = $(this).find(".smdp-hide-image").is(":checked") ? 1 : 0;
-          mapping[itemId] = { category: parentCategory, order: order, hide_image: hideImage };
+
+          mappingArray.push({
+             item_id: itemId,
+             instance_id: instanceId,
+             category: parentCategory,
+             order: order,
+             hide_image: hideImage
+          });
        });
-       $("#mapping_json").val(JSON.stringify(mapping));
+       $("#mapping_json").val(JSON.stringify(mappingArray));
 
        // Now submit the form
        $("#smdp-items-form").get(0).submit(); // Use native submit to bypass jQuery handlers
