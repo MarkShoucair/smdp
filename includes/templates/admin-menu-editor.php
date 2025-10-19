@@ -105,12 +105,34 @@ if ( ! defined( 'ABSPATH' ) ) {
                        </button>
                     </div>
                     <div>
-                       <button type="button" class="smdp-add-item-btn" data-target="<?php echo esc_attr($cat['id']); ?>" style="display:inline-block; margin-right:5px; padding:5px 10px; background:#0073aa; color:#fff; border:none; border-radius:3px; cursor:pointer;">Add Item</button>
-                       <button type="button" class="smdp-hide-category-btn" data-catid="<?php echo esc_attr($cat['id']); ?>" style="display:inline-block; padding:5px 10px; background:#f39c12; color:#fff; border:none; border-radius:3px; cursor:pointer;">
+                       <button type="button" class="smdp-add-item-btn button button-primary" data-target="<?php echo esc_attr($cat['id']); ?>" style="margin-right:5px;">
+                         <span class="dashicons dashicons-plus-alt" style="vertical-align:middle;"></span> Add Item
+                       </button>
+                       <button type="button" class="smdp-hide-category-btn button" data-catid="<?php echo esc_attr($cat['id']); ?>" style="background:#f39c12; color:#fff; border-color:#e08e0b;">
                           <?php echo (isset($cat['hidden']) && $cat['hidden']) ? "Show Category" : "Hide Category"; ?>
                        </button>
                     </div>
                   </div>
+
+                  <!-- Inline Add Item Panel -->
+                  <div class="smdp-add-item-panel" data-category="<?php echo esc_attr($cat['id']); ?>" style="display:none; background:#fff; border:1px solid #2271b1; border-radius:4px; padding:15px; margin:10px 0;">
+                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h3 style="margin:0;">Add Items to <?php echo esc_html($cat['name']); ?></h3>
+                        <button type="button" class="smdp-close-add-panel button" style="padding:2px 8px;">
+                           <span class="dashicons dashicons-no-alt" style="vertical-align:middle;"></span>
+                        </button>
+                     </div>
+                     <input type="text" class="smdp-item-search" placeholder="Search items..." style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px;" />
+                     <div class="smdp-items-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; max-height:400px; overflow-y:auto; padding:5px;">
+                        <!-- Items will be populated here by JavaScript -->
+                     </div>
+                     <div style="margin-top:10px; text-align:right;">
+                        <button type="button" class="smdp-add-selected-items button button-primary">
+                           <span class="dashicons dashicons-plus" style="vertical-align:middle;"></span> Add Selected Items
+                        </button>
+                     </div>
+                  </div>
+
                   <ul class="smdp-sortable-group" style="display:flex; flex-wrap:wrap; gap:10px; list-style:none; margin:10px 0; padding:10px; min-height:220px; background:#ffffff; border-radius:4px;">
                      <?php
                      if (isset($grouped_items[$cat['id']]) && count($grouped_items[$cat['id']]) > 0) {
@@ -185,11 +207,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     </button>
   </div>
 
-  <!-- Modal Dialog for Adding Items -->
-  <div id="smdp-add-item-dialog" title="Add Items" style="display:none;">
-     <input type="text" id="smdp-add-item-search" placeholder="Search items..." style="width:100%; margin-bottom:10px;" />
-     <div id="smdp-add-item-list" style="display:flex; flex-wrap:wrap; gap:10px; max-height:400px; overflow-y:auto;"></div>
-  </div>
 
 <script>
 jQuery(document).ready(function($) {
@@ -356,79 +373,122 @@ jQuery(document).ready(function($) {
       }
    });
 
-   // "Add Item" handler.
+   // "Add Item" button - show inline panel
    $(".smdp-add-item-btn").on("click", function() {
        var targetCategory = $(this).data("target");
-       $("#smdp-add-item-dialog").data("targetCategory", targetCategory);
+       var $panel = $(".smdp-add-item-panel[data-category='" + targetCategory + "']");
 
-       var gridHtml = "";
-       $("#smdp-items-container .smdp-category-group[data-category='unassigned'] .smdp-sortable-item").each(function() {
-          var itemId = $(this).data("item-id");
-          var itemName = $(this).find(".smdp-item-name").text();
-          var thumbHtml = "";
-          var $img = $(this).find("img");
-          if ($img.length) {
-              thumbHtml = "<div style='width:40px; height:40px; margin-bottom:5px;'>" + $img[0].outerHTML + "</div>";
-          }
-          gridHtml += "<div class='smdp-add-item-option' data-id='" + itemId + "' style='width:45%; border:1px solid #ddd; padding:5px; text-align:center; cursor:pointer; margin-bottom:10px;'>"
-              + thumbHtml + "<div>" + itemName + "</div></div>";
-       });
-       if ( gridHtml === "" ) {
-           gridHtml = "<p>No unassigned items available.</p>";
+       // Close all other panels first
+       $(".smdp-add-item-panel").not($panel).slideUp(200);
+
+       // Toggle this panel
+       if ($panel.is(":visible")) {
+           $panel.slideUp(200);
+           return;
        }
-       $("#smdp-add-item-list").html(gridHtml);
 
-       $("#smdp-add-item-list .smdp-add-item-option").off("click").on("click", function() {
-          $(this).toggleClass("selected");
+       // Build the items grid
+       var gridHtml = "";
+       var seenItems = {}; // Track items we've already added to avoid duplicates
+
+       // Get ALL items from all categories (not just unassigned)
+       $("#smdp-items-container .smdp-sortable-item").each(function() {
+          var itemId = $(this).data("item-id");
+
+          // Skip if we've already added this item to the list
+          if (seenItems[itemId]) {
+              return;
+          }
+          seenItems[itemId] = true;
+
+          var itemName = $(this).find(".smdp-item-name").text();
+          var $img = $(this).find("img");
+          var imgStyle = "";
+          if ($img.length) {
+              imgStyle = "background:url('" + $img.attr("src") + "') center/cover no-repeat;";
+          }
+
+          gridHtml += "<div class='smdp-add-item-option' data-id='" + itemId + "' style='border:2px solid #ddd; padding:8px; text-align:center; cursor:pointer; border-radius:4px; transition:all 0.2s;'>"
+              + "<div style='width:100%; height:80px; " + imgStyle + " background-color:#f0f0f0; border-radius:3px; margin-bottom:5px;'></div>"
+              + "<div style='font-size:0.9em; font-weight:500;'>" + itemName + "</div>"
+              + "</div>";
        });
 
-       $("#smdp-add-item-search").off("keyup").on("keyup", function() {
-          var searchVal = $(this).val().toLowerCase();
-          $("#smdp-add-item-list .smdp-add-item-option").each(function() {
-              var text = $(this).text().toLowerCase();
-              $(this).toggle(text.indexOf(searchVal) > -1);
-          });
-       });
+       if ( gridHtml === "" ) {
+           gridHtml = "<p style='text-align:center; padding:20px; color:#666;'>No items available.</p>";
+       }
 
-       $("#smdp-add-item-dialog").dialog({
-          modal: true,
-          width: 600,
-          buttons: {
-              "Add": function() {
-                  var selectedOptions = $("#smdp-add-item-list .smdp-add-item-option.selected");
-                  if ( selectedOptions.length === 0 ) {
-                      alert("Please select at least one item.");
-                      return;
-                  }
-                  selectedOptions.each(function() {
-                      var selectedId = $(this).data("id");
-                      if ( selectedId ) {
-                          // Look for ANY instance of this item (not just in unassigned)
-                          var $sourceItem = $(".smdp-sortable-item[data-item-id='" + selectedId + "']").first();
-                          if ( $sourceItem.length ) {
-                              // Clone the item instead of moving it
-                              var $clone = $sourceItem.clone(true);
+       $panel.find(".smdp-items-grid").html(gridHtml);
+       $panel.slideDown(200);
 
-                              // Generate a unique instance ID: item_id + timestamp + random
-                              var newInstanceId = selectedId + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-                              $clone.attr("data-instance-id", newInstanceId);
-
-                              // Update data-instance-id on child elements too
-                              $clone.find(".smdp-hide-image").attr("data-instance-id", newInstanceId);
-                              $clone.find(".smdp-remove-item").attr("data-instance-id", newInstanceId);
-
-                              // Append clone to target category
-                              $("#smdp-items-container .smdp-category-group[data-category='" + $("#smdp-add-item-dialog").data("targetCategory") + "'] ul.smdp-sortable-group").append($clone);
-                          }
-                      }
-                  });
-                  $(this).dialog("close");
-              },
-              "Cancel": function() {
-                  $(this).dialog("close");
-              }
+       // Handle item selection (click to toggle)
+       $panel.find(".smdp-add-item-option").off("click").on("click", function() {
+          if ($(this).hasClass("selected")) {
+              $(this).removeClass("selected").css({
+                  "border-color": "#ddd",
+                  "background-color": "#fff"
+              });
+          } else {
+              $(this).addClass("selected").css({
+                  "border-color": "#2271b1",
+                  "background-color": "#f0f6fc"
+              });
           }
        });
+   });
+
+   // Close add panel button
+   $(document).on("click", ".smdp-close-add-panel", function() {
+       $(this).closest(".smdp-add-item-panel").slideUp(200);
+   });
+
+   // Search within add item panel
+   $(document).on("keyup", ".smdp-item-search", function() {
+       var searchVal = $(this).val().toLowerCase();
+       var $panel = $(this).closest(".smdp-add-item-panel");
+       $panel.find(".smdp-add-item-option").each(function() {
+           var text = $(this).text().toLowerCase();
+           $(this).toggle(text.indexOf(searchVal) > -1);
+       });
+   });
+
+   // Add selected items button
+   $(document).on("click", ".smdp-add-selected-items", function() {
+       var $panel = $(this).closest(".smdp-add-item-panel");
+       var targetCategory = $panel.data("category");
+       var $selectedOptions = $panel.find(".smdp-add-item-option.selected");
+
+       if ($selectedOptions.length === 0) {
+           alert("Please select at least one item.");
+           return;
+       }
+
+       $selectedOptions.each(function() {
+           var selectedId = $(this).data("id");
+           if (selectedId) {
+               // Look for ANY instance of this item
+               var $sourceItem = $(".smdp-sortable-item[data-item-id='" + selectedId + "']").first();
+               if ($sourceItem.length) {
+                   // Clone the item
+                   var $clone = $sourceItem.clone(true);
+
+                   // Generate a unique instance ID
+                   var newInstanceId = selectedId + "_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                   $clone.attr("data-instance-id", newInstanceId);
+
+                   // Update data-instance-id on child elements
+                   $clone.find(".smdp-hide-image").attr("data-instance-id", newInstanceId);
+                   $clone.find(".smdp-remove-item").attr("data-instance-id", newInstanceId);
+
+                   // Append clone to target category
+                   $(".smdp-category-group[data-category='" + targetCategory + "'] ul.smdp-sortable-group").append($clone);
+               }
+           }
+       });
+
+       // Close panel and clear search
+       $panel.find(".smdp-item-search").val("");
+       $panel.slideUp(200);
    });
 
    // Hide/Show Category handler.
@@ -472,12 +532,29 @@ jQuery(document).ready(function($) {
    });
 
    // Floating save button click
-   $("#smdp-floating-save-btn").on("click", function() {
+   $("#smdp-floating-save-btn").on("click", function(e) {
+       e.preventDefault();
+
+       var $btn = $(this);
+       var originalHtml = $btn.html();
+
+       // Visual feedback - show saving state
+       $btn.prop("disabled", true).html('<span class="dashicons dashicons-update dashicons-spin" style="vertical-align:middle;margin-right:5px;"></span>Saving...');
+
        // Manually build the mapping JSON before submitting - array-based for multi-category support
        var mappingArray = [];
+       var itemCount = 0;
+
        $(".smdp-sortable-item").each(function() {
           var itemId = $(this).data("item-id");
           var instanceId = $(this).data("instance-id"); // Unique ID for this instance
+
+          // Skip if no valid IDs
+          if (!itemId || !instanceId) {
+              console.warn("Skipping item with missing IDs:", this);
+              return;
+          }
+
           var parentCategory = $(this).closest(".smdp-category-group").data("category") || "unassigned";
           var order = $(this).index();
           var hideImage = $(this).find(".smdp-hide-image").is(":checked") ? 1 : 0;
@@ -489,11 +566,29 @@ jQuery(document).ready(function($) {
              order: order,
              hide_image: hideImage
           });
+          itemCount++;
        });
-       $("#mapping_json").val(JSON.stringify(mappingArray));
 
-       // Now submit the form
-       $("#smdp-items-form").get(0).submit(); // Use native submit to bypass jQuery handlers
+       var jsonString = JSON.stringify(mappingArray);
+       console.log("Floating save - Found " + itemCount + " items");
+       console.log("Floating save - JSON length:", jsonString.length);
+
+       // Set the hidden field value
+       $("#mapping_json").val(jsonString);
+
+       // Small delay to show the saving state, then submit
+       setTimeout(function() {
+           var form = document.getElementById("smdp-items-form");
+           if (form) {
+               console.log("Submitting form via native submit...");
+               // Use native DOM submit to avoid jQuery event handlers
+               HTMLFormElement.prototype.submit.call(form);
+           } else {
+               console.error("Form not found!");
+               $btn.prop("disabled", false).html(originalHtml);
+               alert("Error: Form not found. Please try the regular save button.");
+           }
+       }, 200);
    });
 
    // Shortcode copy handler with improved feedback
