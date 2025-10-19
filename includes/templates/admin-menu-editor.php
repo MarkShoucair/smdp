@@ -139,17 +139,38 @@ if ( ! defined( 'ABSPATH' ) ) {
                          foreach ($grouped_items[$cat['id']] as $item) {
                              $instance_id = isset($item['instance_id']) ? $item['instance_id'] : $item['id'];
                              ?>
-                             <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="width:200px; height:200px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                                 <?php if (!empty($item['thumbnail'])) : ?>
-                                     <img src="<?php echo esc_url($item['thumbnail']); ?>" alt="<?php echo esc_attr($item['name']); ?>" style="max-width:80px; margin-bottom:10px;">
+                             <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="width:200px; height:240px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box; position:relative;">
+                                 <?php
+                                 // Determine final sold-out status
+                                 $final_sold_status = '';
+                                 if (!empty($item['sold_out_override'])) {
+                                     $final_sold_status = $item['sold_out_override'];
+                                 } elseif (!empty($item['square_sold_out'])) {
+                                     $final_sold_status = 'sold';
+                                 }
+
+                                 // Show badge if sold out
+                                 if ($final_sold_status === 'sold') : ?>
+                                     <div class="smdp-sold-badge" style="position:absolute; top:5px; right:5px; background:#dc3232; color:#fff; padding:2px 6px; border-radius:3px; font-size:0.7em; font-weight:bold;">SOLD OUT</div>
                                  <?php endif; ?>
-                                 <div style="text-align:center;">
-                                     <span class="smdp-item-name" style="font-size:1.1em; display:block; margin-bottom:5px;"><?php echo esc_html($item['name']); ?></span>
-                                     <label style="font-size:0.9em;">
+
+                                 <?php if (!empty($item['thumbnail'])) : ?>
+                                     <img src="<?php echo esc_url($item['thumbnail']); ?>" alt="<?php echo esc_attr($item['name']); ?>" style="max-width:80px; margin-bottom:5px;">
+                                 <?php endif; ?>
+                                 <div style="text-align:center; width:100%;">
+                                     <span class="smdp-item-name" style="font-size:1.0em; display:block; margin-bottom:5px; font-weight:500;"><?php echo esc_html($item['name']); ?></span>
+
+                                     <select class="smdp-sold-out-select" data-item-id="<?php echo esc_attr($item['id']); ?>" style="width:100%; font-size:0.8em; margin-bottom:3px; padding:2px;">
+                                         <option value="">Auto<?php echo !empty($item['square_sold_out']) ? ' (Sold)' : ' (Available)'; ?></option>
+                                         <option value="sold" <?php selected($item['sold_out_override'], 'sold'); ?>>Force Sold Out</option>
+                                         <option value="available" <?php selected($item['sold_out_override'], 'available'); ?>>Force Available</option>
+                                     </select>
+
+                                     <label style="font-size:0.8em; display:block; margin-bottom:3px;">
                                          <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                          Hide Image
                                      </label>
-                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="margin-top:5px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.8em;">Remove</button>
+                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="margin-top:2px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.75em; width:100%;">Remove</button>
                                  </div>
                              </li>
                              <?php
@@ -173,17 +194,38 @@ if ( ! defined( 'ABSPATH' ) ) {
                      foreach ($grouped_items['unassigned'] as $item) {
                          $instance_id = isset($item['instance_id']) ? $item['instance_id'] : $item['id'];
                          ?>
-                         <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="width:200px; height:200px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                             <?php if (!empty($item['thumbnail'])) : ?>
-                                 <img src="<?php echo esc_url($item['thumbnail']); ?>" alt="<?php echo esc_attr($item['name']); ?>" style="max-width:80px; margin-bottom:10px;">
+                         <li class="smdp-sortable-item" data-item-id="<?php echo esc_attr($item['id']); ?>" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="width:200px; height:240px; padding:10px; border:1px solid #eee; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box; position:relative;">
+                             <?php
+                             // Determine final sold-out status
+                             $final_sold_status = '';
+                             if (!empty($item['sold_out_override'])) {
+                                 $final_sold_status = $item['sold_out_override'];
+                             } elseif (!empty($item['square_sold_out'])) {
+                                 $final_sold_status = 'sold';
+                             }
+
+                             // Show badge if sold out
+                             if ($final_sold_status === 'sold') : ?>
+                                 <div class="smdp-sold-badge" style="position:absolute; top:5px; right:5px; background:#dc3232; color:#fff; padding:2px 6px; border-radius:3px; font-size:0.7em; font-weight:bold;">SOLD OUT</div>
                              <?php endif; ?>
-                             <div style="text-align:center;">
-                                 <span class="smdp-item-name" style="font-size:1.1em; display:block; margin-bottom:5px;"><?php echo esc_html($item['name']); ?></span>
-                                 <label style="font-size:0.9em;">
+
+                             <?php if (!empty($item['thumbnail'])) : ?>
+                                 <img src="<?php echo esc_url($item['thumbnail']); ?>" alt="<?php echo esc_attr($item['name']); ?>" style="max-width:80px; margin-bottom:5px;">
+                             <?php endif; ?>
+                             <div style="text-align:center; width:100%;">
+                                 <span class="smdp-item-name" style="font-size:1.0em; display:block; margin-bottom:5px; font-weight:500;"><?php echo esc_html($item['name']); ?></span>
+
+                                 <select class="smdp-sold-out-select" data-item-id="<?php echo esc_attr($item['id']); ?>" style="width:100%; font-size:0.8em; margin-bottom:3px; padding:2px;">
+                                     <option value="">Auto<?php echo !empty($item['square_sold_out']) ? ' (Sold)' : ' (Available)'; ?></option>
+                                     <option value="sold" <?php selected($item['sold_out_override'], 'sold'); ?>>Force Sold Out</option>
+                                     <option value="available" <?php selected($item['sold_out_override'], 'available'); ?>>Force Available</option>
+                                 </select>
+
+                                 <label style="font-size:0.8em; display:block; margin-bottom:3px;">
                                      <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                      Hide Image
                                  </label>
-                                 <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="margin-top:5px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.8em;">Remove</button>
+                                 <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="margin-top:2px; padding:2px 5px; background:#d9534f; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:0.75em; width:100%;">Remove</button>
                              </div>
                          </li>
                          <?php
@@ -199,12 +241,256 @@ if ( ! defined( 'ABSPATH' ) ) {
      <?php submit_button('Save Mappings'); ?>
   </form>
 
+  <!-- Advanced Items Table Section -->
+  <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h2 style="margin:0;">Advanced Item Management</h2>
+      <button type="button" id="smdp-toggle-items-table" class="button button-secondary">
+        <span class="dashicons dashicons-list-view" style="vertical-align:middle;"></span>
+        <span class="toggle-text">Show Items Table</span>
+      </button>
+    </div>
+
+    <div id="smdp-items-table-container" style="display:none;">
+      <p style="margin-bottom:15px;">
+        <button type="button" id="smdp-match-categories-btn" class="button button-secondary">
+          <span class="dashicons dashicons-category" style="vertical-align:middle;"></span> Match Square Categories
+        </button>
+        <button type="button" id="smdp-sync-soldout-btn" class="button button-secondary" style="margin-left:10px;">
+          <span class="dashicons dashicons-update" style="vertical-align:middle;"></span> Sync Sold Out Status from Square
+        </button>
+      </p>
+
+      <table class="wp-list-table widefat striped" style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="width:60px;">Image</th>
+            <th>Item Name</th>
+            <th>Categories</th>
+            <th style="width:120px;">Square Status</th>
+            <th style="width:150px;">Override</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          // Build comprehensive items list
+          $all_objects = get_option(SMDP_ITEMS_OPTION, array());
+          $mapping = get_option(SMDP_MAPPING_OPTION, array());
+          $categories = get_option(SMDP_CATEGORIES_OPTION, array());
+
+          // Build image lookup
+          $image_lookup = array();
+          foreach ($all_objects as $obj) {
+              if (isset($obj['type']) && $obj['type'] === 'IMAGE' && !empty($obj['image_data']['url'])) {
+                  $image_lookup[$obj['id']] = $obj['image_data']['url'];
+              }
+          }
+
+          // Get all items
+          $all_items_for_table = array();
+          foreach ($all_objects as $obj) {
+              if (isset($obj['type']) && $obj['type'] === 'ITEM') {
+                  $all_items_for_table[] = $obj;
+              }
+          }
+
+          // Sort by name
+          usort($all_items_for_table, function($a, $b) {
+              return strcmp($a['item_data']['name'], $b['item_data']['name']);
+          });
+
+          // Check if new-style mapping
+          $is_new_style = false;
+          foreach ($mapping as $key => $data) {
+              if (isset($data['instance_id'])) {
+                  $is_new_style = true;
+                  break;
+              }
+          }
+
+          foreach ($all_items_for_table as $item_obj):
+              $item_id = $item_obj['id'];
+              $item_data = $item_obj['item_data'];
+
+              // Get thumbnail
+              $thumb = '';
+              if (!empty($item_data['image_ids'][0])) {
+                  $img_id = $item_data['image_ids'][0];
+                  if (isset($image_lookup[$img_id])) {
+                      $thumb = $image_lookup[$img_id];
+                  }
+              }
+
+              // Find which categories this item is in
+              $item_categories = array();
+              if ($is_new_style) {
+                  foreach ($mapping as $map_data) {
+                      if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id) {
+                          $cat_id = $map_data['category'];
+                          if ($cat_id && isset($categories[$cat_id])) {
+                              $item_categories[$cat_id] = $categories[$cat_id]['name'];
+                          } elseif ($cat_id === 'unassigned') {
+                              $item_categories['unassigned'] = 'Unassigned';
+                          }
+                      }
+                  }
+              } else {
+                  if (isset($mapping[$item_id]) && !empty($mapping[$item_id]['category'])) {
+                      $cat_id = $mapping[$item_id]['category'];
+                      if (isset($categories[$cat_id])) {
+                          $item_categories[$cat_id] = $categories[$cat_id]['name'];
+                      }
+                  } else {
+                      $item_categories['unassigned'] = 'Unassigned';
+                  }
+              }
+
+              // Detect Square sold-out status
+              $is_sold_out = false;
+              if (!empty($item_data['variations'])) {
+                  foreach ($item_data['variations'] as $var) {
+                      $ov_list = $var['item_variation_data']['location_overrides'] ?? array();
+                      foreach ($ov_list as $ov) {
+                          if (!empty($ov['sold_out'])) {
+                              $is_sold_out = true;
+                              break 2;
+                          }
+                      }
+                  }
+              }
+
+              // Get override
+              $sold_out_override = '';
+              if ($is_new_style) {
+                  foreach ($mapping as $map_data) {
+                      if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id && isset($map_data['sold_out_override'])) {
+                          $sold_out_override = $map_data['sold_out_override'];
+                          break;
+                      }
+                  }
+              } else {
+                  $sold_out_override = $mapping[$item_id]['sold_out_override'] ?? '';
+              }
+
+              $square_status = $is_sold_out ? 'Sold Out' : 'Available';
+          ?>
+          <tr>
+            <td>
+              <?php if ($thumb): ?>
+                <img src="<?php echo esc_url($thumb); ?>" style="max-width:50px;height:auto;border-radius:3px;">
+              <?php endif; ?>
+            </td>
+            <td><strong><?php echo esc_html($item_data['name']); ?></strong></td>
+            <td>
+              <?php
+              if (empty($item_categories)) {
+                  echo '<em style="color:#999;">No categories</em>';
+              } else {
+                  echo esc_html(implode(', ', array_unique($item_categories)));
+              }
+              ?>
+            </td>
+            <td>
+              <span style="display:inline-block; padding:3px 8px; border-radius:3px; font-size:0.9em; <?php echo $is_sold_out ? 'background:#dc3232; color:#fff;' : 'background:#46b450; color:#fff;'; ?>">
+                <?php echo esc_html($square_status); ?>
+              </span>
+            </td>
+            <td>
+              <select class="smdp-table-sold-out-select" data-item-id="<?php echo esc_attr($item_id); ?>" style="width:100%;">
+                <option value="">Auto (<?php echo $is_sold_out ? 'Sold' : 'Available'; ?>)</option>
+                <option value="sold" <?php selected($sold_out_override, 'sold'); ?>>Force Sold Out</option>
+                <option value="available" <?php selected($sold_out_override, 'available'); ?>>Force Available</option>
+              </select>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Floating Save Button -->
   <div id="smdp-floating-save" style="position:fixed;bottom:30px;right:30px;z-index:9999;display:none;">
     <button type="button" class="button button-primary button-hero" id="smdp-floating-save-btn" style="box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:16px;padding:12px 24px;">
       <span class="dashicons dashicons-saved" style="vertical-align:middle;margin-right:5px;"></span>
       Save Mappings
     </button>
+  </div>
+
+  <!-- Double Confirmation Modal for Match Categories -->
+  <div id="smdp-match-categories-modal" class="smdp-confirmation-modal" style="display:none;">
+    <div class="smdp-modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;"></div>
+    <div class="smdp-modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:500px;width:90%;z-index:100000;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <span class="dashicons dashicons-warning" style="font-size:48px;color:#f56e28;width:48px;height:48px;"></span>
+      </div>
+      <h2 style="margin:0 0 15px 0;text-align:center;color:#d63638;">Warning: This Will Overwrite All Customizations</h2>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:15px;">
+        <strong>This action will reset all your category assignments to match Square POS settings.</strong>
+      </p>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:20px;">
+        You will lose:
+      </p>
+      <ul style="margin:0 0 20px 20px;font-size:14px;line-height:1.8;">
+        <li>Custom category assignments</li>
+        <li>Items in multiple categories</li>
+        <li>Custom category ordering</li>
+      </ul>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:20px;padding:12px;background:#fff3cd;border-left:4px solid:#f56e28;color:#856404;">
+        <strong>Important:</strong> This cannot be undone. Make sure you have a backup if needed.
+      </p>
+      <div style="margin-bottom:20px;">
+        <label style="display:flex;align-items:center;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="smdp-match-confirm-check" style="margin-right:8px;">
+          <span>I understand this will overwrite all my customizations</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button type="button" class="button button-large" id="smdp-match-cancel" style="min-width:120px;">Cancel</button>
+        <button type="button" class="button button-primary button-large" id="smdp-match-confirm" disabled style="min-width:120px;background:#d63638;border-color:#d63638;">
+          <span class="dashicons dashicons-warning" style="vertical-align:middle;margin-right:5px;"></span>
+          Proceed Anyway
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Double Confirmation Modal for Sync Sold Out -->
+  <div id="smdp-sync-soldout-modal" class="smdp-confirmation-modal" style="display:none;">
+    <div class="smdp-modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;"></div>
+    <div class="smdp-modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:500px;width:90%;z-index:100000;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <span class="dashicons dashicons-warning" style="font-size:48px;color:#f56e28;width:48px;height:48px;"></span>
+      </div>
+      <h2 style="margin:0 0 15px 0;text-align:center;color:#d63638;">Warning: This Will Overwrite All Sold-Out Overrides</h2>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:15px;">
+        <strong>This action will sync all sold-out statuses to match current Square POS data.</strong>
+      </p>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:20px;">
+        You will lose:
+      </p>
+      <ul style="margin:0 0 20px 20px;font-size:14px;line-height:1.8;">
+        <li>All "Force Sold Out" overrides</li>
+        <li>All "Force Available" overrides</li>
+        <li>Manual sold-out status controls</li>
+      </ul>
+      <p style="font-size:14px;line-height:1.6;margin-bottom:20px;padding:12px;background:#fff3cd;border-left:4px solid:#f56e28;color:#856404;">
+        <strong>Important:</strong> All items will revert to "Auto" mode, following Square POS settings only.
+      </p>
+      <div style="margin-bottom:20px;">
+        <label style="display:flex;align-items:center;font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="smdp-sync-confirm-check" style="margin-right:8px;">
+          <span>I understand this will reset all sold-out overrides</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button type="button" class="button button-large" id="smdp-sync-cancel" style="min-width:120px;">Cancel</button>
+        <button type="button" class="button button-primary button-large" id="smdp-sync-confirm" disabled style="min-width:120px;background:#d63638;border-color:#d63638;">
+          <span class="dashicons dashicons-warning" style="vertical-align:middle;margin-right:5px;"></span>
+          Proceed Anyway
+        </button>
+      </div>
+    </div>
   </div>
 
 
@@ -403,13 +689,19 @@ jQuery(document).ready(function($) {
 
           var itemName = $(this).find(".smdp-item-name").text();
           var $img = $(this).find("img");
-          var imgStyle = "";
-          if ($img.length) {
-              imgStyle = "background:url('" + $img.attr("src") + "') center/cover no-repeat;";
+          var imgHtml = "";
+
+          if ($img.length && $img.attr("src")) {
+              // Use actual img tag for better reliability
+              var imgSrc = $img.attr("src");
+              var imgAlt = $img.attr("alt") || itemName;
+              imgHtml = "<img src='" + imgSrc + "' alt='" + imgAlt + "' style='width:100%; height:100%; object-fit:cover; border-radius:3px;' />";
           }
 
           gridHtml += "<div class='smdp-add-item-option' data-id='" + itemId + "' style='border:2px solid #ddd; padding:8px; text-align:center; cursor:pointer; border-radius:4px; transition:all 0.2s;'>"
-              + "<div style='width:100%; height:80px; " + imgStyle + " background-color:#f0f0f0; border-radius:3px; margin-bottom:5px;'></div>"
+              + "<div style='width:100%; height:80px; background-color:#f0f0f0; border-radius:3px; margin-bottom:5px; overflow:hidden; display:flex; align-items:center; justify-content:center;'>"
+              + (imgHtml || "<span style='color:#999; font-size:0.8em;'>No Image</span>")
+              + "</div>"
               + "<div style='font-size:0.9em; font-weight:500;'>" + itemName + "</div>"
               + "</div>";
        });
@@ -624,6 +916,158 @@ jQuery(document).ready(function($) {
                $btn.css("background-color", "");
            }, 2000);
        }
+   });
+
+   // Sold-out status change handler
+   $(document).on("change", ".smdp-sold-out-select", function() {
+       var $select = $(this);
+       var itemId = $select.data("item-id");
+       var newStatus = $select.val();
+
+       // Update all instances of this item on the page
+       $(".smdp-sold-out-select[data-item-id='" + itemId + "']").val(newStatus);
+
+       // Update sold-out badges for all instances
+       $(".smdp-sortable-item[data-item-id='" + itemId + "']").each(function() {
+           var $item = $(this);
+           var $badge = $item.find(".smdp-sold-badge");
+
+           // Remove existing badge
+           $badge.remove();
+
+           // Add badge if forcing sold out, or if auto and Square says sold
+           if (newStatus === 'sold') {
+               $item.prepend('<div class="smdp-sold-badge" style="position:absolute; top:5px; right:5px; background:#dc3232; color:#fff; padding:2px 6px; border-radius:3px; font-size:0.7em; font-weight:bold;">SOLD OUT</div>');
+           }
+       });
+
+       // Save via AJAX
+       $.post(ajaxurl, {
+           action: 'smdp_update_sold_out_override',
+           item_id: itemId,
+           override: newStatus,
+           _ajax_nonce: '<?php echo wp_create_nonce('smdp_update_sold_out'); ?>'
+       }, function(response) {
+           if (!response.success) {
+               alert('Error updating sold-out status: ' + (response.data || 'Unknown error'));
+               console.error('Sold-out update failed:', response);
+           }
+       }).fail(function() {
+           alert('Failed to save sold-out status. Please try saving the form.');
+       });
+   });
+
+   // Toggle advanced items table
+   $("#smdp-toggle-items-table").on("click", function() {
+       var $btn = $(this);
+       var $container = $("#smdp-items-table-container");
+       var $toggleText = $btn.find(".toggle-text");
+
+       if ($container.is(":visible")) {
+           $container.slideUp(300);
+           $toggleText.text("Show Items Table");
+           $btn.find(".dashicons").removeClass("dashicons-arrow-up-alt2").addClass("dashicons-list-view");
+       } else {
+           $container.slideDown(300);
+           $toggleText.text("Hide Items Table");
+           $btn.find(".dashicons").removeClass("dashicons-list-view").addClass("dashicons-arrow-up-alt2");
+       }
+   });
+
+   // Table sold-out select handler (syncs with card selects)
+   $(document).on("change", ".smdp-table-sold-out-select", function() {
+       var $select = $(this);
+       var itemId = $select.data("item-id");
+       var newStatus = $select.val();
+
+       // Update all card instances
+       $(".smdp-sold-out-select[data-item-id='" + itemId + "']").val(newStatus).trigger("change");
+   });
+
+   // Match Square Categories - Show modal
+   $("#smdp-match-categories-btn").on("click", function() {
+       $("#smdp-match-categories-modal").fadeIn(200);
+       $("#smdp-match-confirm-check").prop("checked", false);
+       $("#smdp-match-confirm").prop("disabled", true);
+   });
+
+   // Match Categories - Enable confirm button when checkbox is checked
+   $("#smdp-match-confirm-check").on("change", function() {
+       $("#smdp-match-confirm").prop("disabled", !$(this).is(":checked"));
+   });
+
+   // Match Categories - Cancel
+   $("#smdp-match-cancel, #smdp-match-categories-modal .smdp-modal-overlay").on("click", function() {
+       $("#smdp-match-categories-modal").fadeOut(200);
+   });
+
+   // Match Categories - Confirm and execute
+   $("#smdp-match-confirm").on("click", function() {
+       var $modal = $("#smdp-match-categories-modal");
+       var $btn = $("#smdp-match-categories-btn");
+       var originalText = $btn.html();
+
+       $modal.fadeOut(200);
+       $btn.prop("disabled", true).html('<span class="dashicons dashicons-update dashicons-spin" style="vertical-align:middle;"></span> Matching...');
+
+       $.post(ajaxurl, {
+           action: 'smdp_match_categories',
+           _ajax_nonce: '<?php echo wp_create_nonce("smdp_match_categories"); ?>'
+       }, function(response) {
+           if (response.success) {
+               alert('Categories matched successfully! Page will reload.');
+               location.reload();
+           } else {
+               alert('Error: ' + (response.data || 'Unknown error'));
+               $btn.prop("disabled", false).html(originalText);
+           }
+       }).fail(function() {
+           alert('Failed to match categories. Please try again.');
+           $btn.prop("disabled", false).html(originalText);
+       });
+   });
+
+   // Sync Sold Out - Show modal
+   $("#smdp-sync-soldout-btn").on("click", function() {
+       $("#smdp-sync-soldout-modal").fadeIn(200);
+       $("#smdp-sync-confirm-check").prop("checked", false);
+       $("#smdp-sync-confirm").prop("disabled", true);
+   });
+
+   // Sync Sold Out - Enable confirm button when checkbox is checked
+   $("#smdp-sync-confirm-check").on("change", function() {
+       $("#smdp-sync-confirm").prop("disabled", !$(this).is(":checked"));
+   });
+
+   // Sync Sold Out - Cancel
+   $("#smdp-sync-cancel, #smdp-sync-soldout-modal .smdp-modal-overlay").on("click", function() {
+       $("#smdp-sync-soldout-modal").fadeOut(200);
+   });
+
+   // Sync Sold Out - Confirm and execute
+   $("#smdp-sync-confirm").on("click", function() {
+       var $modal = $("#smdp-sync-soldout-modal");
+       var $btn = $("#smdp-sync-soldout-btn");
+       var originalText = $btn.html();
+
+       $modal.fadeOut(200);
+       $btn.prop("disabled", true).html('<span class="dashicons dashicons-update dashicons-spin" style="vertical-align:middle;"></span> Syncing...');
+
+       $.post(ajaxurl, {
+           action: 'smdp_sync_sold_out',
+           _ajax_nonce: '<?php echo wp_create_nonce("smdp_sync_sold_out"); ?>'
+       }, function(response) {
+           if (response.success) {
+               alert('Sold-out status synced successfully! Page will reload.');
+               location.reload();
+           } else {
+               alert('Error: ' + (response.data || 'Unknown error'));
+               $btn.prop("disabled", false).html(originalText);
+           }
+       }).fail(function() {
+           alert('Failed to sync sold-out status. Please try again.');
+           $btn.prop("disabled", false).html(originalText);
+       });
    });
 
    // Hide Image Change Handler (for debugging/visual feedback).

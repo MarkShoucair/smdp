@@ -57,8 +57,9 @@ class SMDP_Ajax_Handler {
         add_action( 'wp_ajax_smdp_match_categories', array( $this, 'match_categories' ) );
         add_action( 'wp_ajax_smdp_save_cat_order', array( $this, 'save_category_order' ) );
 
-        // Sold-Out Sync (Admin only)
+        // Sold-Out Management (Admin only)
         add_action( 'wp_ajax_smdp_sync_sold_out', array( $this, 'sync_sold_out' ) );
+        add_action( 'wp_ajax_smdp_update_sold_out_override', array( $this, 'update_sold_out_override' ) );
 
         // Frontend Sync/Refresh (Public + Admin)
         add_action( 'wp_ajax_nopriv_smdp_check_sync', array( $this, 'check_sync' ) );
@@ -506,6 +507,72 @@ class SMDP_Ajax_Handler {
         wp_send_json_success( array(
             'enabled' => (bool) $new_mode,
             'cache_version' => get_option( 'smdp_cache_version', 1 )
+        ) );
+    }
+
+    /**
+     * Update sold-out override for a specific item
+     *
+     * AJAX handler for updating item sold-out status override
+     */
+    public function update_sold_out_override() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions.' );
+        }
+
+        check_ajax_referer( 'smdp_update_sold_out', '_ajax_nonce' );
+
+        $item_id = isset( $_POST['item_id'] ) ? sanitize_text_field( $_POST['item_id'] ) : '';
+        $override = isset( $_POST['override'] ) ? sanitize_text_field( $_POST['override'] ) : '';
+
+        if ( empty( $item_id ) ) {
+            wp_send_json_error( 'Item ID is required.' );
+        }
+
+        // Validate override value
+        if ( ! in_array( $override, array( '', 'sold', 'available' ), true ) ) {
+            wp_send_json_error( 'Invalid override value.' );
+        }
+
+        // Get current mapping
+        $mapping = get_option( SMDP_MAPPING_OPTION, array() );
+
+        // Check if this is new-style or old-style mapping
+        $is_new_style = false;
+        foreach ( $mapping as $key => $data ) {
+            if ( isset( $data['instance_id'] ) ) {
+                $is_new_style = true;
+                break;
+            }
+        }
+
+        if ( $is_new_style ) {
+            // New-style: Update sold_out_override for all instances of this item
+            foreach ( $mapping as $instance_id => &$map_data ) {
+                if ( isset( $map_data['item_id'] ) && $map_data['item_id'] === $item_id ) {
+                    $map_data['sold_out_override'] = $override;
+                }
+            }
+            unset( $map_data ); // Break reference
+        } else {
+            // Old-style: Direct update
+            if ( ! isset( $mapping[ $item_id ] ) ) {
+                $mapping[ $item_id ] = array(
+                    'category'          => '',
+                    'order'             => 0,
+                    'hide_image'        => 0,
+                    'sold_out_override' => '',
+                );
+            }
+            $mapping[ $item_id ]['sold_out_override'] = $override;
+        }
+
+        update_option( SMDP_MAPPING_OPTION, $mapping );
+
+        wp_send_json_success( array(
+            'message' => 'Sold-out override updated successfully.',
+            'item_id' => $item_id,
+            'override' => $override,
         ) );
     }
 

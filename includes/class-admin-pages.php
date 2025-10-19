@@ -1341,13 +1341,38 @@ class SMDP_Admin_Pages {
                     }
                 }
 
+                // Detect sold-out status from Square data
+                $is_sold_out = false;
+                if (!empty($item_obj['item_data']['variations'])) {
+                    foreach ($item_obj['item_data']['variations'] as $var) {
+                        $ov_list = $var['item_variation_data']['location_overrides'] ?? [];
+                        foreach ($ov_list as $ov) {
+                            if (!empty($ov['sold_out'])) {
+                                $is_sold_out = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
+                // Get sold-out override from mapping (applies to all instances of this item)
+                $sold_out_override = '';
+                foreach ($mapping as $map) {
+                    if (isset($map['item_id']) && $map['item_id'] === $item_id && isset($map['sold_out_override'])) {
+                        $sold_out_override = $map['sold_out_override'];
+                        break;
+                    }
+                }
+
                 $grouped_items[$cat][] = array(
-                    'id'          => $item_id,
-                    'instance_id' => $instance_id,
-                    'name'        => $item_obj['item_data']['name'],
-                    'thumbnail'   => $thumbnail,
-                    'hide_image'  => isset($map_data['hide_image']) ? $map_data['hide_image'] : 0,
-                    'order'       => isset($map_data['order']) ? $map_data['order'] : 0,
+                    'id'                => $item_id,
+                    'instance_id'       => $instance_id,
+                    'name'              => $item_obj['item_data']['name'],
+                    'thumbnail'         => $thumbnail,
+                    'hide_image'        => isset($map_data['hide_image']) ? $map_data['hide_image'] : 0,
+                    'order'             => isset($map_data['order']) ? $map_data['order'] : 0,
+                    'square_sold_out'   => $is_sold_out,
+                    'sold_out_override' => $sold_out_override,
                 );
             }
 
@@ -1368,13 +1393,30 @@ class SMDP_Admin_Pages {
                             $thumbnail = $image_lookup[$first_img_id];
                         }
                     }
+
+                    // Detect sold-out status
+                    $is_sold_out = false;
+                    if (!empty($item_obj['item_data']['variations'])) {
+                        foreach ($item_obj['item_data']['variations'] as $var) {
+                            $ov_list = $var['item_variation_data']['location_overrides'] ?? [];
+                            foreach ($ov_list as $ov) {
+                                if (!empty($ov['sold_out'])) {
+                                    $is_sold_out = true;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+
                     $grouped_items['unassigned'][] = array(
-                        'id'          => $item_id,
-                        'instance_id' => $item_id, // Use item_id as instance_id for unmapped items
-                        'name'        => $item_obj['item_data']['name'],
-                        'thumbnail'   => $thumbnail,
-                        'hide_image'  => 0,
-                        'order'       => 0,
+                        'id'                => $item_id,
+                        'instance_id'       => $item_id, // Use item_id as instance_id for unmapped items
+                        'name'              => $item_obj['item_data']['name'],
+                        'thumbnail'         => $thumbnail,
+                        'hide_image'        => 0,
+                        'order'             => 0,
+                        'square_sold_out'   => $is_sold_out,
+                        'sold_out_override' => '',
                     );
                 }
             }
@@ -1395,13 +1437,29 @@ class SMDP_Admin_Pages {
                         $thumbnail = $image_lookup[$first_img_id];
                     }
                 }
+                // Detect sold-out status
+                $is_sold_out = false;
+                if (!empty($item_obj['item_data']['variations'])) {
+                    foreach ($item_obj['item_data']['variations'] as $var) {
+                        $ov_list = $var['item_variation_data']['location_overrides'] ?? [];
+                        foreach ($ov_list as $ov) {
+                            if (!empty($ov['sold_out'])) {
+                                $is_sold_out = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
                 $grouped_items[$cat][] = array(
-                    'id'          => $item_id,
-                    'instance_id' => $item_id, // Use item_id as instance_id for old-style
-                    'name'        => $item_obj['item_data']['name'],
-                    'thumbnail'   => $thumbnail,
-                    'hide_image'  => isset($mapping[$item_id]['hide_image']) ? $mapping[$item_id]['hide_image'] : 0,
-                    'order'       => isset($mapping[$item_id]['order']) ? $mapping[$item_id]['order'] : 0,
+                    'id'                => $item_id,
+                    'instance_id'       => $item_id, // Use item_id as instance_id for old-style
+                    'name'              => $item_obj['item_data']['name'],
+                    'thumbnail'         => $thumbnail,
+                    'hide_image'        => isset($mapping[$item_id]['hide_image']) ? $mapping[$item_id]['hide_image'] : 0,
+                    'order'             => isset($mapping[$item_id]['order']) ? $mapping[$item_id]['order'] : 0,
+                    'square_sold_out'   => $is_sold_out,
+                    'sold_out_override' => isset($mapping[$item_id]['sold_out_override']) ? $mapping[$item_id]['sold_out_override'] : '',
                 );
             }
         }
