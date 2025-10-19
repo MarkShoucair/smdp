@@ -53,6 +53,7 @@ class SMDP_Ajax_Handler {
         add_action( 'wp_ajax_smdp_delete_category', array( $this, 'delete_category' ) );
         add_action( 'wp_ajax_smdp_toggle_category_hidden', array( $this, 'toggle_category_hidden' ) );
         add_action( 'wp_ajax_smdp_add_category', array( $this, 'add_category' ) );
+        add_action( 'wp_ajax_smdp_create_category', array( $this, 'create_category' ) );
         add_action( 'wp_ajax_smdp_match_categories', array( $this, 'match_categories' ) );
         add_action( 'wp_ajax_smdp_save_cat_order', array( $this, 'save_category_order' ) );
 
@@ -156,6 +157,53 @@ class SMDP_Ajax_Handler {
         } else {
             wp_send_json_error( 'Category not found.' );
         }
+    }
+
+    /**
+     * AJAX: Create a new category from Menu Editor
+     */
+    public function create_category() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions.' );
+        }
+        check_ajax_referer( 'smdp_create_category' );
+
+        $name = isset( $_POST['name'] ) ? smdp_sanitize_text_field( $_POST['name'], 100 ) : '';
+
+        if ( empty( $name ) ) {
+            wp_send_json_error( 'Category name is required.' );
+        }
+
+        // Generate slug from name
+        $slug = sanitize_title( $name );
+
+        // Load existing categories
+        $categories = get_option( SMDP_CATEGORIES_OPTION, array() );
+        if ( ! is_array( $categories ) ) {
+            $categories = array();
+        }
+
+        // Create unique ID
+        $id = 'cat_' . time();
+
+        // Create new category
+        $categories[ $id ] = array(
+            'id'    => $id,
+            'name'  => $name,
+            'slug'  => $slug,
+            'order' => count( $categories ) + 1,
+            'hidden' => false
+        );
+
+        // Save
+        update_option( SMDP_CATEGORIES_OPTION, $categories );
+
+        wp_send_json_success( array(
+            'id' => $id,
+            'name' => $name,
+            'slug' => $slug,
+            'message' => 'Category created successfully.'
+        ) );
     }
 
     /**

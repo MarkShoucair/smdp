@@ -18,10 +18,13 @@ if ( ! defined( 'ABSPATH' ) ) {
      Use the "Hide Image" checkbox to disable front-end image display.
   </p>
 
-  <!-- Category Order Section -->
+  <!-- Category Management Section -->
   <div style="margin-bottom:20px;">
-    <button type="button" id="smdp-toggle-category-order" class="button button-secondary" style="margin-bottom:10px;">
+    <button type="button" id="smdp-toggle-category-order" class="button button-secondary" style="margin-bottom:10px;margin-right:10px;">
       <span class="dashicons dashicons-sort" style="vertical-align:middle;"></span> Sort Categories
+    </button>
+    <button type="button" id="smdp-add-category-btn" class="button button-primary" style="margin-bottom:10px;">
+      <span class="dashicons dashicons-plus-alt" style="vertical-align:middle;"></span> Add Category
     </button>
 
     <div id="smdp-category-order-panel" style="display:none; background:#fff; border:1px solid #ccd0d4; padding:15px; margin-bottom:15px;">
@@ -68,6 +71,17 @@ if ( ! defined( 'ABSPATH' ) ) {
         <button type="button" class="button button-primary" id="smdp-save-cat-order">Save Category Order</button>
         <span id="smdp-cat-order-status" style="margin-left:10px;"></span>
       </p>
+    </div>
+
+    <!-- Add Category Panel -->
+    <div id="smdp-add-category-panel" style="display:none; background:#fff; border:1px solid #ccd0d4; padding:15px; margin-bottom:15px;">
+      <h3 style="margin-top:0;">Add New Category</h3>
+      <p style="margin-bottom:15px;">Enter a name for your new category. A URL-friendly slug will be generated automatically.</p>
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <input type="text" id="smdp-new-cat-name" placeholder="Category Name" style="flex:1;padding:8px;" />
+        <button type="button" class="button button-primary" id="smdp-save-new-category">Add Category</button>
+      </div>
+      <span id="smdp-add-cat-status" style="display:inline-block;margin-top:10px;"></span>
     </div>
   </div>
 
@@ -169,6 +183,62 @@ jQuery(document).ready(function($) {
    // Toggle category order panel
    $("#smdp-toggle-category-order").on("click", function() {
       $("#smdp-category-order-panel").slideToggle(300);
+      $("#smdp-add-category-panel").hide();
+   });
+
+   // Toggle add category panel
+   $("#smdp-add-category-btn").on("click", function() {
+      $("#smdp-add-category-panel").slideToggle(300);
+      $("#smdp-category-order-panel").hide();
+   });
+
+   // Create new category
+   $("#smdp-save-new-category").on("click", function() {
+      var $btn = $(this);
+      var $status = $("#smdp-add-cat-status");
+      var $input = $("#smdp-new-cat-name");
+      var categoryName = $input.val().trim();
+
+      if (!categoryName) {
+         $status.html('<span style="color:#dc3232;">Please enter a category name.</span>');
+         return;
+      }
+
+      $btn.prop("disabled", true);
+      $status.html('<span style="color:#999;">Creating category...</span>');
+
+      $.ajax({
+         url: ajaxurl,
+         method: "POST",
+         data: {
+            action: "smdp_create_category",
+            name: categoryName,
+            _ajax_nonce: "<?php echo wp_create_nonce('smdp_create_category'); ?>"
+         },
+         success: function(response) {
+            if (response.success) {
+               $status.html('<span style="color:#46b450;">✓ Category created! Reloading...</span>');
+               setTimeout(function() {
+                  location.reload();
+               }, 1000);
+            } else {
+               $status.html('<span style="color:#dc3232;">Error: ' + (response.data || 'Unknown error') + '</span>');
+               $btn.prop("disabled", false);
+            }
+         },
+         error: function() {
+            $status.html('<span style="color:#dc3232;">Error: Failed to create category</span>');
+            $btn.prop("disabled", false);
+         }
+      });
+   });
+
+   // Allow Enter key to submit new category
+   $("#smdp-new-cat-name").on("keypress", function(e) {
+      if (e.which === 13) {
+         e.preventDefault();
+         $("#smdp-save-new-category").click();
+      }
    });
 
    // Initialize category order sortable
