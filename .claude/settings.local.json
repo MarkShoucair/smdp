@@ -3,7 +3,8 @@
     "allow": [
       "Bash(test:*)",
       "Read(//c/Users/mark/Local Sites/menu-app-testing/**)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(awk -F: '$1 > 1190 && $1 < 1400 {print}')"
     ],
     "deny": [],
     "ask": []

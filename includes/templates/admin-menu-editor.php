@@ -13,8 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 
-<div class="wrap">
-  <h1>Menu Editor</h1>
+  <h2>Menu Editor</h2>
   <p>Drag and drop items to reorder or move them between categories.<br>
      Use the "Hide Image" checkbox to disable front-end image display.
   </p>
@@ -111,7 +110,6 @@ if ( ! defined( 'ABSPATH' ) ) {
      <input type="text" id="smdp-add-item-search" placeholder="Search items..." style="width:100%; margin-bottom:10px;" />
      <div id="smdp-add-item-list" style="display:flex; flex-wrap:wrap; gap:10px; max-height:400px; overflow-y:auto;"></div>
   </div>
-</div>
 
 <script>
 jQuery(document).ready(function($) {

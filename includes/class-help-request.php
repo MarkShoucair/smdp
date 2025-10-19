@@ -42,8 +42,9 @@ class SMDP_Help_Request {
     add_action( 'admin_menu',            [ $this, 'add_admin_page' ] );
     add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin' ] );
     add_action( 'admin_init',            [ $this, 'handle_admin_form' ] );
-    add_action( 'admin_menu',            [ $this, 'add_modifier_settings_page' ] );
-    add_action( 'admin_init',            [ $this, 'handle_modifier_settings_form' ] );
+    // Modifiers page moved to Menu Management → Modifiers tab
+    // add_action( 'admin_menu',            [ $this, 'add_modifier_settings_page' ] );
+    // add_action( 'admin_init',            [ $this, 'handle_modifier_settings_form' ] );
   }
 
   /* ══════════════════  Shortcodes  ══════════════════ */

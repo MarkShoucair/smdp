@@ -105,23 +105,25 @@ class SMDP_Admin_Pages {
             array( $this, 'render_menu_management_page' )
         );
 
-        add_submenu_page(
-            'smdp_main',
-            'Menu Editor',
-            'Menu Editor',
-            'manage_options',
-            'smdp_menu_editor',
-            array( $this, 'render_items_page' )
-        );
+        // Menu Editor moved to Menu Management → Menu Editor tab
+        // add_submenu_page(
+        //     'smdp_main',
+        //     'Menu Editor',
+        //     'Menu Editor',
+        //     'manage_options',
+        //     'smdp_menu_editor',
+        //     array( $this, 'render_items_page' )
+        // );
 
-        add_submenu_page(
-            'smdp_main',
-            'API Log',
-            'API Log',
-            'manage_options',
-            'smdp_api_log',
-            array( $this, 'render_api_log_page' )
-        );
+        // API Log moved to Settings → API Log tab
+        // add_submenu_page(
+        //     'smdp_main',
+        //     'API Log',
+        //     'API Log',
+        //     'manage_options',
+        //     'smdp_api_log',
+        //     array( $this, 'render_api_log_page' )
+        // );
     }
 
     /**
@@ -292,6 +294,7 @@ class SMDP_Admin_Pages {
             <h2 class="nav-tab-wrapper">
                 <a href="#tab-connection" class="nav-tab nav-tab-active">Square Connection</a>
                 <a href="#tab-reset" class="nav-tab">Reset & Clear</a>
+                <a href="#tab-api-log" class="nav-tab">API Log</a>
                 <a href="#tab-docs" class="nav-tab">Documentation</a>
             </h2>
 
@@ -538,6 +541,30 @@ class SMDP_Admin_Pages {
                 </div>
             </div><!-- End Tab: Reset -->
 
+            <!-- Tab: API Log -->
+            <div id="tab-api-log" class="smdp-settings-tab" style="display:none;">
+                <h2>Square API Log</h2>
+                <p>This section displays the API request and raw response received from Square during the catalog sync. (Up to the 10 most recent entries are shown.)</p>
+
+                <?php
+                $api_logs = get_option( SMDP_API_LOG_OPTION, array() );
+                if ( ! empty( $api_logs ) ) : ?>
+                    <?php foreach ( $api_logs as $log ) : ?>
+                        <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; background: #fff;">
+                            <strong>Timestamp:</strong> <?php echo esc_html( $log['timestamp'] ); ?><br><br>
+                            <strong>API Request:</strong>
+                            <pre style="background: #f5f5f5; padding: 10px; border: 1px solid #ccc; overflow-y: auto; max-height: 150px; white-space: pre-wrap; word-wrap: break-word;"><?php echo esc_html( $log['catalog_request'] ); ?></pre>
+                            <strong>API Response:</strong>
+                            <pre style="background: #f5f5f5; padding: 10px; border: 1px solid #ccc; overflow-y: auto; max-height: 300px; white-space: pre-wrap; word-wrap: break-word;"><?php echo esc_html( $log['catalog_response'] ); ?></pre>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <div style="background:#fff;border:1px solid #ccd0d4;padding:20px;margin:20px 0;">
+                        <p>No API logs recorded yet. Logs will appear here after syncing your catalog from Square.</p>
+                    </div>
+                <?php endif; ?>
+            </div><!-- End Tab: API Log -->
+
             <!-- Tab: Documentation -->
             <div id="tab-docs" class="smdp-settings-tab" style="display:none;">
                 <h2>Documentation & Quick Start Guide</h2>
@@ -709,12 +736,13 @@ class SMDP_Admin_Pages {
         ?>
         <div class="wrap">
             <h1>Menu Management</h1>
-            <p>Manage your menu categories, items, modifiers, and webhook subscriptions.</p>
+            <p>Manage your menu categories, items, modifiers, menu editor, and webhook subscriptions.</p>
 
             <!-- Tab Navigation -->
             <h2 class="nav-tab-wrapper">
                 <a href="#tab-categories" class="nav-tab nav-tab-active">Categories</a>
                 <a href="#tab-items" class="nav-tab">Items</a>
+                <a href="#tab-menu-editor" class="nav-tab">Menu Editor</a>
                 <a href="#tab-modifiers" class="nav-tab">Modifiers</a>
                 <a href="#tab-webhooks" class="nav-tab">Webhooks</a>
             </h2>
@@ -727,6 +755,11 @@ class SMDP_Admin_Pages {
             <!-- Tab: Items -->
             <div id="tab-items" class="smdp-menu-mgmt-tab" style="display:none;">
                 <?php $this->render_items_list(); ?>
+            </div>
+
+            <!-- Tab: Menu Editor -->
+            <div id="tab-menu-editor" class="smdp-menu-mgmt-tab" style="display:none;">
+                <?php $this->render_items_page(); ?>
             </div>
 
             <!-- Tab: Modifiers -->
@@ -1015,11 +1048,37 @@ class SMDP_Admin_Pages {
     }
 
     /**
-     * Render the modifiers list page
+     * Render the modifiers list page with show/hide functionality
      */
     public function render_modifiers_list() {
+        // Handle form submission for show/hide
+        if ( isset( $_POST['smdp_modifier_admin_nonce'] ) ) {
+            check_admin_referer( 'smdp_modifier_admin', 'smdp_modifier_admin_nonce' );
+
+            if ( isset( $_POST['smdp_save_modifiers'] ) ) {
+                // Get all modifier lists
+                $all_items = get_option( SMDP_ITEMS_OPTION, [] );
+                $all_list_ids = [];
+                foreach ( $all_items as $obj ) {
+                    if ( $obj['type'] === 'MODIFIER_LIST' ) {
+                        $all_list_ids[] = $obj['id'];
+                    }
+                }
+
+                // Get the ones marked as visible (checked boxes)
+                $visible = isset( $_POST['smdp_visible_mods'] ) ? array_keys( $_POST['smdp_visible_mods'] ) : [];
+
+                // Disabled = all lists MINUS visible ones
+                $disabled = array_diff( $all_list_ids, $visible );
+
+                update_option( 'smdp_disabled_modifiers', array_values( $disabled ) );
+                echo '<div class="updated"><p>Modifier visibility settings saved.</p></div>';
+            }
+        }
+
         // Load cached data
         $all_items = get_option( SMDP_ITEMS_OPTION, [] );
+        $disabled_mods = (array) get_option( 'smdp_disabled_modifiers', [] );
 
         // Build list of modifier lists
         $modifier_lists = [];
@@ -1039,12 +1098,16 @@ class SMDP_Admin_Pages {
 
         ?>
           <h2>Modifier Lists</h2>
-          <p>View all modifier lists synced from Square. Modifiers are automatically applied to items based on your Square configuration.</p>
+          <p>Manage modifier visibility and view all modifier lists synced from Square. Unchecked modifiers will be hidden from the menu app.</p>
+
+          <form method="post">
+            <?php wp_nonce_field( 'smdp_modifier_admin', 'smdp_modifier_admin_nonce' ); ?>
 
           <?php if ( $modifier_lists ): ?>
             <table class="wp-list-table widefat striped">
               <thead>
                 <tr>
+                  <th style="width:60px;">Show?</th>
                   <th>Modifier List Name</th>
                   <th>Selection Type</th>
                   <th>Modifiers</th>
@@ -1054,16 +1117,18 @@ class SMDP_Admin_Pages {
               <tbody>
                 <?php foreach ( $modifier_lists as $mod_list_obj ):
                     $mod_list_data = $mod_list_obj['modifier_list_data'];
+                    $list_id = $mod_list_obj['id'];
                     $list_name = $mod_list_data['name'] ?? 'Unnamed';
                     $selection_type = $mod_list_data['selection_type'] ?? 'SINGLE';
                     $modifiers = $mod_list_data['modifiers'] ?? [];
+                    $is_visible = ! in_array( $list_id, $disabled_mods, true );
 
                     // Count items using this modifier list
                     $items_using = 0;
                     foreach ( $all_items as $item ) {
                         if ( $item['type'] === 'ITEM' && ! empty( $item['item_data']['modifier_list_info'] ) ) {
                             foreach ( $item['item_data']['modifier_list_info'] as $ml_info ) {
-                                if ( $ml_info['modifier_list_id'] === $mod_list_obj['id'] ) {
+                                if ( $ml_info['modifier_list_id'] === $list_id ) {
                                     $items_using++;
                                     break;
                                 }
@@ -1072,6 +1137,9 @@ class SMDP_Admin_Pages {
                     }
                 ?>
                 <tr>
+                  <td style="text-align:center;">
+                    <input type="checkbox" name="smdp_visible_mods[<?php echo esc_attr( $list_id ); ?>]" value="1" <?php checked( $is_visible, true ); ?>>
+                  </td>
                   <td><strong><?php echo esc_html( $list_name ); ?></strong></td>
                   <td><?php echo esc_html( $selection_type ); ?></td>
                   <td>
@@ -1101,9 +1169,15 @@ class SMDP_Admin_Pages {
                 <?php endforeach; ?>
               </tbody>
             </table>
+
+            <p style="margin-top:20px;">
+              <button name="smdp_save_modifiers" class="button button-primary">Save Modifier Visibility</button>
+            </p>
           <?php else: ?>
             <p>No modifier lists found. Make sure you've synced your catalog from Square.</p>
           <?php endif; ?>
+
+          </form>
 
           <style>
             .wp-list-table th, .wp-list-table td { vertical-align: top; }
