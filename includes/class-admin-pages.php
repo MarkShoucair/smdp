@@ -293,9 +293,9 @@ class SMDP_Admin_Pages {
             <!-- Tab Navigation -->
             <h2 class="nav-tab-wrapper">
                 <a href="#tab-connection" class="nav-tab nav-tab-active">Square Connection</a>
-                <a href="#tab-reset" class="nav-tab">Reset & Clear</a>
                 <a href="#tab-api-log" class="nav-tab">API Log</a>
                 <a href="#tab-docs" class="nav-tab">Documentation</a>
+                <a href="#tab-reset" class="nav-tab">Reset & Clear</a>
             </h2>
 
             <!-- Tab: Square Connection -->
@@ -740,26 +740,26 @@ class SMDP_Admin_Pages {
 
             <!-- Tab Navigation -->
             <h2 class="nav-tab-wrapper">
-                <a href="#tab-categories" class="nav-tab nav-tab-active">Categories</a>
+                <a href="#tab-menu-editor" class="nav-tab nav-tab-active">Menu Editor</a>
+                <a href="#tab-categories" class="nav-tab">Categories</a>
                 <a href="#tab-items" class="nav-tab">Items</a>
-                <a href="#tab-menu-editor" class="nav-tab">Menu Editor</a>
                 <a href="#tab-modifiers" class="nav-tab">Modifiers</a>
                 <a href="#tab-webhooks" class="nav-tab">Webhooks</a>
             </h2>
 
+            <!-- Tab: Menu Editor -->
+            <div id="tab-menu-editor" class="smdp-menu-mgmt-tab active" style="display:block;">
+                <?php $this->render_items_page(); ?>
+            </div>
+
             <!-- Tab: Categories -->
-            <div id="tab-categories" class="smdp-menu-mgmt-tab active" style="display:block;">
+            <div id="tab-categories" class="smdp-menu-mgmt-tab" style="display:none;">
                 <?php $this->render_categories_page(); ?>
             </div>
 
             <!-- Tab: Items -->
             <div id="tab-items" class="smdp-menu-mgmt-tab" style="display:none;">
                 <?php $this->render_items_list(); ?>
-            </div>
-
-            <!-- Tab: Menu Editor -->
-            <div id="tab-menu-editor" class="smdp-menu-mgmt-tab" style="display:none;">
-                <?php $this->render_items_page(); ?>
             </div>
 
             <!-- Tab: Modifiers -->

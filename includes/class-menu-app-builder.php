@@ -255,8 +255,6 @@ class SMDP_Menu_App_Builder {
       <h2 class="nav-tab-wrapper">
         <a href="#tab-layout" class="nav-tab nav-tab-active">App Layout</a>
         <a href="#tab-styles" class="nav-tab">Styles</a>
-        <a href="#tab-items" class="nav-tab">Items</a>
-        <a href="#tab-categories" class="nav-tab">Categories</a>
         <a href="#tab-pwa" class="nav-tab">PWA & Debug</a>
         <a href="#tab-advanced" class="nav-tab">Advanced</a>
       </h2>
@@ -292,48 +290,7 @@ class SMDP_Menu_App_Builder {
         </form>
       </div>
 
-      <div id="tab-items" class="smdp-tab">
-        <?php echo self::render_items_editor_embed(); ?>
-      </div>
-
-      <div id="tab-categories" class="smdp-tab">
-        <?php
-          $cat_opt = defined('SMDP_CATEGORIES_OPTION') ? SMDP_CATEGORIES_OPTION : 'square_menu_categories';
-          $cats = get_option($cat_opt, array());
-          if (!is_array($cats)) $cats = array();
-          uasort($cats, function($a,$b){
-            $oa = isset($a['order']) ? intval($a['order']) : 0;
-            $ob = isset($b['order']) ? intval($b['order']) : 0;
-            if ($oa === $ob) {
-              $an = isset($a['name']) ? $a['name'] : '';
-              $bn = isset($b['name']) ? $b['name'] : '';
-              return strcasecmp($an, $bn);
-            }
-            return ($oa < $ob) ? -1 : 1;
-          });
-        ?>
-        <div class="postbox" style="padding:12px;margin-bottom:16px;">
-          <h3 style="margin:0 0 10px;">Reorder Categories (drag to sort)</h3>
-          <label style="display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;">
-            <input type="checkbox" id="smdp-order-exclude-hidden" checked>
-            Exclude hidden categories
-          </label>
-          <ul id="smdp-cat-order" class="smdp-cat-order" style="list-style:none;margin:0;padding:0;">
-            <?php foreach ($cats as $cid => $cat): $is_hidden = !empty($cat['hidden']); ?>
-              <li class="smdp-cat-order-item <?php echo $is_hidden ? 'is-hidden' : ''; ?>" data-id="<?php echo esc_attr($cid); ?>" data-hidden="<?php echo $is_hidden ? '1' : '0'; ?>" style="border:1px solid #e5e5e5;border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#fff;display:flex;justify-content:space-between;align-items:center;">
-                <span><?php echo esc_html($cat['name'] ?? 'Category'); ?><?php echo $is_hidden ? ' <em style="opacity:.7">(hidden)</em>' : ''; ?></span>
-                <span class="dashicons dashicons-move"></span>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-          <p>
-            <button type="button" class="button button-primary" id="smdp-save-cat-order">Save Order</button>
-            <span id="smdp-cat-order-status" style="margin-left:8px;"></span>
-          </p>
-        </div>
-
-        <?php echo self::render_categories_editor_embed(); ?>
-      </div>
+      <!-- Items and Categories tabs moved to Menu Management → Menu Editor -->
 
       <!-- Tab: PWA & Debug -->
       <div id="tab-pwa" class="smdp-tab">

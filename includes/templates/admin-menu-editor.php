@@ -18,6 +18,59 @@ if ( ! defined( 'ABSPATH' ) ) {
      Use the "Hide Image" checkbox to disable front-end image display.
   </p>
 
+  <!-- Category Order Section -->
+  <div style="margin-bottom:20px;">
+    <button type="button" id="smdp-toggle-category-order" class="button button-secondary" style="margin-bottom:10px;">
+      <span class="dashicons dashicons-sort" style="vertical-align:middle;"></span> Sort Categories
+    </button>
+
+    <div id="smdp-category-order-panel" style="display:none; background:#fff; border:1px solid #ccd0d4; padding:15px; margin-bottom:15px;">
+      <h3 style="margin-top:0;">Reorder Categories (drag to sort)</h3>
+      <label style="display:inline-flex;align-items:center;gap:6px;margin-bottom:12px;">
+        <input type="checkbox" id="smdp-order-exclude-hidden" checked>
+        Exclude hidden categories from list
+      </label>
+      <ul id="smdp-cat-order" class="smdp-cat-order" style="list-style:none;margin:0;padding:0;max-width:600px;">
+        <?php
+        // Get categories with current order
+        $cat_opt = defined('SMDP_CATEGORIES_OPTION') ? SMDP_CATEGORIES_OPTION : 'square_menu_categories';
+        $all_categories = get_option($cat_opt, array());
+        if (!is_array($all_categories)) $all_categories = array();
+
+        // Sort by current order
+        uasort($all_categories, function($a,$b){
+          $oa = isset($a['order']) ? intval($a['order']) : 0;
+          $ob = isset($b['order']) ? intval($b['order']) : 0;
+          if ($oa === $ob) {
+            $an = isset($a['name']) ? $a['name'] : '';
+            $bn = isset($b['name']) ? $b['name'] : '';
+            return strcasecmp($an, $bn);
+          }
+          return ($oa < $ob) ? -1 : 1;
+        });
+
+        foreach ($all_categories as $cid => $cat):
+          $is_hidden = !empty($cat['hidden']);
+        ?>
+          <li class="smdp-cat-order-item <?php echo $is_hidden ? 'is-hidden' : ''; ?>"
+              data-id="<?php echo esc_attr($cid); ?>"
+              data-hidden="<?php echo $is_hidden ? '1' : '0'; ?>"
+              style="border:1px solid #e5e5e5;border-radius:4px;padding:10px 12px;margin-bottom:8px;background:#fafafa;display:flex;justify-content:space-between;align-items:center;cursor:move;">
+            <span>
+              <span class="dashicons dashicons-move" style="color:#999;margin-right:8px;"></span>
+              <?php echo esc_html($cat['name'] ?? 'Category'); ?>
+              <?php echo $is_hidden ? ' <em style="opacity:.6">(hidden)</em>' : ''; ?>
+            </span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <p style="margin-top:15px;">
+        <button type="button" class="button button-primary" id="smdp-save-cat-order">Save Category Order</button>
+        <span id="smdp-cat-order-status" style="margin-left:10px;"></span>
+      </p>
+    </div>
+  </div>
+
   <form method="post" id="smdp-items-form">
      <?php wp_nonce_field('smdp_mapping_save','smdp_mapping_nonce'); ?>
      <div id="smdp-items-container">
@@ -113,6 +166,71 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <script>
 jQuery(document).ready(function($) {
+   // Toggle category order panel
+   $("#smdp-toggle-category-order").on("click", function() {
+      $("#smdp-category-order-panel").slideToggle(300);
+   });
+
+   // Initialize category order sortable
+   $("#smdp-cat-order").sortable({
+      placeholder: "smdp-cat-placeholder",
+      forcePlaceholderSize: true,
+      cursor: "move",
+      opacity: 0.8
+   }).disableSelection();
+
+   // Filter hidden categories in sort list
+   $("#smdp-order-exclude-hidden").on("change", function() {
+      if ($(this).is(":checked")) {
+         $("#smdp-cat-order .smdp-cat-order-item.is-hidden").hide();
+      } else {
+         $("#smdp-cat-order .smdp-cat-order-item.is-hidden").show();
+      }
+      $("#smdp-cat-order").sortable("refresh");
+   }).trigger("change");
+
+   // Save category order
+   $("#smdp-save-cat-order").on("click", function() {
+      var $btn = $(this);
+      var $status = $("#smdp-cat-order-status");
+      var order = [];
+
+      $("#smdp-cat-order .smdp-cat-order-item").each(function(index) {
+         order.push({
+            id: $(this).data("id"),
+            order: index
+         });
+      });
+
+      $btn.prop("disabled", true);
+      $status.html('<span style="color:#999;">Saving...</span>');
+
+      $.ajax({
+         url: ajaxurl,
+         method: "POST",
+         data: {
+            action: "smdp_save_cat_order",
+            order: JSON.stringify(order),
+            _ajax_nonce: "<?php echo wp_create_nonce('smdp_cat_order'); ?>"
+         },
+         success: function(response) {
+            if (response.success) {
+               $status.html('<span style="color:#46b450;">✓ Saved! Reloading...</span>');
+               setTimeout(function() {
+                  location.reload();
+               }, 1000);
+            } else {
+               $status.html('<span style="color:#dc3232;">Error: ' + (response.data || 'Unknown error') + '</span>');
+               $btn.prop("disabled", false);
+            }
+         },
+         error: function() {
+            $status.html('<span style="color:#dc3232;">Error: Failed to save</span>');
+            $btn.prop("disabled", false);
+         }
+      });
+   });
+
    // Initialize sortable groups.
    $(".smdp-sortable-group").sortable({
       connectWith: ".smdp-sortable-group",

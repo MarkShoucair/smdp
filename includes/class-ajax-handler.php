@@ -54,6 +54,7 @@ class SMDP_Ajax_Handler {
         add_action( 'wp_ajax_smdp_toggle_category_hidden', array( $this, 'toggle_category_hidden' ) );
         add_action( 'wp_ajax_smdp_add_category', array( $this, 'add_category' ) );
         add_action( 'wp_ajax_smdp_match_categories', array( $this, 'match_categories' ) );
+        add_action( 'wp_ajax_smdp_save_cat_order', array( $this, 'save_category_order' ) );
 
         // Sold-Out Sync (Admin only)
         add_action( 'wp_ajax_smdp_sync_sold_out', array( $this, 'sync_sold_out' ) );
@@ -155,6 +156,44 @@ class SMDP_Ajax_Handler {
         } else {
             wp_send_json_error( 'Category not found.' );
         }
+    }
+
+    /**
+     * AJAX: Save category order from Menu Editor
+     */
+    public function save_category_order() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions.' );
+        }
+        check_ajax_referer( 'smdp_cat_order' );
+
+        $order_json = isset( $_POST['order'] ) ? $_POST['order'] : '';
+        $order_data = json_decode( stripslashes( $order_json ), true );
+
+        if ( ! is_array( $order_data ) ) {
+            wp_send_json_error( 'Invalid order data.' );
+        }
+
+        // Load categories
+        $categories = get_option( SMDP_CATEGORIES_OPTION, array() );
+        if ( ! is_array( $categories ) ) {
+            $categories = array();
+        }
+
+        // Update order for each category
+        foreach ( $order_data as $item ) {
+            if ( isset( $item['id'] ) && isset( $item['order'] ) ) {
+                $cat_id = $item['id'];
+                if ( isset( $categories[ $cat_id ] ) ) {
+                    $categories[ $cat_id ]['order'] = intval( $item['order'] );
+                }
+            }
+        }
+
+        // Save updated categories
+        update_option( SMDP_CATEGORIES_OPTION, $categories );
+
+        wp_send_json_success( 'Category order saved successfully.' );
     }
 
     /**
