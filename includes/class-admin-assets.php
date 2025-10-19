@@ -57,7 +57,9 @@ class SMDP_Admin_Assets {
         if ( isset( $_GET['page'] ) && strpos( $_GET['page'], 'smdp_' ) !== false ) {
             wp_enqueue_script( 'jquery-ui-sortable' );
             wp_enqueue_script( 'jquery-ui-dialog' );
-            wp_enqueue_style( 'jquery-ui-css', 'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css' );
+            // REMOVED: External jQuery UI CSS from Google CDN
+            // jQuery UI functionality works without the CSS (sortable doesn't require styling)
+            // If UI styling is needed in future, we'll add minimal inline CSS
         }
     }
 

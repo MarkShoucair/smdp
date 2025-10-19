@@ -2,9 +2,9 @@
 .smdp-app-header { position: sticky; top: 0; background: #fff; padding: 10px 0; z-index: 3; }
 .smdp-cat-bar { position: sticky; top: 48px; z-index: 2; display: flex; gap: 8px; overflow-x: auto;
   padding: 8px 0; background: #fff; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-.smdp-cat-btn { padding: 10px 14px; border-radius: 999px; border: 1px solid #e5e5e5; background:#fff;
+.smdp-cat-btn { padding: 10px 14px; border-radius: 999px; border: 1px solid #01669c; background:#fff;
   font-size: 16px; white-space: nowrap; cursor: pointer; min-width: fit-content; flex-shrink: 0; }
-.smdp-cat-btn.active { border-color:#333; background:#f3f4f6; }
+.smdp-cat-btn.active { border-color:#0986bf; background:#0986bf; }
 .smdp-app-sections { padding-top: 12px; }
 
 /* Left layout rail */

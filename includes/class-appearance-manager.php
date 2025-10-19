@@ -22,7 +22,7 @@ class SMDP_Appearance_Manager {
 	 * Initialize the class
 	 */
 	public function __construct() {
-		// Only enqueue structural CSS - all styles are now hard-coded
+		// Enqueue hardcoded structural CSS only - no dynamic CSS
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_structural_css' ) );
 	}
 
@@ -71,92 +71,13 @@ class SMDP_Appearance_Manager {
 	}
 
 	/**
-	 * Inject dynamic CSS based on appearance settings
+	 * REMOVED: Dynamic CSS generation - all styles are now hardcoded in CSS files
+	 * This method is kept for reference but no longer hooked
 	 */
-	public function inject_dynamic_css() {
-		if ( ! $this->is_menu_app_page() ) {
-			return;
-		}
-
-		$settings = $this->get_settings();
-		$css = $this->generate_css( $settings );
-
-		if ( ! empty( $css ) ) {
-			echo "\n<style id=\"smdp-dynamic-styles\">\n" . $css . "\n</style>\n";
-		}
-
-		// Add custom CSS if provided
-		if ( ! empty( $settings['custom_css'] ) ) {
-			echo "\n<style id=\"smdp-custom-styles\">\n" . wp_strip_all_tags( $settings['custom_css'] ) . "\n</style>\n";
-		}
-	}
-
-	/**
-	 * Generate CSS from settings
-	 *
-	 * @param array $settings Appearance settings
-	 * @return string Generated CSS
-	 */
-	private function generate_css( $settings ) {
-		$css = "/* SMDP Dynamic Styles */\n";
-
-		// Help & Bill Button Styles
-		$css .= "\n/* Help & Bill Button Styles */\n";
-		$css .= ".smdp-help-btn,\n.smdp-bill-btn {\n";
-		$css .= "\tbackground-color: " . esc_attr( $settings['help_btn_bg_color'] ) . ";\n";
-		$css .= "\tcolor: " . esc_attr( $settings['help_btn_text_color'] ) . ";\n";
-		$css .= "\tborder: none;\n";
-		$css .= "\tborder-radius: " . esc_attr( $settings['help_btn_border_radius'] ) . "px;\n";
-		$css .= "\tpadding: " . esc_attr( $settings['help_btn_padding_v'] ) . "em " . esc_attr( $settings['help_btn_padding_h'] ) . "em;\n";
-		$css .= "\tfont-size: " . esc_attr( $settings['help_btn_font_size'] ) . "rem;\n";
-		$css .= "\tfont-weight: " . esc_attr( $settings['help_btn_font_weight'] ) . ";\n";
-		$css .= "\tcursor: pointer;\n";
-		$css .= "\ttransition: background-color 0.2s ease;\n";
-		$css .= "}\n\n";
-
-		$css .= ".smdp-help-btn:hover,\n";
-		$css .= ".smdp-help-btn:focus,\n";
-		$css .= ".smdp-bill-btn:hover,\n";
-		$css .= ".smdp-bill-btn:focus {\n";
-		$css .= "\tbackground-color: " . esc_attr( $settings['help_btn_bg_color'] ) . ";\n";
-		$css .= "\toutline: none;\n";
-		$css .= "}\n\n";
-
-		// Disabled state
-		$css .= "/* Disabled Help/Bill Button State */\n";
-		$css .= ".smdp-help-btn.smdp-btn-disabled,\n";
-		$css .= ".smdp-help-btn:disabled,\n";
-		$css .= ".smdp-bill-btn.smdp-bill-disabled,\n";
-		$css .= ".smdp-bill-btn:disabled {\n";
-		$css .= "\tbackground-color: " . esc_attr( $settings['help_btn_disabled_bg'] ) . ";\n";
-		$css .= "\tcolor: " . esc_attr( $settings['help_btn_disabled_text'] ) . ";\n";
-		$css .= "\tcursor: not-allowed;\n";
-		$css .= "\topacity: 0.8;\n";
-		$css .= "}\n\n";
-
-		// Category Button Styles
-		$css .= "/* Category Button Styles */\n";
-		$css .= ".smdp-cat-btn {\n";
-		$css .= "\tbox-sizing: border-box !important;\n";
-		$css .= "\tpadding: " . esc_attr( $settings['cat_btn_padding_v'] ) . "px " . esc_attr( $settings['cat_btn_padding_h'] ) . "px !important;\n";
-		$css .= "}\n\n";
-
-		$css .= ".smdp-cat-bar {\n";
-		$css .= "\tgap: " . esc_attr( $settings['cat_btn_gap'] ) . "px !important;\n";
-		$css .= "}\n\n";
-
-		// Left Sidebar Layout Styles
-		$css .= "/* Left Sidebar Layout Styles */\n";
-		$css .= ".smdp-menu-app-fe.layout-left {\n";
-		$css .= "\tgrid-template-columns: " . esc_attr( $settings['left_sidebar_width'] ) . "px 1fr !important;\n";
-		$css .= "}\n\n";
-
-		$css .= ".smdp-menu-app-fe.layout-left .smdp-cat-btn {\n";
-		$css .= "\tmin-width: " . esc_attr( $settings['left_sidebar_width'] ) . "px !important;\n";
-		$css .= "\tpadding-left: " . esc_attr( $settings['left_sidebar_btn_padding'] ) . "px !important;\n";
-		$css .= "}\n";
-
-		return $css;
+	private function inject_dynamic_css_DEPRECATED() {
+		// This method is deprecated - all styles are now hardcoded in:
+		// - assets/css/smdp-structural.css (structural & layout styles)
+		// - assets/css/menu-app.css (visual styles)
 	}
 
 	/**

@@ -181,99 +181,37 @@ class SMDP_Menu_App_Builder {
     $plugin_main = dirname(dirname(__FILE__)) . '/Main.php';
     $base_url = plugins_url('', $plugin_main);
     $ver = '1.8';
-    wp_register_style('smdp-menu-app',  $base_url . '/assets/css/menu-app.css', array(), $ver);
+
+    // Register structural CSS (hardcoded layout & structure)
+    wp_register_style('smdp-structural', $base_url . '/assets/css/smdp-structural.css', array(), $ver);
+
+    // Register menu app CSS (hardcoded visual styles)
+    wp_register_style('smdp-menu-app',  $base_url . '/assets/css/menu-app.css', array('smdp-structural'), $ver);
+
     wp_register_script('smdp-menu-app', $base_url . '/assets/js/menu-app-frontend.js', array(), $ver, true);
     wp_register_script('smdp-pwa-install', $base_url . '/assets/js/pwa-install.js', array(), $ver, true);
 
-    // Add inline styles for button customization
-    add_action('wp_footer', array(__CLASS__, 'output_button_styles'));
+    // REMOVED: Custom CSS output - all styles are now hardcoded in CSS files
+    // No more dynamic inline styles
   }
 
-  // Output custom button styles AND custom CSS
-  public static function output_button_styles() {
-    if (!wp_style_is('smdp-menu-app', 'enqueued')) return;
-
-    $styles = get_option(self::OPT_STYLES, array());
-    $custom_css = get_option(self::OPT_CSS, '');
-
-    // Output button styles
-    if (!empty($styles)) {
-      $css = self::generate_button_css($styles);
-      if ($css) {
-        echo '<style id="smdp-custom-button-styles">' . $css . '</style>';
-      }
-    }
-
-    // Output custom CSS
-    if (!empty($custom_css) && trim($custom_css) !== '' && trim($custom_css) !== '/* Button & card style overrides here */') {
-      echo '<style id="smdp-user-custom-css">' . wp_strip_all_tags($custom_css) . '</style>';
-    }
+  /**
+   * DEPRECATED: Custom CSS output removed
+   * All styles are now hardcoded in:
+   * - assets/css/smdp-structural.css (structural & layout styles)
+   * - assets/css/menu-app.css (visual styles)
+   */
+  private static function output_button_styles_DEPRECATED() {
+    // This method is no longer used
   }
 
-  // Generate CSS from style settings
-  private static function generate_button_css($styles) {
-    $css = array();
-
-    // Default button styles
-    $default_css = array();
-    $active_css = array();
-
-    if (!empty($styles['bg_color'])) {
-      $default_css[] = 'background: ' . sanitize_hex_color($styles['bg_color']) . ' !important';
-    }
-    if (!empty($styles['text_color'])) {
-      $default_css[] = 'color: ' . sanitize_hex_color($styles['text_color']) . ' !important';
-    }
-    if (!empty($styles['border_color'])) {
-      $default_css[] = 'border-color: ' . sanitize_hex_color($styles['border_color']) . ' !important';
-    }
-    if (!empty($styles['font_size'])) {
-      $default_css[] = 'font-size: ' . intval($styles['font_size']) . 'px !important';
-    }
-    if (!empty($styles['padding_vertical'])) {
-      $padding_h = !empty($styles['padding_horizontal']) ? intval($styles['padding_horizontal']) : 14;
-      $default_css[] = 'padding: ' . intval($styles['padding_vertical']) . 'px ' . $padding_h . 'px !important';
-    }
-    if (!empty($styles['border_radius'])) {
-      $default_css[] = 'border-radius: ' . intval($styles['border_radius']) . 'px !important';
-    }
-    if (!empty($styles['border_width'])) {
-      $default_css[] = 'border-width: ' . intval($styles['border_width']) . 'px !important';
-      $default_css[] = 'border-style: solid !important';
-    }
-    if (!empty($styles['font_weight'])) {
-      $default_css[] = 'font-weight: ' . sanitize_text_field($styles['font_weight']) . ' !important';
-    }
-    if (!empty($styles['font_family'])) {
-      $default_css[] = 'font-family: ' . sanitize_text_field($styles['font_family']) . ' !important';
-    }
-
-    // IMPORTANT: Ensure buttons maintain white-space: nowrap for single-line display
-    // and min-width to prevent text cutoff
-    $default_css[] = 'white-space: nowrap !important';
-    $default_css[] = 'min-width: fit-content !important';
-    $default_css[] = 'flex-shrink: 0 !important';
-
-    // Active button styles
-    if (!empty($styles['active_bg_color'])) {
-      $active_css[] = 'background: ' . sanitize_hex_color($styles['active_bg_color']) . ' !important';
-    }
-    if (!empty($styles['active_text_color'])) {
-      $active_css[] = 'color: ' . sanitize_hex_color($styles['active_text_color']) . ' !important';
-    }
-    if (!empty($styles['active_border_color'])) {
-      $active_css[] = 'border-color: ' . sanitize_hex_color($styles['active_border_color']) . ' !important';
-    }
-
-    $output = '';
-    if (!empty($default_css)) {
-      $output .= '.smdp-cat-btn { ' . implode('; ', $default_css) . '; }';
-    }
-    if (!empty($active_css)) {
-      $output .= '.smdp-cat-btn.active { ' . implode('; ', $active_css) . '; }';
-    }
-
-    return $output;
+  /**
+   * DEPRECATED: Dynamic CSS generation removed
+   * All styles are now hardcoded in CSS files
+   */
+  private static function generate_button_css_DEPRECATED($styles) {
+    // This method is no longer used
+    return '';
   }
 
   public static function render_admin_page() {
@@ -1246,6 +1184,8 @@ class SMDP_Menu_App_Builder {
       $cats_to_show[] = $c;
     }
 
+    // Enqueue hardcoded CSS files (structural CSS is a dependency of menu-app CSS)
+    wp_enqueue_style('smdp-structural');
     wp_enqueue_style('smdp-menu-app');
     wp_enqueue_script('smdp-menu-app');
 
