@@ -18,6 +18,174 @@ if ( ! defined( 'ABSPATH' ) ) {
      Use the "Hide Image" checkbox to disable front-end image display.
   </p>
 
+  <!-- Advanced Items Table Section -->
+  <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+      <h2 style="margin:0;">Advanced Item Management</h2>
+      <button type="button" id="smdp-toggle-items-table" class="button button-secondary">
+        <span class="dashicons dashicons-list-view" style="vertical-align:middle;"></span>
+        <span class="toggle-text">Show Items Table</span>
+      </button>
+    </div>
+
+    <div id="smdp-items-table-container" style="display:none;">
+      <p style="margin-bottom:15px;">
+        <button type="button" id="smdp-match-categories-btn" class="button button-secondary">
+          <span class="dashicons dashicons-category" style="vertical-align:middle;"></span> Match Square Categories
+        </button>
+        <button type="button" id="smdp-sync-soldout-btn" class="button button-secondary" style="margin-left:10px;">
+          <span class="dashicons dashicons-update" style="vertical-align:middle;"></span> Sync Sold Out Status from Square
+        </button>
+      </p>
+
+      <table class="wp-list-table widefat striped" style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="width:60px;">Image</th>
+            <th>Item Name</th>
+            <th>Categories</th>
+            <th style="width:120px;">Square Status</th>
+            <th style="width:150px;">Override</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          // Build comprehensive items list
+          $all_objects = get_option(SMDP_ITEMS_OPTION, array());
+          $mapping = get_option(SMDP_MAPPING_OPTION, array());
+          $categories = get_option(SMDP_CATEGORIES_OPTION, array());
+
+          // Build image lookup
+          $image_lookup_table = array();
+          foreach ($all_objects as $obj) {
+              if (isset($obj['type']) && $obj['type'] === 'IMAGE' && !empty($obj['image_data']['url'])) {
+                  $image_lookup_table[$obj['id']] = $obj['image_data']['url'];
+              }
+          }
+
+          // Get all items
+          $all_items_for_table = array();
+          foreach ($all_objects as $obj) {
+              if (isset($obj['type']) && $obj['type'] === 'ITEM') {
+                  $all_items_for_table[] = $obj;
+              }
+          }
+
+          // Sort by name
+          usort($all_items_for_table, function($a, $b) {
+              return strcmp($a['item_data']['name'], $b['item_data']['name']);
+          });
+
+          // Check if new-style mapping
+          $is_new_style_table = false;
+          foreach ($mapping as $key => $data) {
+              if (isset($data['instance_id'])) {
+                  $is_new_style_table = true;
+                  break;
+              }
+          }
+
+          foreach ($all_items_for_table as $item_obj):
+              $item_id = $item_obj['id'];
+              $item_data = $item_obj['item_data'];
+
+              // Get thumbnail
+              $thumb = '';
+              if (!empty($item_data['image_ids'][0])) {
+                  $img_id = $item_data['image_ids'][0];
+                  if (isset($image_lookup_table[$img_id])) {
+                      $thumb = $image_lookup_table[$img_id];
+                  }
+              }
+
+              // Find which categories this item is in
+              $item_categories = array();
+              if ($is_new_style_table) {
+                  foreach ($mapping as $map_data) {
+                      if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id) {
+                          $cat_id = $map_data['category'];
+                          if ($cat_id && isset($categories[$cat_id])) {
+                              $item_categories[$cat_id] = $categories[$cat_id]['name'];
+                          } elseif ($cat_id === 'unassigned') {
+                              $item_categories['unassigned'] = 'Unassigned';
+                          }
+                      }
+                  }
+              } else {
+                  if (isset($mapping[$item_id]) && !empty($mapping[$item_id]['category'])) {
+                      $cat_id = $mapping[$item_id]['category'];
+                      if (isset($categories[$cat_id])) {
+                          $item_categories[$cat_id] = $categories[$cat_id]['name'];
+                      }
+                  } else {
+                      $item_categories['unassigned'] = 'Unassigned';
+                  }
+              }
+
+              // Detect Square sold-out status
+              $is_sold_out = false;
+              if (!empty($item_data['variations'])) {
+                  foreach ($item_data['variations'] as $var) {
+                      $ov_list = $var['item_variation_data']['location_overrides'] ?? array();
+                      foreach ($ov_list as $ov) {
+                          if (!empty($ov['sold_out'])) {
+                              $is_sold_out = true;
+                              break 2;
+                          }
+                      }
+                  }
+              }
+
+              // Get override
+              $sold_out_override = '';
+              if ($is_new_style_table) {
+                  foreach ($mapping as $map_data) {
+                      if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id && isset($map_data['sold_out_override'])) {
+                          $sold_out_override = $map_data['sold_out_override'];
+                          break;
+                      }
+                  }
+              } else {
+                  $sold_out_override = $mapping[$item_id]['sold_out_override'] ?? '';
+              }
+
+              $square_status = $is_sold_out ? 'Sold Out' : 'Available';
+          ?>
+          <tr>
+            <td>
+              <?php if ($thumb): ?>
+                <img src="<?php echo esc_url($thumb); ?>" style="max-width:50px;height:auto;border-radius:3px;">
+              <?php endif; ?>
+            </td>
+            <td><strong><?php echo esc_html($item_data['name']); ?></strong></td>
+            <td>
+              <?php
+              if (empty($item_categories)) {
+                  echo '<em style="color:#999;">No categories</em>';
+              } else {
+                  echo esc_html(implode(', ', array_unique($item_categories)));
+              }
+              ?>
+            </td>
+            <td>
+              <span style="display:inline-block; padding:3px 8px; border-radius:3px; font-size:0.9em; <?php echo $is_sold_out ? 'background:#dc3232; color:#fff;' : 'background:#46b450; color:#fff;'; ?>">
+                <?php echo esc_html($square_status); ?>
+              </span>
+            </td>
+            <td>
+              <select class="smdp-table-sold-out-select" data-item-id="<?php echo esc_attr($item_id); ?>" style="width:100%;">
+                <option value="">Auto (<?php echo $is_sold_out ? 'Sold' : 'Available'; ?>)</option>
+                <option value="sold" <?php selected($sold_out_override, 'sold'); ?>>Force Sold Out</option>
+                <option value="available" <?php selected($sold_out_override, 'available'); ?>>Force Available</option>
+              </select>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Category Management Section -->
   <div style="margin-bottom:20px;">
     <button type="button" id="smdp-toggle-category-order" class="button button-secondary" style="margin-bottom:10px;margin-right:10px;">
@@ -240,174 +408,6 @@ if ( ! defined( 'ABSPATH' ) ) {
      <input type="hidden" name="mapping_json" id="mapping_json" value="">
      <?php submit_button('Save Mappings'); ?>
   </form>
-
-  <!-- Advanced Items Table Section -->
-  <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <h2 style="margin:0;">Advanced Item Management</h2>
-      <button type="button" id="smdp-toggle-items-table" class="button button-secondary">
-        <span class="dashicons dashicons-list-view" style="vertical-align:middle;"></span>
-        <span class="toggle-text">Show Items Table</span>
-      </button>
-    </div>
-
-    <div id="smdp-items-table-container" style="display:none;">
-      <p style="margin-bottom:15px;">
-        <button type="button" id="smdp-match-categories-btn" class="button button-secondary">
-          <span class="dashicons dashicons-category" style="vertical-align:middle;"></span> Match Square Categories
-        </button>
-        <button type="button" id="smdp-sync-soldout-btn" class="button button-secondary" style="margin-left:10px;">
-          <span class="dashicons dashicons-update" style="vertical-align:middle;"></span> Sync Sold Out Status from Square
-        </button>
-      </p>
-
-      <table class="wp-list-table widefat striped" style="margin-top:10px;">
-        <thead>
-          <tr>
-            <th style="width:60px;">Image</th>
-            <th>Item Name</th>
-            <th>Categories</th>
-            <th style="width:120px;">Square Status</th>
-            <th style="width:150px;">Override</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          // Build comprehensive items list
-          $all_objects = get_option(SMDP_ITEMS_OPTION, array());
-          $mapping = get_option(SMDP_MAPPING_OPTION, array());
-          $categories = get_option(SMDP_CATEGORIES_OPTION, array());
-
-          // Build image lookup
-          $image_lookup = array();
-          foreach ($all_objects as $obj) {
-              if (isset($obj['type']) && $obj['type'] === 'IMAGE' && !empty($obj['image_data']['url'])) {
-                  $image_lookup[$obj['id']] = $obj['image_data']['url'];
-              }
-          }
-
-          // Get all items
-          $all_items_for_table = array();
-          foreach ($all_objects as $obj) {
-              if (isset($obj['type']) && $obj['type'] === 'ITEM') {
-                  $all_items_for_table[] = $obj;
-              }
-          }
-
-          // Sort by name
-          usort($all_items_for_table, function($a, $b) {
-              return strcmp($a['item_data']['name'], $b['item_data']['name']);
-          });
-
-          // Check if new-style mapping
-          $is_new_style = false;
-          foreach ($mapping as $key => $data) {
-              if (isset($data['instance_id'])) {
-                  $is_new_style = true;
-                  break;
-              }
-          }
-
-          foreach ($all_items_for_table as $item_obj):
-              $item_id = $item_obj['id'];
-              $item_data = $item_obj['item_data'];
-
-              // Get thumbnail
-              $thumb = '';
-              if (!empty($item_data['image_ids'][0])) {
-                  $img_id = $item_data['image_ids'][0];
-                  if (isset($image_lookup[$img_id])) {
-                      $thumb = $image_lookup[$img_id];
-                  }
-              }
-
-              // Find which categories this item is in
-              $item_categories = array();
-              if ($is_new_style) {
-                  foreach ($mapping as $map_data) {
-                      if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id) {
-                          $cat_id = $map_data['category'];
-                          if ($cat_id && isset($categories[$cat_id])) {
-                              $item_categories[$cat_id] = $categories[$cat_id]['name'];
-                          } elseif ($cat_id === 'unassigned') {
-                              $item_categories['unassigned'] = 'Unassigned';
-                          }
-                      }
-                  }
-              } else {
-                  if (isset($mapping[$item_id]) && !empty($mapping[$item_id]['category'])) {
-                      $cat_id = $mapping[$item_id]['category'];
-                      if (isset($categories[$cat_id])) {
-                          $item_categories[$cat_id] = $categories[$cat_id]['name'];
-                      }
-                  } else {
-                      $item_categories['unassigned'] = 'Unassigned';
-                  }
-              }
-
-              // Detect Square sold-out status
-              $is_sold_out = false;
-              if (!empty($item_data['variations'])) {
-                  foreach ($item_data['variations'] as $var) {
-                      $ov_list = $var['item_variation_data']['location_overrides'] ?? array();
-                      foreach ($ov_list as $ov) {
-                          if (!empty($ov['sold_out'])) {
-                              $is_sold_out = true;
-                              break 2;
-                          }
-                      }
-                  }
-              }
-
-              // Get override
-              $sold_out_override = '';
-              if ($is_new_style) {
-                  foreach ($mapping as $map_data) {
-                      if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id && isset($map_data['sold_out_override'])) {
-                          $sold_out_override = $map_data['sold_out_override'];
-                          break;
-                      }
-                  }
-              } else {
-                  $sold_out_override = $mapping[$item_id]['sold_out_override'] ?? '';
-              }
-
-              $square_status = $is_sold_out ? 'Sold Out' : 'Available';
-          ?>
-          <tr>
-            <td>
-              <?php if ($thumb): ?>
-                <img src="<?php echo esc_url($thumb); ?>" style="max-width:50px;height:auto;border-radius:3px;">
-              <?php endif; ?>
-            </td>
-            <td><strong><?php echo esc_html($item_data['name']); ?></strong></td>
-            <td>
-              <?php
-              if (empty($item_categories)) {
-                  echo '<em style="color:#999;">No categories</em>';
-              } else {
-                  echo esc_html(implode(', ', array_unique($item_categories)));
-              }
-              ?>
-            </td>
-            <td>
-              <span style="display:inline-block; padding:3px 8px; border-radius:3px; font-size:0.9em; <?php echo $is_sold_out ? 'background:#dc3232; color:#fff;' : 'background:#46b450; color:#fff;'; ?>">
-                <?php echo esc_html($square_status); ?>
-              </span>
-            </td>
-            <td>
-              <select class="smdp-table-sold-out-select" data-item-id="<?php echo esc_attr($item_id); ?>" style="width:100%;">
-                <option value="">Auto (<?php echo $is_sold_out ? 'Sold' : 'Available'; ?>)</option>
-                <option value="sold" <?php selected($sold_out_override, 'sold'); ?>>Force Sold Out</option>
-                <option value="available" <?php selected($sold_out_override, 'available'); ?>>Force Available</option>
-              </select>
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
   <!-- Floating Save Button -->
   <div id="smdp-floating-save" style="position:fixed;bottom:30px;right:30px;z-index:9999;display:none;">
@@ -985,10 +985,13 @@ jQuery(document).ready(function($) {
    });
 
    // Match Square Categories - Show modal
-   $("#smdp-match-categories-btn").on("click", function() {
+   $("#smdp-match-categories-btn").on("click", function(e) {
+       e.preventDefault();
+       e.stopImmediatePropagation();
        $("#smdp-match-categories-modal").fadeIn(200);
        $("#smdp-match-confirm-check").prop("checked", false);
        $("#smdp-match-confirm").prop("disabled", true);
+       return false;
    });
 
    // Match Categories - Enable confirm button when checkbox is checked
@@ -1028,10 +1031,13 @@ jQuery(document).ready(function($) {
    });
 
    // Sync Sold Out - Show modal
-   $("#smdp-sync-soldout-btn").on("click", function() {
+   $("#smdp-sync-soldout-btn").on("click", function(e) {
+       e.preventDefault();
+       e.stopImmediatePropagation();
        $("#smdp-sync-soldout-modal").fadeIn(200);
        $("#smdp-sync-confirm-check").prop("checked", false);
        $("#smdp-sync-confirm").prop("disabled", true);
+       return false;
    });
 
    // Sync Sold Out - Enable confirm button when checkbox is checked

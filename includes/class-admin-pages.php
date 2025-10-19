@@ -1014,6 +1014,8 @@ class SMDP_Admin_Pages {
 
         <script>
         jQuery(function($){
+          // NOTE: These handlers are disabled - now handled in Menu Editor with double-confirmation modals
+          /*
           // Match Square Categories → plugin mapping
           $('#smdp-match-categories-btn').click(function(){
             if(!confirm('Overwrite plugin categories from Square cache?')) return;
@@ -1037,6 +1039,7 @@ class SMDP_Admin_Pages {
               else alert('Error: ' + r.data);
             });
           });
+          */
         });
         </script>
         <style>
