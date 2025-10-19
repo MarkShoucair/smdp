@@ -156,6 +156,7 @@ body.admin-bar .smdp-menu-app-fe {
 .smdp-cat-bar {
 	display: flex !important;
 	flex-wrap: nowrap !important;
+	background: #ffffff;
 }
 
 /* Allow buttons to grow */
@@ -208,39 +209,25 @@ body.admin-bar .smdp-menu-app-fe {
 }
 
 /* ============================================
-   HELP & BILL BUTTON STYLES (HARD-CODED)
+   HELP & BILL BUTTON DISABLED STATES (HARD-CODED)
    ============================================ */
-
-.smdp-help-btn,
-.smdp-bill-btn {
-	background-color: #f5fdfc;
-	color: #00649d;
-	border: none;
-	border-radius: 50px;
-	padding: 0.75em 1.5em;
-	font-size: 1rem;
-	font-weight: 600;
-	cursor: pointer;
-	transition: background-color 0.2s ease;
-}
-
-.smdp-help-btn:hover,
-.smdp-help-btn:focus,
-.smdp-bill-btn:hover,
-.smdp-bill-btn:focus {
-	background-color: #f5fdfc;
-	outline: none;
-}
 
 /* Disabled "Help Requested" state */
 .smdp-help-btn.smdp-btn-disabled,
-.smdp-help-btn:disabled,
+.smdp-help-btn:disabled {
+	background-color: #c0392b !important;
+	color: #ffffff !important;
+	cursor: not-allowed !important;
+	opacity: 0.8 !important;
+}
+
+/* Disabled "Bill Requested" state */
 .smdp-bill-btn.smdp-bill-disabled,
 .smdp-bill-btn:disabled {
-	background-color: #e74c3c;
-	color: #ffffff;
-	cursor: not-allowed;
-	opacity: 0.8;
+	background-color: #1e8449 !important;
+	color: #ffffff !important;
+	cursor: not-allowed !important;
+	opacity: 0.8 !important;
 }
 
 /* ============================================
@@ -258,4 +245,98 @@ body.admin-bar .smdp-menu-app-fe {
 /* Left layout - specific padding */
 .smdp-menu-app-fe.layout-left .smdp-cat-btn {
 	padding-left: 20px !important;
+}
+
+/* ============================================
+   TABLE BADGE & ACTION BUTTONS (HARD-CODED)
+   ============================================ */
+
+/* Table badge at bottom-right */
+#smdp-table-badge {
+	background: #3498db;
+	color: #fff;
+	padding: 0.75rem 1rem;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 0.9rem;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+	cursor: pointer;
+	user-select: none;
+	text-align: center;
+	line-height: 1;
+	box-sizing: border-box;
+	width: 120px;
+	max-width: 120px;
+	min-width: 120px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* View Bill button */
+.smdp-view-bill-btn {
+	padding: 0.75rem 1rem;
+	background: #9b59b6;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+	white-space: nowrap;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.3s ease;
+	box-sizing: border-box;
+	width: 120px;
+	max-width: 120px;
+	min-width: 120px;
+}
+
+/* Action buttons container (Help + Bill) */
+.smdp-action-buttons {
+	display: flex;
+	gap: 10px;
+}
+
+/* Request Help button */
+.smdp-help-btn {
+	padding: 1rem 1.5rem;
+	background: #e74c3c;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+	white-space: nowrap;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	transition: all 0.3s ease;
+}
+
+/* Request Bill button */
+.smdp-bill-btn {
+	padding: 1rem 1.5rem;
+	background: #27ae60;
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 600;
+	cursor: pointer;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+	white-space: nowrap;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	transition: all 0.3s ease;
 }

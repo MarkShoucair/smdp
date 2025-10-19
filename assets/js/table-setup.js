@@ -189,9 +189,9 @@
     var tableBadge = document.createElement('div');
     tableBadge.id = 'smdp-table-badge';
     tableBadge.textContent = 'Table ' + currentTable;
-    tableBadge.style.cssText = 'background:#3498db;color:#fff;padding:0.75rem 1rem;border-radius:8px;font-weight:600;font-size:0.9rem;box-shadow:0 4px 10px rgba(0,0,0,0.3);cursor:pointer;user-select:none;text-align:center;line-height:1;box-sizing:border-box;width:120px;max-width:120px;min-width:120px;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-    
-    // View Bill button (directly under table badge) - now smaller and left-aligned
+    // Styles moved to smdp-structural.css
+
+    // View Bill button (directly under table badge)
     var viewBillBtn = document.createElement('button');
     viewBillBtn.className = 'smdp-view-bill-btn';
     viewBillBtn.setAttribute('data-table', currentTable);
@@ -205,12 +205,13 @@
       </svg>
       <span>View Bill</span>
     `;
-    viewBillBtn.style.cssText = 'padding:0.75rem 1rem;background:#9b59b6;color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);white-space:nowrap;line-height:1;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;box-sizing:border-box;width:120px;max-width:120px;min-width:120px;';
-    
+    // Styles moved to smdp-structural.css
+
     // Bottom row container for Help & Bill buttons
     var buttonRow = document.createElement('div');
-    buttonRow.style.cssText = 'display:flex;gap:10px;';
-    
+    buttonRow.className = 'smdp-action-buttons';
+    // Styles moved to smdp-structural.css
+
     // Help button with icon
     var helpBtn = document.createElement('button');
     helpBtn.className = 'smdp-help-btn';
@@ -223,8 +224,8 @@
       </svg>
       <span>Request Help</span>
     `;
-    helpBtn.style.cssText = 'padding:1rem 1.5rem;background:#e74c3c;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);white-space:nowrap;line-height:1;display:flex;align-items:center;transition:all 0.3s ease;';
-    
+    // Styles moved to smdp-structural.css
+
     // Bill button with icon
     var billBtn = document.createElement('button');
     billBtn.className = 'smdp-bill-btn';
@@ -236,7 +237,7 @@
       </svg>
       <span>Request Bill</span>
     `;
-    billBtn.style.cssText = 'padding:1rem 1.5rem;background:#27ae60;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.3);white-space:nowrap;line-height:1;display:flex;align-items:center;transition:all 0.3s ease;';
+    // Styles moved to smdp-structural.css
     
     // Add click animations
     [helpBtn, billBtn, viewBillBtn].forEach(function(btn) {

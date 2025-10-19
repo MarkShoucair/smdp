@@ -405,25 +405,111 @@ class SMDP_Menu_App_Builder {
   public static function field_css() {
     $css = get_option(self::OPT_CSS, "/* Add your custom CSS here to override default styles */");
     ?>
-    <textarea name="<?php echo esc_attr(self::OPT_CSS); ?>" rows="15" style="width:100%;font-family:monospace;font-size:13px;"><?php echo esc_textarea($css); ?></textarea>
-    <p class="description">
-      <strong>Custom CSS Override:</strong> Add your own CSS here to customize the menu app appearance.<br>
-      This CSS will load <em>after</em> the hardcoded styles, allowing you to override any default styling.<br><br>
-      <strong>Common selectors:</strong><br>
-      • <code>.smdp-cat-btn</code> - Category buttons<br>
-      • <code>.smdp-cat-btn.active</code> - Active category button<br>
-      • <code>.smdp-help-btn</code> - Help button<br>
-      • <code>.smdp-bill-btn</code> - Bill button<br>
-      • <code>.smdp-menu-app-fe</code> - Main container<br>
-      • <code>.smdp-app-header</code> - Header area<br>
-      • <code>.smdp-app-sections</code> - Content area<br>
-      <br>
-      <strong>Example:</strong><br>
-      <code>
-        .smdp-cat-btn { background: #ff0000; color: white; }<br>
-        .smdp-help-btn { border-radius: 10px; }
-      </code>
-    </p>
+    <textarea name="<?php echo esc_attr(self::OPT_CSS); ?>" rows="20" style="width:100%;font-family:monospace;font-size:12px;"><?php echo esc_textarea($css); ?></textarea>
+
+    <details style="margin-top:12px;border:1px solid #ddd;padding:12px;border-radius:4px;">
+      <summary style="cursor:pointer;font-weight:600;font-size:14px;">📖 Complete CSS Selector Reference (Click to expand)</summary>
+
+      <div style="margin-top:12px;line-height:1.8;">
+        <p><strong>🎨 Custom CSS Override:</strong> Add your own CSS here to customize the menu app appearance.<br>
+        This CSS will load <em>after</em> the hardcoded styles, allowing you to override any default styling.</p>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">🔘 Category Buttons</h4>
+        <code>.smdp-cat-btn</code> - All category buttons<br>
+        <code>.smdp-cat-btn.active</code> - Active/selected category button<br>
+        <code>.smdp-cat-bar</code> - Category button container/rail (background, padding, gap)<br>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">🔴 Action Buttons (Bottom-Right)</h4>
+        <code>.smdp-help-btn</code> - "Request Help" button<br>
+        <code>.smdp-help-btn.smdp-btn-disabled</code> - Disabled help button state<br>
+        <code>.smdp-bill-btn</code> - "Request Bill" button<br>
+        <code>.smdp-bill-btn.smdp-bill-disabled</code> - Disabled bill button state<br>
+        <code>.smdp-view-bill-btn</code> - "View Bill" button<br>
+        <code>#smdp-table-badge</code> - Table number badge<br>
+        <code>.smdp-action-buttons</code> - Container for Help + Bill buttons<br>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">📦 Layout & Containers</h4>
+        <code>.smdp-menu-app-fe</code> - Main menu app container<br>
+        <code>.smdp-menu-app-fe.layout-left</code> - When using left sidebar layout<br>
+        <code>.smdp-menu-app-fe.layout-top</code> - When using top category bar layout<br>
+        <code>.smdp-app-header</code> - Header area (contains category bar)<br>
+        <code>.smdp-app-sections</code> - Content area (contains menu items)<br>
+        <code>.smdp-app-section</code> - Individual category section<br>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">🍽️ Menu Items</h4>
+        <code>.smdp-menu-container</code> - Menu items wrapper<br>
+        <code>.smdp-menu-grid</code> - Menu items grid layout<br>
+        <code>.smdp-menu-item</code> - Individual menu item card<br>
+        <code>.smdp-item-tile</code> - Menu item tile/card<br>
+        <code>.sold-out-item</code> - Sold out menu item<br>
+        <code>.sold-out-banner</code> - "SOLD OUT" banner on items<br>
+        <code>.smdp-menu-image</code> - Menu item images<br>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">🔍 Search Features</h4>
+        <code>.smdp-search-container</code> - Search bar wrapper<br>
+        <code>.smdp-search-bar</code> - Search input field<br>
+        <code>.smdp-search-icon</code> - Search magnifying glass icon<br>
+        <code>.smdp-search-clear</code> - Clear search button<br>
+        <code>.smdp-search-results</code> - Search results container<br>
+        <code>.smdp-no-results</code> - No results message<br>
+        <code>.smdp-highlight</code> - Highlighted search text<br>
+        <code>.smdp-menu-app-fe.searching</code> - When search is active<br>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">🖼️ Promo Screen</h4>
+        <code>#smdp-promo-screen</code> - Promo/screensaver overlay<br>
+        <code>#smdp-slides-container</code> - Promo slides container<br>
+        <code>.smdp-promo-slide</code> - Individual promo slide image<br>
+
+        <h4 style="margin-top:16px;margin-bottom:8px;border-bottom:2px solid #0073aa;padding-bottom:4px;">💡 Examples</h4>
+        <pre style="background:#f5f5f5;padding:12px;border-radius:4px;overflow-x:auto;"><code>/* Change category button colors */
+.smdp-cat-btn {
+  background: #ff0000;
+  color: white;
+  border-radius: 25px;
+}
+
+.smdp-cat-btn.active {
+  background: #cc0000;
+}
+
+/* Change Request Help button color */
+.smdp-help-btn {
+  background: #ff9800;
+  font-size: 1.1rem;
+}
+
+/* Change category rail background */
+.smdp-cat-bar {
+  background: linear-gradient(to right, #f5f5f5, #e0e0e0);
+  padding: 12px 0;
+}
+
+/* Change table badge color */
+#smdp-table-badge {
+  background: #9c27b0;
+  font-size: 1rem;
+}
+
+/* Customize menu item cards */
+.smdp-menu-item {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Change sold out banner */
+.sold-out-banner {
+  background: #ff5722;
+  font-weight: bold;
+}
+
+/* Custom search bar styling */
+.smdp-search-bar {
+  border: 2px solid #3498db;
+  border-radius: 30px;
+}
+</code></pre>
+      </div>
+    </details>
     <?php
   }
 
