@@ -446,8 +446,19 @@ jQuery(document).ready(function($) {
 
    // Floating save button click
    $("#smdp-floating-save-btn").on("click", function() {
-       // Trigger form submission directly (the form's submit handler will build the mapping)
-       $("#smdp-items-form").submit();
+       // Manually build the mapping JSON before submitting
+       var mapping = {};
+       $(".smdp-sortable-item").each(function() {
+          var itemId = $(this).data("item-id");
+          var parentCategory = $(this).closest(".smdp-category-group").data("category") || "unassigned";
+          var order = $(this).index();
+          var hideImage = $(this).find(".smdp-hide-image").is(":checked") ? 1 : 0;
+          mapping[itemId] = { category: parentCategory, order: order, hide_image: hideImage };
+       });
+       $("#mapping_json").val(JSON.stringify(mapping));
+
+       // Now submit the form
+       $("#smdp-items-form").get(0).submit(); // Use native submit to bypass jQuery handlers
    });
 
    // Shortcode copy handler with improved feedback
