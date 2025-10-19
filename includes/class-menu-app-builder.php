@@ -43,14 +43,14 @@ class SMDP_Menu_App_Builder {
   /** ---------------- Admin ---------------- */
 
   public static function admin_menu() {
-    add_menu_page(
-      'Menu App Builder',
-      'Menu App Builder',
-      'manage_options',
-      'smdp_menu_app_builder',
-      array(__CLASS__, 'render_admin_page'),
-      'dashicons-smartphone',
-      61
+    // Add as submenu under Square Menu instead of top-level menu
+    add_submenu_page(
+      'smdp_main',                          // Parent slug (Square Menu)
+      'Menu App Builder',                   // Page title
+      'Menu App Builder',                   // Menu title
+      'manage_options',                     // Capability
+      'smdp_menu_app_builder',              // Menu slug
+      array(__CLASS__, 'render_admin_page') // Callback
     );
   }
 

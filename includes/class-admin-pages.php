@@ -299,24 +299,23 @@ class SMDP_Admin_Pages {
         <div class="wrap">
             <h1>Square Menu Settings</h1>
 
-            <!-- OAuth Debug Info (temporary diagnostic) -->
-            <div class="notice notice-info">
-                <p><strong>OAuth Debug Info:</strong></p>
-                <ul style="font-family:monospace;font-size:11px;">
-                    <li>OAuth Token in DB: <?php echo get_option( 'smdp_oauth_access_token' ) ? 'YES (' . strlen(get_option( 'smdp_oauth_access_token' )) . ' chars encrypted)' : 'NO'; ?></li>
-                    <li>Manual Token in DB: <?php echo $manual_token_raw ? 'YES (' . strlen($manual_token_raw) . ' chars encrypted)' : 'NO'; ?></li>
-                    <li>is_authorized() returns: <?php echo $oauth_connected ? 'TRUE' : 'FALSE'; ?></li>
-                    <li>smdp_get_access_token() returns: <?php echo ! empty( $token ) ? 'Token exists (' . strlen($token) . ' chars decrypted)' : 'EMPTY'; ?></li>
-                    <li>Token Source: <?php echo $token_source ? $token_source : 'NONE'; ?></li>
-                </ul>
-            </div>
-
             <!-- Debug Mode Warning -->
             <?php if ($debug_mode): ?>
             <div class="notice notice-warning" style="border-left:4px solid #f39c12;">
                 <p><strong>⚠️ PWA Debug Mode is Active!</strong> Caching is bypassed and a debug panel is visible on the frontend. This should only be enabled during development.</p>
             </div>
             <?php endif; ?>
+
+            <!-- Tab Navigation -->
+            <h2 class="nav-tab-wrapper">
+                <a href="#tab-connection" class="nav-tab nav-tab-active">Square Connection</a>
+                <a href="#tab-pwa" class="nav-tab">PWA Debug</a>
+                <a href="#tab-advanced" class="nav-tab">Advanced Settings</a>
+                <a href="#tab-reset" class="nav-tab">Reset & Clear</a>
+            </h2>
+
+            <!-- Tab: Square Connection -->
+            <div id="tab-connection" class="smdp-settings-tab active" style="display:block;">
 
             <!-- OAuth Connection Section -->
             <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
@@ -531,65 +530,124 @@ class SMDP_Admin_Pages {
                     </tr>
                 </table>
 
-                <h2>PWA Debug Mode</h2>
-                <p>Enable debug mode to help with tablet testing and development. This will bypass PWA caching and show a debug panel on the frontend.</p>
-                <table class="form-table">
-                    <tr>
-                        <th scope="row">Enable Debug Mode</th>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
-                                Enable PWA Debug Mode (bypass caching, show debug tools)
-                            </label>
-                            <p class="description">When enabled, tablets will always load the latest version of files and display a debug panel with cache-clearing tools.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Cache Version</th>
-                        <td>
-                            <input type="number" name="smdp_cache_version" id="smdp_cache_version" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:100px;">
-                            <button type="button" class="button" id="smdp-increment-version">Increment Version</button>
-                            <p class="description">
-                                Current version: <strong>v<?php echo $cache_version; ?></strong><br>
-                                Increment this number to force all tablets to reload assets, even without debug mode enabled.
-                            </p>
-                            <script>
-                                jQuery(document).ready(function($){
-                                    $('#smdp-increment-version').click(function(){
-                                        var $input = $('#smdp_cache_version');
-                                        $input.val(parseInt($input.val()) + 1);
-                                    });
-                                });
-                            </script>
-                        </td>
-                    </tr>
-                </table>
-
-                <?php submit_button( 'Save Settings', 'primary', 'smdp_save_settings' ); ?>
+                <?php submit_button( 'Save Connection Settings', 'primary', 'smdp_save_settings' ); ?>
             </form>
 
-            <hr>
             <!-- Sync Now Button -->
+            <h3>Manual Sync</h3>
+            <p>Manually sync menu data from Square to update items, categories, and mappings.</p>
             <form method="post">
                 <?php wp_nonce_field( 'smdp_sync_now', 'smdp_nonce_sync' ); ?>
                 <?php submit_button( 'Sync Now', 'secondary', 'smdp_sync_now' ); ?>
             </form>
-            <hr>
-            <!-- Clear Cached Data Section -->
-            <h2>Clear Cached Data</h2>
-            <p>This will delete all locally cached data (items, mappings, categories, API logs) while preserving your Square Access Token.</p>
-            <form method="post">
-                <?php wp_nonce_field( 'smdp_clear_all_data', 'smdp_clear_data_nonce' ); ?>
-                <?php submit_button( 'Clear All Cached Data', 'secondary', 'clear_all_data' ); ?>
-            </form>
 
-            <hr>
-            <!-- Advanced Settings Section -->
-            <h2>Advanced Settings</h2>
-            <?php
-            // Display advanced settings registered in class-admin-settings.php
-            do_settings_sections( 'smdp_settings_page' );
-            ?>
+            </div><!-- End Tab: Connection -->
+
+            <!-- Tab: PWA Debug -->
+            <div id="tab-pwa" class="smdp-settings-tab" style="display:none;">
+                <h2>PWA Debug Mode</h2>
+                <p>Enable debug mode to help with tablet testing and development. This will bypass PWA caching and show a debug panel on the frontend.</p>
+
+                <form method="post">
+                    <?php wp_nonce_field( 'smdp_settings_save', 'smdp_nonce' ); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Enable Debug Mode</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
+                                    Enable PWA Debug Mode (bypass caching, show debug tools)
+                                </label>
+                                <p class="description">When enabled, tablets will always load the latest version of files and display a debug panel with cache-clearing tools.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Cache Version</th>
+                            <td>
+                                <input type="number" name="smdp_cache_version" id="smdp_cache_version" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:100px;">
+                                <button type="button" class="button" id="smdp-increment-version">Increment Version</button>
+                                <p class="description">
+                                    Current version: <strong>v<?php echo $cache_version; ?></strong><br>
+                                    Increment this number to force all tablets to reload assets, even without debug mode enabled.
+                                </p>
+                                <script>
+                                    jQuery(document).ready(function($){
+                                        $('#smdp-increment-version').click(function(){
+                                            var $input = $('#smdp_cache_version');
+                                            $input.val(parseInt($input.val()) + 1);
+                                        });
+                                    });
+                                </script>
+                            </td>
+                        </tr>
+                        <!-- Hidden fields to preserve other settings -->
+                        <tr style="display:none;">
+                            <td>
+                                <input type="text" name="smdp_access_token" value="<?php echo esc_attr( $display_token ); ?>">
+                                <input type="text" name="smdp_sync_interval" value="<?php echo esc_attr($interval); ?>">
+                                <input type="checkbox" name="smdp_sync_mode" value="1" <?php checked( $sync_mode, 1 ); ?>>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button( 'Save PWA Debug Settings', 'primary', 'smdp_save_settings' ); ?>
+                </form>
+            </div><!-- End Tab: PWA Debug -->
+
+            <!-- Tab: Advanced Settings -->
+            <div id="tab-advanced" class="smdp-settings-tab" style="display:none;">
+                <h2>Advanced Settings</h2>
+                <p>Advanced configuration options for menu app URL flushing, rate limiting, and help request settings.</p>
+                <?php
+                // Display advanced settings registered in class-admin-settings.php
+                do_settings_sections( 'smdp_settings_page' );
+                ?>
+            </div><!-- End Tab: Advanced -->
+
+            <!-- Tab: Reset & Clear -->
+            <div id="tab-reset" class="smdp-settings-tab" style="display:none;">
+                <h2>Reset & Clear Cached Data</h2>
+
+                <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+                    <h3>Clear Cached Data</h3>
+                    <p>This will delete all locally cached data (items, mappings, categories, API logs) while preserving your Square Access Token.</p>
+                    <form method="post">
+                        <?php wp_nonce_field( 'smdp_clear_all_data', 'smdp_clear_data_nonce' ); ?>
+                        <?php submit_button( 'Clear All Cached Data', 'secondary', 'clear_all_data', false, array( 'onclick' => 'return confirm("Are you sure you want to clear all cached data? This cannot be undone.");' ) ); ?>
+                    </form>
+                </div>
+            </div><!-- End Tab: Reset -->
+
+            <script>
+            jQuery(document).ready(function($) {
+                // Tab switching
+                $('.nav-tab').on('click', function(e) {
+                    e.preventDefault();
+                    var target = $(this).attr('href');
+
+                    // Update nav tabs
+                    $('.nav-tab').removeClass('nav-tab-active');
+                    $(this).addClass('nav-tab-active');
+
+                    // Update tab content
+                    $('.smdp-settings-tab').hide().removeClass('active');
+                    $(target).show().addClass('active');
+                });
+            });
+            </script>
+
+            <style>
+            .smdp-settings-tab {
+                background: #fff;
+                border: 1px solid #ccd0d4;
+                border-top: none;
+                padding: 20px;
+                margin: 0 0 20px 0;
+            }
+            .smdp-settings-tab.active {
+                display: block;
+            }
+            </style>
+
         </div>
         <?php
     }
