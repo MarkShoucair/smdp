@@ -309,6 +309,7 @@ class SMDP_Sync_Manager {
      * Process category objects
      *
      * Filters, deduplicates by slug, and preserves existing flags.
+     * IMPORTANT: Preserves custom categories (IDs starting with 'cat_')
      *
      * @param array $objects Catalog objects
      */
@@ -317,6 +318,19 @@ class SMDP_Sync_Manager {
         $by_slug = array();
         $final_categories = array();
 
+        // First, preserve all custom categories (created manually, not from Square)
+        foreach ( $existing_categories as $cat_id => $cat_data ) {
+            if ( strpos( $cat_id, 'cat_' ) === 0 ) {
+                // This is a custom category - preserve it
+                $final_categories[ $cat_id ] = $cat_data;
+                // Track slug to prevent duplicates
+                if ( isset( $cat_data['slug'] ) ) {
+                    $by_slug[ $cat_data['slug'] ] = $cat_id;
+                }
+            }
+        }
+
+        // Now process Square categories
         foreach ( $objects as $obj ) {
             if ( isset( $obj['type'] ) && $obj['type'] === 'CATEGORY' ) {
                 $cd   = $obj['category_data'] ?? array();
