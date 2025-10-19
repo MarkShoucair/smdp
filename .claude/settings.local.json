@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Read(//c/Users/mark/Local Sites/menu-app-testing/**)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

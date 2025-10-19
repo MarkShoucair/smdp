@@ -200,13 +200,11 @@ class SMDP_Standalone_Menu_App {
             padding: 0 !important;
         }
 
-        /* Force menu app to be full width but preserve horizontal padding */
+        /* Don't override the menu app container - let it use the hardcoded CSS naturally */
+        /* The hardcoded CSS already has: .smdp-menu-app-fe { max-width: 1200px; margin: 0 auto; padding: 12px; } */
+        /* We just need to remove the max-width constraint for full-width standalone mode */
         .smdp-menu-app-fe {
-            width: 100% !important;
             max-width: none !important;
-            margin: 0 !important;
-            padding: 0 12px !important; /* Preserve horizontal padding for category bar */
-            box-sizing: border-box !important;
         }
 
         /* iOS safe area handling */
