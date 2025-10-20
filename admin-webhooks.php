@@ -158,10 +158,33 @@ function smdp_render_webhooks_page() {
                 echo '<div class="error"><p>HTTP error: ' . esc_html( $resp->get_error_message() ) . '</p></div>';
             } else {
                 $code = wp_remote_retrieve_response_code( $resp );
-                $data = json_decode( wp_remote_retrieve_body( $resp ), true );
+                $body = wp_remote_retrieve_body( $resp );
+                $data = json_decode( $body, true );
                 $subs = $data['subscriptions'] ?? [];
                 if ( 200 !== $code ) {
-                    echo '<div class="error"><p>Square API returned ' . esc_html( $code ) . '</p></div>';
+                    echo '<div class="error"><p><strong>Square API Error (HTTP ' . esc_html( $code ) . ')</strong></p>';
+                    if ( $code === 403 ) {
+                        echo '<p><strong>Permission Denied (403 Forbidden)</strong></p>';
+                        echo '<p>This error usually means:</p>';
+                        echo '<ul style="margin-left:20px;">';
+                        echo '<li>You are using an OAuth token instead of a personal access token</li>';
+                        echo '<li>Your access token does not have the required webhook permissions</li>';
+                        echo '<li>Your access token does not have application-level access</li>';
+                        echo '</ul>';
+                        echo '<p><strong>To fix this:</strong></p>';
+                        echo '<ol style="margin-left:20px;">';
+                        echo '<li>Go to your Square Developer Dashboard</li>';
+                        echo '<li>Generate a new <strong>Personal Access Token</strong> (not OAuth)</li>';
+                        echo '<li>Ensure it has "Webhooks" permission enabled</li>';
+                        echo '<li>Disconnect OAuth in Settings and use the personal token instead</li>';
+                        echo '</ol>';
+                    }
+                    if ( !empty($data['errors']) ) {
+                        echo '<p><strong>Error details:</strong></p><pre style="background:#f5f5f5; padding:10px; overflow:auto;">' . esc_html( print_r( $data['errors'], true ) ) . '</pre>';
+                    } else {
+                        echo '<p><strong>Raw response:</strong></p><pre style="background:#f5f5f5; padding:10px; overflow:auto;">' . esc_html( $body ) . '</pre>';
+                    }
+                    echo '</div>';
                 } elseif ( $subs ) {
                     echo '<table class="widefat fixed striped"><thead><tr>'
                        . '<th>ID</th><th>Events</th><th>URL</th><th>Signature Key</th><th>Created</th></tr></thead><tbody>';

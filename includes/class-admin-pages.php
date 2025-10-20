@@ -741,7 +741,6 @@ class SMDP_Admin_Pages {
             <!-- Tab Navigation -->
             <h2 class="nav-tab-wrapper">
                 <a href="#tab-menu-editor" class="nav-tab nav-tab-active">Menu Editor</a>
-                <a href="#tab-items" class="nav-tab">Items</a>
                 <a href="#tab-modifiers" class="nav-tab">Modifiers</a>
                 <a href="#tab-webhooks" class="nav-tab">Webhooks</a>
             </h2>
@@ -751,12 +750,7 @@ class SMDP_Admin_Pages {
                 <?php $this->render_items_page(); ?>
             </div>
 
-            <!-- Categories functionality moved to Menu Editor -->
-
-            <!-- Tab: Items -->
-            <div id="tab-items" class="smdp-menu-mgmt-tab" style="display:none;">
-                <?php $this->render_items_list(); ?>
-            </div>
+            <!-- Items tab removed - functionality now in Menu Editor's Advanced Items Table -->
 
             <!-- Tab: Modifiers -->
             <div id="tab-modifiers" class="smdp-menu-mgmt-tab" style="display:none;">

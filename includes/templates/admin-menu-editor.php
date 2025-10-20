@@ -43,7 +43,9 @@ if ( ! defined( 'ABSPATH' ) ) {
           <tr>
             <th style="width:60px;">Image</th>
             <th>Item Name</th>
-            <th>Categories</th>
+            <th style="width:180px;">Square Category</th>
+            <th style="width:200px;">Square Category ID</th>
+            <th>Menu Categories</th>
             <th style="width:120px;">Square Status</th>
             <th style="width:150px;">Override</th>
           </tr>
@@ -96,6 +98,13 @@ if ( ! defined( 'ABSPATH' ) ) {
                   if (isset($image_lookup_table[$img_id])) {
                       $thumb = $image_lookup_table[$img_id];
                   }
+              }
+
+              // Get Square reporting category
+              $reporting_cat_id = $item_data['reporting_category']['id'] ?? '';
+              $reporting_cat_name = '';
+              if ($reporting_cat_id && isset($categories[$reporting_cat_id])) {
+                  $reporting_cat_name = $categories[$reporting_cat_id]['name'];
               }
 
               // Find which categories this item is in
@@ -158,6 +167,24 @@ if ( ! defined( 'ABSPATH' ) ) {
               <?php endif; ?>
             </td>
             <td><strong><?php echo esc_html($item_data['name']); ?></strong></td>
+            <td>
+              <?php
+              if ($reporting_cat_name) {
+                  echo esc_html($reporting_cat_name);
+              } else {
+                  echo '<em style="color:#999;">None</em>';
+              }
+              ?>
+            </td>
+            <td style="font-family:monospace; font-size:0.85em; color:#666;">
+              <?php
+              if ($reporting_cat_id) {
+                  echo esc_html($reporting_cat_id);
+              } else {
+                  echo '<em style="color:#999;">None</em>';
+              }
+              ?>
+            </td>
             <td>
               <?php
               if (empty($item_categories)) {
