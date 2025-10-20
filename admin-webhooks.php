@@ -99,6 +99,13 @@ function smdp_render_webhooks_page() {
         return; // Stop rendering the rest of the page
     }
 
+    // Handle "View Webhooks" button click
+    $show_webhooks = false;
+    if ( isset( $_POST['smdp_view_webhooks_nonce'] )
+      && wp_verify_nonce( $_POST['smdp_view_webhooks_nonce'], 'smdp_view_webhooks' ) ) {
+        $show_webhooks = true;
+    }
+
     // Webhook action buttons
     echo '<div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">';
     echo '<h2 style="margin-top: 0;">Webhook Actions</h2>';
@@ -113,60 +120,75 @@ function smdp_render_webhooks_page() {
     echo '</form>';
 
     // Refresh Webhooks button
-    echo '<form method="post" style="display: inline-block;">';
+    echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
     wp_nonce_field( 'smdp_refresh_webhook', 'smdp_refresh_webhook_nonce' );
     echo '<button type="submit" class="button button-secondary" style="height: 40px; font-size: 14px;">';
     echo '<span class="dashicons dashicons-update" style="margin-top: 7px;"></span> Refresh Webhooks';
     echo '</button>';
     echo '</form>';
 
+    // View Existing Webhooks button
+    echo '<form method="post" style="display: inline-block;">';
+    wp_nonce_field( 'smdp_view_webhooks', 'smdp_view_webhooks_nonce' );
+    echo '<button type="submit" class="button button-secondary" style="height: 40px; font-size: 14px;">';
+    echo '<span class="dashicons dashicons-visibility" style="margin-top: 7px;"></span> View Existing Webhooks';
+    echo '</button>';
+    echo '</form>';
+
     echo '<p style="margin-top: 15px;"><em>';
     echo '<strong>Activate Webhooks:</strong> Creates the webhook subscription automatically if it doesn\'t exist. Only needs to be done once.<br>';
-    echo '<strong>Refresh Webhooks:</strong> Syncs the signature keys from Square without creating new webhooks.';
+    echo '<strong>Refresh Webhooks:</strong> Syncs the signature keys from Square without creating new webhooks.<br>';
+    echo '<strong>View Existing Webhooks:</strong> Fetches and displays current webhook subscriptions from Square (makes an API call).';
     echo '</em></p>';
     echo '</div>';
 
-    // List existing subscriptions
-    echo '<h2>Existing Subscriptions</h2>';
-    if ( empty( $token ) ) {
-        echo '<div class="error"><p>No access token set. Please configure your token.</p></div>';
-    } else {
-        $resp = wp_remote_get( "$base_url/v2/webhooks/subscriptions?include_disabled=true", [
-            'headers' => [
-                'Authorization'  => "Bearer $token",
-                'Square-Version' => $api_ver,
-            ],
-        ] );
-        if ( is_wp_error( $resp ) ) {
-            echo '<div class="error"><p>HTTP error: ' . esc_html( $resp->get_error_message() ) . '</p></div>';
+    // Only list existing subscriptions if "View Existing Webhooks" button was clicked
+    if ( $show_webhooks ) {
+        echo '<h2>Existing Subscriptions</h2>';
+        if ( empty( $token ) ) {
+            echo '<div class="error"><p>No access token set. Please configure your token.</p></div>';
         } else {
-            $code = wp_remote_retrieve_response_code( $resp );
-            $data = json_decode( wp_remote_retrieve_body( $resp ), true );
-            $subs = $data['subscriptions'] ?? [];
-            if ( 200 !== $code ) {
-                echo '<div class="error"><p>Square API returned ' . esc_html( $code ) . '</p></div>';
-            } elseif ( $subs ) {
-                echo '<table class="widefat fixed striped"><thead><tr>'
-                   . '<th>ID</th><th>Events</th><th>URL</th><th>Signature Key</th><th>Created</th></tr></thead><tbody>';
-                foreach ( $subs as $sub ) {
-                    // Check if this is the catalog.version.updated webhook
-                    $is_catalog_webhook = in_array('catalog.version.updated', $sub['event_types'], true);
-                    $stored = $is_catalog_webhook
-                        ? smdp_get_webhook_key()
-                        : smdp_get_webhook_key( "smdp_webhook_signature_key_{$sub['id']}" );
-                    echo '<tr>'
-                       . '<td>' . esc_html( $sub['id'] ) . '</td>'
-                       . '<td>' . esc_html( implode(', ', $sub['event_types']) ) . '</td>'
-                       . '<td><code>' . esc_url( $sub['notification_url'] ) . '</code></td>'
-                       . '<td><code>' . esc_html( $stored ? substr($stored, 0, 20) . '...' : '(not stored)' ) . '</code></td>'
-                       . '<td>' . esc_html( $sub['created_at'] ) . '</td>'
-                       . '</tr>';
-                }
-                echo '</tbody></table>';
+            $resp = wp_remote_get( "$base_url/v2/webhooks/subscriptions?include_disabled=true", [
+                'headers' => [
+                    'Authorization'  => "Bearer $token",
+                    'Square-Version' => $api_ver,
+                ],
+            ] );
+            if ( is_wp_error( $resp ) ) {
+                echo '<div class="error"><p>HTTP error: ' . esc_html( $resp->get_error_message() ) . '</p></div>';
             } else {
-                echo '<p>No subscriptions found.</p>';
+                $code = wp_remote_retrieve_response_code( $resp );
+                $data = json_decode( wp_remote_retrieve_body( $resp ), true );
+                $subs = $data['subscriptions'] ?? [];
+                if ( 200 !== $code ) {
+                    echo '<div class="error"><p>Square API returned ' . esc_html( $code ) . '</p></div>';
+                } elseif ( $subs ) {
+                    echo '<table class="widefat fixed striped"><thead><tr>'
+                       . '<th>ID</th><th>Events</th><th>URL</th><th>Signature Key</th><th>Created</th></tr></thead><tbody>';
+                    foreach ( $subs as $sub ) {
+                        // Check if this is the catalog.version.updated webhook
+                        $is_catalog_webhook = in_array('catalog.version.updated', $sub['event_types'], true);
+                        $stored = $is_catalog_webhook
+                            ? smdp_get_webhook_key()
+                            : smdp_get_webhook_key( "smdp_webhook_signature_key_{$sub['id']}" );
+                        echo '<tr>'
+                           . '<td>' . esc_html( $sub['id'] ) . '</td>'
+                           . '<td>' . esc_html( implode(', ', $sub['event_types']) ) . '</td>'
+                           . '<td><code>' . esc_url( $sub['notification_url'] ) . '</code></td>'
+                           . '<td><code>' . esc_html( $stored ? substr($stored, 0, 20) . '...' : '(not stored)' ) . '</code></td>'
+                           . '<td>' . esc_html( $sub['created_at'] ) . '</td>'
+                           . '</tr>';
+                    }
+                    echo '</tbody></table>';
+                } else {
+                    echo '<p>No subscriptions found.</p>';
+                }
             }
         }
+    } else {
+        echo '<div style="margin: 20px 0; padding: 15px; background: #fff; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,0.04);">';
+        echo '<p style="margin: 0;"><em>Click "View Existing Webhooks" above to fetch and display current webhook subscriptions. This will make an API call to Square.</em></p>';
+        echo '</div>';
     }
 
     // Handle creation form submission

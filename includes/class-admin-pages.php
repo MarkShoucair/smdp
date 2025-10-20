@@ -997,8 +997,9 @@ class SMDP_Admin_Pages {
                   <td><?php echo esc_html($square_sold); ?></td>
                   <td>
                     <select name="item_mapping[<?php echo esc_attr($item_id); ?>][sold_out_override]">
-                      <option value="sold"     <?php selected($plugin_override, 'sold'); ?>>Sold Out</option>
-                      <option value="available"<?php selected($plugin_override, 'available'); ?>>Available</option>
+                      <option value="" <?php selected($plugin_override, ''); ?>>Auto</option>
+                      <option value="sold"     <?php selected($plugin_override, 'sold'); ?>>Force Sold Out</option>
+                      <option value="available"<?php selected($plugin_override, 'available'); ?>>Force Available</option>
                     </select>
                   </td>
                 </tr>
@@ -1247,8 +1248,23 @@ class SMDP_Admin_Pages {
 
                     // Preserve sold_out_override if it exists in old mapping
                     $sold_out_override = '';
-                    if ( isset($existing[$item_id]['sold_out_override']) ) {
+
+                    // Check if we have an existing mapping for this specific instance
+                    if ( isset($existing[$instance_id]['sold_out_override']) ) {
+                        $sold_out_override = $existing[$instance_id]['sold_out_override'];
+                    }
+                    // Fall back to checking by item_id for old-style mappings
+                    elseif ( isset($existing[$item_id]['sold_out_override']) ) {
                         $sold_out_override = $existing[$item_id]['sold_out_override'];
+                    }
+                    // For new instances of existing items, find any instance of this item and use its override
+                    else {
+                        foreach ($existing as $existing_key => $existing_data) {
+                            if (isset($existing_data['item_id']) && $existing_data['item_id'] === $item_id && isset($existing_data['sold_out_override'])) {
+                                $sold_out_override = $existing_data['sold_out_override'];
+                                break;
+                            }
+                        }
                     }
 
                     $new_mapping[$instance_id] = array(

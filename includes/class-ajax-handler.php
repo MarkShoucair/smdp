@@ -257,17 +257,48 @@ class SMDP_Ajax_Handler {
         $items   = get_option( SMDP_ITEMS_OPTION, array() );
         $mapping = get_option( SMDP_MAPPING_OPTION, array() );
 
-        foreach ( $items as $obj ) {
-            if ( ! isset( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
-                continue;
-            }
-            $id = $obj['id'];
-            // Pull the reporting_category.id from the cached item_data
-            $new_cat = $obj['item_data']['reporting_category']['id'] ?? '';
-            if ( $new_cat !== '' ) {
-                $mapping[$id]['category'] = $new_cat;
+        // Check if this is new-style mapping
+        $is_new_style = false;
+        foreach ($mapping as $key => $data) {
+            if (isset($data['instance_id'])) {
+                $is_new_style = true;
+                break;
             }
         }
+
+        if ($is_new_style) {
+            // New-style: Update all instances of each item to match Square category
+            foreach ( $items as $obj ) {
+                if ( ! isset( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
+                    continue;
+                }
+                $item_id = $obj['id'];
+                $new_cat = $obj['item_data']['reporting_category']['id'] ?? '';
+
+                if ( $new_cat !== '' ) {
+                    // Update all instances of this item
+                    foreach ($mapping as $instance_id => &$map_data) {
+                        if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id) {
+                            $map_data['category'] = $new_cat;
+                        }
+                    }
+                    unset($map_data); // Break reference
+                }
+            }
+        } else {
+            // Old-style: Direct update
+            foreach ( $items as $obj ) {
+                if ( ! isset( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
+                    continue;
+                }
+                $id = $obj['id'];
+                $new_cat = $obj['item_data']['reporting_category']['id'] ?? '';
+                if ( $new_cat !== '' ) {
+                    $mapping[$id]['category'] = $new_cat;
+                }
+            }
+        }
+
         update_option( SMDP_MAPPING_OPTION, $mapping );
         wp_send_json_success();
     }
@@ -295,38 +326,29 @@ class SMDP_Ajax_Handler {
         $mapping   = get_option( SMDP_MAPPING_OPTION, array() );
         $all_items = get_option( SMDP_ITEMS_OPTION, array() );
 
-        // Loop items, detect sold_out via variation.location_overrides
-        foreach ( $all_items as $obj ) {
-            if ( empty( $obj['type'] ) || $obj['type'] !== 'ITEM' ) {
-                continue;
+        // Check if this is new-style mapping
+        $is_new_style = false;
+        foreach ($mapping as $key => $data) {
+            if (isset($data['instance_id'])) {
+                $is_new_style = true;
+                break;
             }
-            $item_id   = $obj['id'];
-            $item_data = $obj['item_data'];
-            $is_sold   = false;
+        }
 
-            if ( ! empty( $item_data['variations'] ) ) {
-                foreach ( $item_data['variations'] as $var ) {
-                    $ov_list = $var['item_variation_data']['location_overrides'] ?? array();
-                    foreach ( $ov_list as $ov ) {
-                        if ( ! empty( $ov['sold_out'] ) ) {
-                            $is_sold = true;
-                            break 2;
-                        }
-                    }
-                }
+        // Reset all sold-out overrides to Auto (empty string)
+        // This makes all items automatically use Square's sold-out status
+        if ($is_new_style) {
+            // New-style: Reset all instances
+            foreach ($mapping as $instance_id => &$map_data) {
+                $map_data['sold_out_override'] = '';
             }
-
-            if ( ! isset( $mapping[ $item_id ] ) ) {
-                $mapping[ $item_id ] = array(
-                    'category'          => 'unassigned',
-                    'order'             => 0,
-                    'hide_image'        => 0,
-                    'sold_out_override' => '',
-                );
+            unset($map_data); // Break reference
+        } else {
+            // Old-style: Reset all items
+            foreach ($mapping as $item_id => &$map_data) {
+                $map_data['sold_out_override'] = '';
             }
-
-            // Write override
-            $mapping[ $item_id ]['sold_out_override'] = $is_sold ? 'sold' : 'available';
+            unset($map_data); // Break reference
         }
 
         // Save & respond
