@@ -696,10 +696,25 @@ class SMDP_Admin_Pages {
 
             <script>
             jQuery(document).ready(function($) {
+                // Restore last active tab from localStorage
+                var lastTab = localStorage.getItem('smdp_settings_active_tab');
+                if (lastTab && $(lastTab).length) {
+                    // Update nav tabs
+                    $('.nav-tab').removeClass('nav-tab-active');
+                    $('.nav-tab[href="' + lastTab + '"]').addClass('nav-tab-active');
+
+                    // Update tab content
+                    $('.smdp-settings-tab').hide().removeClass('active');
+                    $(lastTab).show().addClass('active');
+                }
+
                 // Tab switching
                 $('.nav-tab').on('click', function(e) {
                     e.preventDefault();
                     var target = $(this).attr('href');
+
+                    // Save active tab to localStorage
+                    localStorage.setItem('smdp_settings_active_tab', target);
 
                     // Update nav tabs
                     $('.nav-tab').removeClass('nav-tab-active');
@@ -776,10 +791,25 @@ class SMDP_Admin_Pages {
             </style>
             <script>
             jQuery(document).ready(function($) {
+                // Restore last active tab from localStorage
+                var lastTab = localStorage.getItem('smdp_menu_mgmt_active_tab');
+                if (lastTab && $(lastTab).length) {
+                    // Update nav tabs
+                    $('.nav-tab').removeClass('nav-tab-active');
+                    $('.nav-tab[href="' + lastTab + '"]').addClass('nav-tab-active');
+
+                    // Update tab content
+                    $('.smdp-menu-mgmt-tab').hide().removeClass('active');
+                    $(lastTab).show().addClass('active');
+                }
+
                 // Tab switching
                 $('.nav-tab').on('click', function(e) {
                     e.preventDefault();
                     var target = $(this).attr('href');
+
+                    // Save active tab to localStorage
+                    localStorage.setItem('smdp_menu_mgmt_active_tab', target);
 
                     // Update nav tabs
                     $('.nav-tab').removeClass('nav-tab-active');

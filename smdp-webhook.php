@@ -44,6 +44,7 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
 
     error_log( '[SMDP] Webhook URL: ' . $url );
     error_log( '[SMDP] Request body length: ' . strlen($body) );
+    error_log( '[SMDP] Request body content: ' . $body );
 
     // Verify the webhook signature
     $sig_key = smdp_get_webhook_key();
@@ -154,9 +155,16 @@ function smdp_verify_square_signature( $signature, $body, $url ) {
     // 4) Compute HMAC-SHA256 over URL + raw body
     $payload_to_sign = $url . $body;
     error_log( '[SMDP] VERIFY: Payload to sign: URL=' . $url . ', body_length=' . strlen($body) );
+    error_log( '[SMDP] VERIFY: Full payload (first 200 chars): ' . substr($payload_to_sign, 0, 200) );
     $computed = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret, true ) );
     error_log( '[SMDP] VERIFY: Computed signature: ' . $computed );
     error_log( '[SMDP] VERIFY: Received signature: ' . $signature );
+
+    // Try alternative: notification_url from the webhook subscription
+    // Square might use the exact URL from the subscription, not the canonical URL
+    error_log( '[SMDP] VERIFY: Trying to debug - URL used: ' . $url );
+    error_log( '[SMDP] VERIFY: rest_url result: ' . rest_url( 'smdp/v1/webhook' ) );
+    error_log( '[SMDP] VERIFY: rtrim result: ' . rtrim( rest_url( 'smdp/v1/webhook' ), '/' ) );
 
     // 5) Compare
     $match = hash_equals( $computed, $signature );
