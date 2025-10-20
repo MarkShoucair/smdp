@@ -117,13 +117,14 @@ function smdp_render_webhooks_page() {
                 ) ? 'https://connect.squareupsandbox.com'
                   : 'https://connect.squareup.com';
 
-    echo '<div class="wrap"><h1>Square Webhooks</h1>';
+    // Don't create wrap div - this page is now embedded in a tab
+    echo '<h2 style="margin-top:0;">Square Webhooks</h2>';
 
     // Check if using OAuth authentication
     $oauth_token = get_option( 'smdp_oauth_access_token', '' );
     if ( ! empty( $oauth_token ) ) {
         echo '<div class="notice notice-warning" style="padding:15px;margin:20px 0;">';
-        echo '<h2 style="margin-top:0;">⚠️ Webhooks Not Available with OAuth</h2>';
+        echo '<h3 style="margin-top:0;">⚠️ Webhooks Not Available with OAuth</h3>';
         echo '<p><strong>Square webhook subscriptions are application-level and require a personal access token.</strong></p>';
         echo '<p>You are currently using OAuth authentication, which provides merchant-specific tokens. To use webhooks:</p>';
         echo '<ol>';
@@ -134,8 +135,7 @@ function smdp_render_webhooks_page() {
         echo '</ol>';
         echo '<p><em>Note: Automatic catalog syncing via webhooks will only work with personal access tokens.</em></p>';
         echo '</div>';
-        echo '</div>'; // Close wrap
-        return; // Stop rendering the rest of the page
+        return; // Stop rendering the rest of the page (no closing div needed)
     }
 
     // Always show webhooks (removed button requirement for better UX)
@@ -315,5 +315,5 @@ function smdp_render_webhooks_page() {
     submit_button( 'Create Webhook' );
     echo '</form>';
 
-    echo '</div>';
+    // No closing div needed - this page is now embedded in a tab
 }

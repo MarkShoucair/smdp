@@ -100,10 +100,12 @@ body.admin-bar .smdp-menu-app-fe {
 	flex-direction: column;
 	max-height: calc(100vh - 40px);
 	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .smdp-menu-app-fe.layout-left .smdp-app-sections {
 	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 /* Remove border from left category rail */
@@ -199,13 +201,7 @@ body.admin-bar .smdp-menu-app-fe {
 
 /* Left layout grid adjustment */
 .smdp-menu-app-fe.layout-left {
-	grid-template-columns: auto 1fr !important;
-}
-
-/* Ensure buttons can grow in left layout */
-.smdp-menu-app-fe.layout-left .smdp-cat-btn {
-	width: 100% !important;
-	min-width: 260px !important;
+	grid-template-columns: 260px 1fr !important;
 }
 
 /* ============================================
@@ -258,9 +254,13 @@ body.admin-bar .smdp-menu-app-fe {
 	gap: 8px !important;
 }
 
-/* Left layout - maintain horizontal padding */
+/* Left layout - reduce padding and font size to fit in sidebar */
 .smdp-menu-app-fe.layout-left .smdp-cat-btn {
-	padding: 12px 50px;
+	padding: 10px 20px;
+	font-size: 18px;
+	width: 100%;
+	text-align: left;
+	justify-content: flex-start;
 }
 
 /* ============================================
