@@ -39,6 +39,8 @@ class SMDP_Help_Request {
     add_action( 'wp_ajax_smdp_get_bill',            [ $this, 'ajax_get_bill' ] );
     add_action( 'wp_ajax_nopriv_smdp_get_bill',     [ $this, 'ajax_get_bill' ] );
     add_action( 'wp_ajax_smdp_sync_locations',      [ $this, 'ajax_sync_locations' ] );
+    add_action( 'wp_ajax_smdp_add_table',           [ $this, 'ajax_add_table' ] );
+    add_action( 'wp_ajax_smdp_add_table_item',      [ $this, 'ajax_add_table_item' ] );
 
     // admin
     add_action( 'admin_menu',            [ $this, 'add_admin_page' ] );
@@ -105,7 +107,9 @@ class SMDP_Help_Request {
     wp_enqueue_script( 'smdp-help-admin', plugins_url( '../assets/js/help-admin.js', __FILE__ ), ['jquery'], null, true );
     wp_localize_script( 'smdp-help-admin', 'smdpAdmin', [
         'ajax_url' => admin_url('admin-ajax.php'),
-        'sync_locations_nonce' => wp_create_nonce('smdp_sync_locations')
+        'sync_locations_nonce' => wp_create_nonce('smdp_sync_locations'),
+        'add_table_nonce' => wp_create_nonce('smdp_add_table'),
+        'add_table_item_nonce' => wp_create_nonce('smdp_add_table_item')
     ]);
   }
 
@@ -476,6 +480,85 @@ class SMDP_Help_Request {
         'message' => 'Successfully synced ' . count($locations) . ' location(s)',
         'count' => count($locations),
         'locations' => $locations
+    ]);
+  }
+
+  /**
+   * AJAX handler to add table with customer ID
+   */
+  public function ajax_add_table(): void {
+    check_ajax_referer('smdp_add_table', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+
+    $table_num = smdp_sanitize_text_field($_POST['table_number'] ?? '', 10);
+    $customer_id = smdp_sanitize_text_field($_POST['customer_id'] ?? '', 100);
+
+    if (empty($table_num) || empty($customer_id)) {
+        wp_send_json_error('Please provide both table number and customer ID');
+        return;
+    }
+
+    $tables = (array)get_option($this->opt_tables, []);
+    $tables[$table_num] = $customer_id;
+    update_option($this->opt_tables, $tables);
+
+    error_log('[SMDP] Added table ' . $table_num . ' with customer ID via AJAX');
+
+    wp_send_json_success([
+        'message' => 'Table ' . $table_num . ' added successfully!',
+        'table_number' => $table_num,
+        'customer_id' => $customer_id
+    ]);
+  }
+
+  /**
+   * AJAX handler to add table item
+   */
+  public function ajax_add_table_item(): void {
+    check_ajax_referer('smdp_add_table_item', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+
+    $table_num = smdp_sanitize_text_field($_POST['table_number'] ?? '', 10);
+    $item_id = smdp_sanitize_text_field($_POST['item_id'] ?? '', 100);
+
+    if (empty($table_num) || empty($item_id)) {
+        wp_send_json_error('Please provide both table number and select an item');
+        return;
+    }
+
+    $table_items = (array)get_option($this->opt_table_items, []);
+    $table_items[$table_num] = $item_id;
+    update_option($this->opt_table_items, $table_items);
+
+    error_log('[SMDP] Added table item ' . $table_num . ' via AJAX');
+
+    // Get item name for response
+    $all_items = get_option(SMDP_ITEMS_OPTION, []);
+    $item_name = 'Unknown Item';
+    foreach ($all_items as $obj) {
+        if ($obj['type'] === 'ITEM' && !empty($obj['item_data']['variations'])) {
+            foreach ($obj['item_data']['variations'] as $variation) {
+                if ($variation['id'] === $item_id) {
+                    $item_name = $obj['item_data']['name'];
+                    break 2;
+                }
+            }
+        }
+    }
+
+    wp_send_json_success([
+        'message' => 'Table ' . $table_num . ' item added successfully!',
+        'table_number' => $table_num,
+        'item_id' => $item_id,
+        'item_name' => $item_name
     ]);
   }
 
@@ -942,6 +1025,7 @@ class SMDP_Help_Request {
     echo '</tr></table>';
 
     submit_button('Add Table Item', 'secondary', 'add_table_item', false);
+    echo ' <span id="add-table-item-status" style="margin-left:10px;"></span>';
     echo '<p class="description">Create items in Square called "Table 1", "Table 2", etc., search for them above, then add them.</p>';
     echo '</form>';
     
@@ -991,6 +1075,7 @@ class SMDP_Help_Request {
     echo '</tr></table>';
 
     submit_button('Add Table with Customer ID', 'secondary', 'add_table_button', false);
+    echo ' <span id="add-table-status" style="margin-left:10px;"></span>';
     echo '<p class="description">Create customers in Square POS (e.g., "Table 1", "Table 2"), then paste their Customer IDs here.</p>';
     echo '</form>';
     

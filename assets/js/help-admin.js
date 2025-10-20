@@ -12,6 +12,37 @@ document.addEventListener('click', function(e){
 jQuery(document).ready(function($) {
     console.log("[SMDP] Admin JS loaded");
 
+    // Tab navigation with hash support
+    function switchTab(tabId) {
+        $(".nav-tab").removeClass("nav-tab-active");
+        $(".smdp-help-tab").removeClass("active").hide();
+
+        $('a[href="' + tabId + '"]').addClass("nav-tab-active");
+        $(tabId).addClass("active").show();
+
+        // Update URL hash without scrolling
+        if (history.pushState) {
+            history.pushState(null, null, tabId);
+        } else {
+            location.hash = tabId;
+        }
+    }
+
+    // Handle tab clicks
+    $(".nav-tab").on("click", function(e) {
+        e.preventDefault();
+        var tabId = $(this).attr("href");
+        switchTab(tabId);
+    });
+
+    // On page load, check for hash and switch to that tab
+    if (window.location.hash) {
+        var hash = window.location.hash;
+        if ($(hash).length) {
+            switchTab(hash);
+        }
+    }
+
     // Sync Locations button
     $("#smdp-sync-locations-btn").on("click", function() {
         var $btn = $(this);
@@ -143,22 +174,107 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Debug form submission
-    $("form").on("submit", function(e) {
-        var formData = $(this).serializeArray();
-        console.log("[SMDP] Form submitting with data:", formData);
+    // AJAX form submission for adding table items
+    $("input[name='add_table_item']").closest("form").on("submit", function(e) {
+        e.preventDefault();
 
-        // Check if this is the table item form
-        if ($(this).find("input[name='table_item_number']").length) {
-            var tableNum = $("input[name='table_item_number']").val();
-            var itemId = $("#table-item-id").val();
-            console.log("[SMDP] Table Item Form - Number:", tableNum, "Item ID:", itemId);
+        var $form = $(this);
+        var $status = $("#add-table-item-status");
+        var $btn = $form.find("input[name='add_table_item']");
+        var tableNum = $form.find("input[name='table_item_number']").val().trim();
+        var itemId = $("#table-item-id").val();
 
-            if (!tableNum || !itemId) {
-                alert("Please enter a table number and select an item!");
-                e.preventDefault();
-                return false;
-            }
+        if (!tableNum || !itemId) {
+            $status.html('<span style="color:#dc3232;">✗ Please enter a table number and select an item</span>');
+            return false;
         }
+
+        $btn.prop("disabled", true);
+        $status.html('<span style="color:#666;">Adding...</span>');
+
+        $.ajax({
+            url: ajaxurl,
+            method: "POST",
+            data: {
+                action: "smdp_add_table_item",
+                nonce: smdpAdmin.add_table_item_nonce,
+                table_number: tableNum,
+                item_id: itemId
+            },
+            success: function(response) {
+                if (response.success) {
+                    $status.html('<span style="color:#46b450;">✓ ' + response.data.message + '</span>');
+
+                    // Clear form
+                    $form.find("input[name='table_item_number']").val("");
+                    $("#table-item-id").val("");
+                    $("#table-item-selected").removeClass("active");
+                    $("#table-item-search").val("");
+
+                    // Reload page after 1 second to show new table in list
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    $status.html('<span style="color:#dc3232;">✗ ' + (response.data || 'Error adding table item') + '</span>');
+                    $btn.prop("disabled", false);
+                }
+            },
+            error: function() {
+                $status.html('<span style="color:#dc3232;">✗ Connection error</span>');
+                $btn.prop("disabled", false);
+            }
+        });
+    });
+
+    // AJAX form submission for adding table with customer ID
+    $("input[name='add_table_button']").closest("form").on("submit", function(e) {
+        e.preventDefault();
+
+        var $form = $(this);
+        var $status = $("#add-table-status");
+        var $btn = $form.find("input[name='add_table_button']");
+        var tableNum = $form.find("input[name='new_table']").val().trim();
+        var customerId = $form.find("input[name='new_table_customer']").val().trim();
+
+        if (!tableNum || !customerId) {
+            $status.html('<span style="color:#dc3232;">✗ Please enter both table number and customer ID</span>');
+            return false;
+        }
+
+        $btn.prop("disabled", true);
+        $status.html('<span style="color:#666;">Adding...</span>');
+
+        $.ajax({
+            url: ajaxurl,
+            method: "POST",
+            data: {
+                action: "smdp_add_table",
+                nonce: smdpAdmin.add_table_nonce,
+                table_number: tableNum,
+                customer_id: customerId
+            },
+            success: function(response) {
+                if (response.success) {
+                    $status.html('<span style="color:#46b450;">✓ ' + response.data.message + '</span>');
+
+                    // Clear form
+                    $form.find("input[name='new_table']").val("");
+                    $form.find("input[name='new_table_customer']").val("");
+
+                    // Reload page after 1 second to show new table in list
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    $status.html('<span style="color:#dc3232;">✗ ' + (response.data || 'Error adding table') + '</span>');
+                    $btn.prop("disabled", false);
+                }
+            },
+            error: function() {
+                $status.html('<span style="color:#dc3232;">✗ Connection error</span>');
+                $btn.prop("disabled", false);
+            }
+        });
     });
 });
