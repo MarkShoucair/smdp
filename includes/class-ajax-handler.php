@@ -50,12 +50,13 @@ class SMDP_Ajax_Handler {
      */
     private function register_hooks() {
         // Category Management (Admin only)
-        add_action( 'wp_ajax_smdp_delete_category', array( $this, 'delete_category' ) );
         add_action( 'wp_ajax_smdp_toggle_category_hidden', array( $this, 'toggle_category_hidden' ) );
         add_action( 'wp_ajax_smdp_add_category', array( $this, 'add_category' ) );
         add_action( 'wp_ajax_smdp_create_category', array( $this, 'create_category' ) );
+        add_action( 'wp_ajax_smdp_delete_category', array( $this, 'delete_category' ) );
         add_action( 'wp_ajax_smdp_match_categories', array( $this, 'match_categories' ) );
         add_action( 'wp_ajax_smdp_save_cat_order', array( $this, 'save_category_order' ) );
+        add_action( 'wp_ajax_smdp_cleanup_duplicates', array( $this, 'cleanup_duplicates' ) );
 
         // Sold-Out Management (Admin only)
         add_action( 'wp_ajax_smdp_sync_sold_out', array( $this, 'sync_sold_out' ) );
@@ -88,7 +89,7 @@ class SMDP_Ajax_Handler {
     // ========================================================================
 
     /**
-     * AJAX: Delete a category
+     * AJAX: Delete a custom category
      */
     public function delete_category() {
         if ( ! current_user_can( 'manage_options' ) ) {
@@ -96,16 +97,47 @@ class SMDP_Ajax_Handler {
         }
         check_ajax_referer( 'smdp_delete_category' );
 
-        $category_id = smdp_sanitize_text_field( $_POST['category_id'], 50 ); // Internal category IDs
-        $categories = get_option( SMDP_CATEGORIES_OPTION, array() );
+        $category_id = isset( $_POST['category_id'] ) ? sanitize_text_field( $_POST['category_id'] ) : '';
 
-        if ( isset( $categories[$category_id] ) ) {
-            unset( $categories[$category_id] );
-            update_option( SMDP_CATEGORIES_OPTION, $categories );
-            wp_send_json_success();
-        } else {
+        if ( empty( $category_id ) ) {
+            wp_send_json_error( 'Category ID is required.' );
+        }
+
+        // Only allow deletion of custom categories (those starting with 'cat_')
+        if ( strpos( $category_id, 'cat_' ) !== 0 ) {
+            wp_send_json_error( 'Cannot delete Square-synced categories. Only custom categories can be deleted.' );
+        }
+
+        // Load categories
+        $categories = get_option( SMDP_CATEGORIES_OPTION, array() );
+        if ( ! is_array( $categories ) ) {
+            $categories = array();
+        }
+
+        if ( ! isset( $categories[ $category_id ] ) ) {
             wp_send_json_error( 'Category not found.' );
         }
+
+        // Remove category
+        unset( $categories[ $category_id ] );
+        update_option( SMDP_CATEGORIES_OPTION, $categories );
+
+        // Remove all items from this category in the mapping
+        $mapping = get_option( SMDP_MAPPING_OPTION, array() );
+        if ( is_array( $mapping ) ) {
+            $updated_mapping = array();
+            foreach ( $mapping as $key => $data ) {
+                // Keep only items not in the deleted category
+                if ( isset( $data['category'] ) && $data['category'] !== $category_id ) {
+                    $updated_mapping[ $key ] = $data;
+                }
+            }
+            update_option( SMDP_MAPPING_OPTION, $updated_mapping );
+        }
+
+        wp_send_json_success( array(
+            'message' => 'Category deleted successfully.'
+        ) );
     }
 
     /**
@@ -638,6 +670,52 @@ class SMDP_Ajax_Handler {
             }
             return $is_sold;
         }
+    }
+
+    /**
+     * AJAX: Cleanup duplicate items in categories
+     */
+    public function cleanup_duplicates() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( 'Insufficient permissions.' );
+        }
+        check_ajax_referer( 'smdp_cleanup_duplicates' );
+
+        $mapping = get_option( SMDP_MAPPING_OPTION, array() );
+
+        // Track items by category
+        $items_in_categories = array();
+        $cleaned_mapping = array();
+        $removed_count = 0;
+
+        foreach ( $mapping as $key => $data ) {
+            if ( ! isset( $data['item_id'] ) || ! isset( $data['category'] ) ) {
+                continue;
+            }
+
+            $item_id = $data['item_id'];
+            $category = $data['category'];
+            $combo_key = $item_id . '|' . $category;
+
+            // If this item+category combination already exists, skip it (it's a duplicate)
+            if ( isset( $items_in_categories[ $combo_key ] ) ) {
+                $removed_count++;
+                continue; // Don't add to cleaned mapping
+            }
+
+            // Mark this combination as seen
+            $items_in_categories[ $combo_key ] = true;
+
+            // Keep this entry
+            $cleaned_mapping[ $key ] = $data;
+        }
+
+        update_option( SMDP_MAPPING_OPTION, $cleaned_mapping );
+
+        wp_send_json_success( array(
+            'message' => "Removed {$removed_count} duplicate items.",
+            'removed_count' => $removed_count
+        ) );
     }
 }
 

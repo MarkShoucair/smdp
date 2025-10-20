@@ -28,6 +28,11 @@ class SMDP_Protection_Settings {
 	 * @return bool
 	 */
 	private function is_menu_app_page() {
+		// Check if this is the standalone menu app page
+		if ( isset( $_GET['smdp_app'] ) || ( isset( $_SERVER['REQUEST_URI'] ) && strpos( $_SERVER['REQUEST_URI'], '/menu-app' ) !== false ) ) {
+			return true;
+		}
+
 		// Check if the menu app shortcode was rendered
 		if ( defined( 'SMDP_MENU_APP_RENDERED' ) && SMDP_MENU_APP_RENDERED ) {
 			return true;

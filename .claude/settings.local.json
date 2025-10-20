@@ -4,7 +4,11 @@
       "Bash(test:*)",
       "Read(//c/Users/mark/Local Sites/menu-app-testing/**)",
       "Bash(dir:*)",
-      "Bash(awk -F: '$1 > 1190 && $1 < 1400 {print}')"
+      "Bash(awk -F: '$1 > 1190 && $1 < 1400 {print}')",
+      "Bash(copy \"C:\\Users\\mark\\Local Sites\\menu-app-testing\\STYLING_REVIEW.md\" \"C:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\STYLING_REVIEW.md\")",
+      "Read(//c/Users/mark/OneDrive/Desktop/Oct 7 Stable/3.0/**)",
+      "Bash(git checkout:*)",
+      "Bash(copy:*)"
     ],
     "deny": [],
     "ask": []

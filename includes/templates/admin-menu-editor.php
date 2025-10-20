@@ -18,23 +18,126 @@ if ( ! defined( 'ABSPATH' ) ) {
      Use the "Hide Image" checkbox to disable front-end image display.
   </p>
 
-  <!-- Advanced Items Table Section -->
-  <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-      <h2 style="margin:0;">Advanced Item Management</h2>
-      <button type="button" id="smdp-toggle-items-table" class="button button-secondary">
-        <span class="dashicons dashicons-list-view" style="vertical-align:middle;"></span>
-        <span class="toggle-text">Show Items Table</span>
-      </button>
+  <!-- Category Management Section -->
+  <div style="margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <button type="button" id="smdp-toggle-category-order" class="button button-secondary" style="margin-bottom:10px;margin-right:10px;">
+          <span class="dashicons dashicons-sort" style="vertical-align:middle;"></span> Sort Categories
+        </button>
+        <button type="button" id="smdp-add-category-btn" class="button button-primary" style="margin-bottom:10px;">
+          <span class="dashicons dashicons-plus-alt" style="vertical-align:middle;"></span> Add Category
+        </button>
+      </div>
+      <div>
+        <button type="button" id="smdp-toggle-category-mgmt" class="button button-secondary" style="margin-bottom:10px;margin-right:10px;">
+          <span class="dashicons dashicons-category" style="vertical-align:middle;"></span> Category Management
+        </button>
+        <button type="button" id="smdp-toggle-items-table" class="button button-secondary" style="margin-bottom:10px;">
+          <span class="dashicons dashicons-list-view" style="vertical-align:middle;"></span> Advanced Item Management
+        </button>
+      </div>
     </div>
 
-    <div id="smdp-items-table-container" style="display:none;">
+    <!-- Category Management Table Section -->
+    <div id="smdp-category-mgmt-container" style="display:none; background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:10px 0 20px 0;">
+      <h3 style="margin-top:0;">Category Management</h3>
+      <p>Manage all categories (both Square-synced and custom). View and edit category details.</p>
+
+      <table class="wp-list-table widefat striped" style="margin-top:10px;">
+        <thead>
+          <tr>
+            <th style="width:50px;">Type</th>
+            <th>Category Name</th>
+            <th style="width:220px;">Category ID (Plugin)</th>
+            <th style="width:220px;">Square Reporting Cat ID</th>
+            <th>Slug</th>
+            <th style="width:80px;">Order</th>
+            <th style="width:100px;">Status</th>
+            <th style="width:120px;">Item Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+          $categories = get_option(SMDP_CATEGORIES_OPTION, array());
+          $mapping = get_option(SMDP_MAPPING_OPTION, array());
+
+          if (!empty($categories)):
+            // Sort by order
+            uasort($categories, function($a, $b) {
+              $oa = isset($a['order']) ? intval($a['order']) : 0;
+              $ob = isset($b['order']) ? intval($b['order']) : 0;
+              if ($oa === $ob) {
+                return strcmp($a['name'], $b['name']);
+              }
+              return $oa - $ob;
+            });
+
+            foreach ($categories as $cat_id => $cat):
+              // Determine if custom or Square category
+              $is_custom = strpos($cat_id, 'cat_') === 0;
+              $type_label = $is_custom ? 'Custom' : 'Square';
+              $type_color = $is_custom ? '#f39c12' : '#2271b1';
+
+              // Count items in this category
+              $item_count = 0;
+              foreach ($mapping as $map_data) {
+                if (isset($map_data['category']) && $map_data['category'] === $cat_id) {
+                  $item_count++;
+                }
+              }
+
+              // Status
+              $is_hidden = isset($cat['hidden']) && $cat['hidden'];
+              $status_label = $is_hidden ? 'Hidden' : 'Visible';
+              $status_color = $is_hidden ? '#dc3232' : '#46b450';
+          ?>
+            <tr>
+              <td>
+                <span style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:0.85em;background:<?php echo $type_color; ?>;color:#fff;">
+                  <?php echo $type_label; ?>
+                </span>
+              </td>
+              <td><strong><?php echo esc_html($cat['name']); ?></strong></td>
+              <td><code style="font-size:0.85em;color:#666;"><?php echo esc_html($cat_id); ?></code></td>
+              <td>
+                <?php
+                // Show if this category ID matches Square reporting categories
+                if (!$is_custom) {
+                  echo '<code style="font-size:0.85em;color:#2271b1;font-weight:500;">' . esc_html($cat_id) . '</code>';
+                  echo '<div style="font-size:0.8em;color:#666;margin-top:2px;">⚠️ Items use this ID for matching</div>';
+                } else {
+                  echo '<span style="color:#999;font-size:0.9em;">N/A (Custom Category)</span>';
+                }
+                ?>
+              </td>
+              <td><code><?php echo esc_html($cat['slug']); ?></code></td>
+              <td style="text-align:center;"><?php echo esc_html($cat['order'] ?? 0); ?></td>
+              <td>
+                <span style="display:inline-block;padding:2px 6px;border-radius:3px;font-size:0.85em;background:<?php echo $status_color; ?>;color:#fff;">
+                  <?php echo $status_label; ?>
+                </span>
+              </td>
+              <td style="text-align:center;"><?php echo $item_count; ?> items</td>
+            </tr>
+          <?php endforeach; else: ?>
+            <tr><td colspan="8" style="text-align:center;padding:20px;color:#666;">No categories found.</td></tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Advanced Items Table Section -->
+    <div id="smdp-items-table-container" style="display:none; background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:10px 0 20px 0;">
       <p style="margin-bottom:15px;">
         <button type="button" id="smdp-match-categories-btn" class="button button-secondary">
           <span class="dashicons dashicons-category" style="vertical-align:middle;"></span> Match Square Categories
         </button>
         <button type="button" id="smdp-sync-soldout-btn" class="button button-secondary" style="margin-left:10px;">
           <span class="dashicons dashicons-update" style="vertical-align:middle;"></span> Sync Sold Out Status from Square
+        </button>
+        <button type="button" id="smdp-cleanup-duplicates-btn" class="button button-secondary" style="margin-left:10px;">
+          <span class="dashicons dashicons-admin-tools" style="vertical-align:middle;"></span> Remove Duplicate Items
         </button>
       </p>
 
@@ -43,11 +146,12 @@ if ( ! defined( 'ABSPATH' ) ) {
           <tr>
             <th style="width:60px;">Image</th>
             <th>Item Name</th>
-            <th style="width:180px;">Square Category</th>
-            <th style="width:200px;">Square Category ID</th>
-            <th>Menu Categories</th>
-            <th style="width:120px;">Square Status</th>
-            <th style="width:150px;">Override</th>
+            <th style="width:150px;">Square Category</th>
+            <th style="width:180px;">Square Reporting Cat ID</th>
+            <th style="width:180px;">Plugin Category IDs</th>
+            <th style="width:150px;">Menu Categories (Names)</th>
+            <th style="width:100px;">Square Status</th>
+            <th style="width:130px;">Override</th>
           </tr>
         </thead>
         <tbody>
@@ -109,14 +213,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
               // Find which categories this item is in
               $item_categories = array();
+              $item_category_ids = array(); // Store the actual IDs
               if ($is_new_style_table) {
                   foreach ($mapping as $map_data) {
                       if (isset($map_data['item_id']) && $map_data['item_id'] === $item_id) {
                           $cat_id = $map_data['category'];
                           if ($cat_id && isset($categories[$cat_id])) {
                               $item_categories[$cat_id] = $categories[$cat_id]['name'];
+                              $item_category_ids[] = $cat_id;
                           } elseif ($cat_id === 'unassigned') {
                               $item_categories['unassigned'] = 'Unassigned';
+                              $item_category_ids[] = 'unassigned';
                           }
                       }
                   }
@@ -125,9 +232,11 @@ if ( ! defined( 'ABSPATH' ) ) {
                       $cat_id = $mapping[$item_id]['category'];
                       if (isset($categories[$cat_id])) {
                           $item_categories[$cat_id] = $categories[$cat_id]['name'];
+                          $item_category_ids[] = $cat_id;
                       }
                   } else {
                       $item_categories['unassigned'] = 'Unassigned';
+                      $item_category_ids[] = 'unassigned';
                   }
               }
 
@@ -185,6 +294,18 @@ if ( ! defined( 'ABSPATH' ) ) {
               }
               ?>
             </td>
+            <td style="font-family:monospace; font-size:0.75em; color:#2271b1;">
+              <?php
+              if (!empty($item_category_ids)) {
+                  foreach ($item_category_ids as $idx => $cid) {
+                      if ($idx > 0) echo '<br>';
+                      echo esc_html($cid);
+                  }
+              } else {
+                  echo '<em style="color:#999;">None</em>';
+              }
+              ?>
+            </td>
             <td>
               <?php
               if (empty($item_categories)) {
@@ -211,16 +332,6 @@ if ( ! defined( 'ABSPATH' ) ) {
         </tbody>
       </table>
     </div>
-  </div>
-
-  <!-- Category Management Section -->
-  <div style="margin-bottom:20px;">
-    <button type="button" id="smdp-toggle-category-order" class="button button-secondary" style="margin-bottom:10px;margin-right:10px;">
-      <span class="dashicons dashicons-sort" style="vertical-align:middle;"></span> Sort Categories
-    </button>
-    <button type="button" id="smdp-add-category-btn" class="button button-primary" style="margin-bottom:10px;">
-      <span class="dashicons dashicons-plus-alt" style="vertical-align:middle;"></span> Add Category
-    </button>
 
     <div id="smdp-category-order-panel" style="display:none; background:#fff; border:1px solid #ccd0d4; padding:15px; margin-bottom:15px;">
       <h3 style="margin-top:0;">Reorder Categories (drag to sort)</h3>
@@ -228,15 +339,23 @@ if ( ! defined( 'ABSPATH' ) ) {
         <input type="checkbox" id="smdp-order-exclude-hidden" checked>
         Exclude hidden categories from list
       </label>
-      <ul id="smdp-cat-order" class="smdp-cat-order" style="list-style:none;margin:0;padding:0;max-width:600px;">
+      <div id="smdp-cat-order" class="smdp-cat-order" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:0;padding:0;">
         <?php
         // Get categories with current order
         $cat_opt = defined('SMDP_CATEGORIES_OPTION') ? SMDP_CATEGORIES_OPTION : 'square_menu_categories';
         $all_categories = get_option($cat_opt, array());
         if (!is_array($all_categories)) $all_categories = array();
 
-        // Sort by current order
+        // Sort by hidden status first (visible first, hidden last), then by order
         uasort($all_categories, function($a,$b){
+          // First sort by hidden status - visible categories first
+          $a_hidden = !empty($a['hidden']) ? 1 : 0;
+          $b_hidden = !empty($b['hidden']) ? 1 : 0;
+          if ($a_hidden !== $b_hidden) {
+            return $a_hidden - $b_hidden; // 0 (visible) comes before 1 (hidden)
+          }
+
+          // Then sort by order within visible/hidden groups
           $oa = isset($a['order']) ? intval($a['order']) : 0;
           $ob = isset($b['order']) ? intval($b['order']) : 0;
           if ($oa === $ob) {
@@ -250,18 +369,18 @@ if ( ! defined( 'ABSPATH' ) ) {
         foreach ($all_categories as $cid => $cat):
           $is_hidden = !empty($cat['hidden']);
         ?>
-          <li class="smdp-cat-order-item <?php echo $is_hidden ? 'is-hidden' : ''; ?>"
+          <div class="smdp-cat-order-item <?php echo $is_hidden ? 'is-hidden' : ''; ?>"
               data-id="<?php echo esc_attr($cid); ?>"
               data-hidden="<?php echo $is_hidden ? '1' : '0'; ?>"
-              style="border:1px solid #e5e5e5;border-radius:4px;padding:10px 12px;margin-bottom:8px;background:#fafafa;display:flex;justify-content:space-between;align-items:center;cursor:move;">
-            <span>
-              <span class="dashicons dashicons-move" style="color:#999;margin-right:8px;"></span>
-              <?php echo esc_html($cat['name'] ?? 'Category'); ?>
-              <?php echo $is_hidden ? ' <em style="opacity:.6">(hidden)</em>' : ''; ?>
-            </span>
-          </li>
+              style="border:1px solid #e5e5e5;border-radius:4px;padding:15px;background:#fafafa;cursor:move;text-align:center;">
+            <span class="dashicons dashicons-move" style="color:#999;display:block;margin-bottom:8px;"></span>
+            <span style="font-weight:500;display:block;"><?php echo esc_html($cat['name'] ?? 'Category'); ?></span>
+            <?php if ($is_hidden): ?>
+              <em style="opacity:.6;font-size:0.9em;display:block;margin-top:4px;">(hidden)</em>
+            <?php endif; ?>
+          </div>
         <?php endforeach; ?>
-      </ul>
+      </div>
       <p style="margin-top:15px;">
         <button type="button" class="button button-primary" id="smdp-save-cat-order">Save Category Order</button>
         <span id="smdp-cat-order-status" style="margin-left:10px;"></span>
@@ -303,9 +422,14 @@ if ( ! defined( 'ABSPATH' ) ) {
                        <button type="button" class="smdp-add-item-btn button button-primary" data-target="<?php echo esc_attr($cat['id']); ?>" style="margin-right:5px;">
                          <span class="dashicons dashicons-plus-alt" style="vertical-align:middle;"></span> Add Item
                        </button>
-                       <button type="button" class="smdp-hide-category-btn button" data-catid="<?php echo esc_attr($cat['id']); ?>" style="background:#f39c12; color:#fff; border-color:#e08e0b;">
+                       <button type="button" class="smdp-hide-category-btn button" data-catid="<?php echo esc_attr($cat['id']); ?>" style="background:#f39c12; color:#fff; border-color:#e08e0b; margin-right:5px;">
                           <?php echo (isset($cat['hidden']) && $cat['hidden']) ? "Show Category" : "Hide Category"; ?>
                        </button>
+                       <?php if (strpos($cat['id'], 'cat_') === 0): ?>
+                       <button type="button" class="smdp-delete-category-btn button" data-catid="<?php echo esc_attr($cat['id']); ?>" data-catname="<?php echo esc_attr($cat['name']); ?>" style="background:#dc3232; color:#fff; border-color:#dc3232;">
+                         <span class="dashicons dashicons-trash" style="vertical-align:middle;"></span> Delete
+                       </button>
+                       <?php endif; ?>
                     </div>
                   </div>
 
@@ -365,7 +489,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                          <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                          Hide Image
                                      </label>
-                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" title="Remove from category">×</button>
+                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="position:absolute; bottom:5px; left:5px; background:#e57373; color:#fff; border:1px solid #e57373; font-size:0.85em; padding:3px 8px; border-radius:3px; cursor:pointer;">×</button>
                                  </div>
                              </li>
                              <?php
@@ -437,8 +561,8 @@ if ( ! defined( 'ABSPATH' ) ) {
   </form>
 
   <!-- Floating Save Button -->
-  <div id="smdp-floating-save" style="position:fixed;bottom:30px;right:30px;z-index:9999;display:none;">
-    <button type="button" class="button button-primary button-hero" id="smdp-floating-save-btn" style="box-shadow:0 4px 12px rgba(0,0,0,0.3);font-size:16px;padding:12px 24px;">
+  <div id="smdp-floating-save" style="position:fixed;bottom:30px;right:30px;z-index:9999;">
+    <button type="button" class="button button-primary button-large" id="smdp-floating-save-btn" style="box-shadow:0 4px 12px rgba(0,0,0,0.3);">
       <span class="dashicons dashicons-saved" style="vertical-align:middle;margin-right:5px;"></span>
       Save Mappings
     </button>
@@ -523,16 +647,52 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <script>
 jQuery(document).ready(function($) {
+   // Close all panels helper function
+   function closeAllPanels(exceptPanel) {
+      var panels = [
+         "#smdp-category-order-panel",
+         "#smdp-add-category-panel",
+         "#smdp-category-mgmt-container",
+         "#smdp-items-table-container"
+      ];
+
+      panels.forEach(function(panel) {
+         if (panel !== exceptPanel && $(panel).is(":visible")) {
+            $(panel).hide();
+         }
+      });
+   }
+
    // Toggle category order panel
    $("#smdp-toggle-category-order").on("click", function() {
-      $("#smdp-category-order-panel").slideToggle(300);
-      $("#smdp-add-category-panel").hide();
+      var $panel = $("#smdp-category-order-panel");
+      var wasVisible = $panel.is(":visible");
+
+      closeAllPanels("#smdp-category-order-panel");
+
+      if (wasVisible) {
+         // Was open, close it
+         $panel.hide();
+      } else {
+         // Was closed, open it
+         $panel.slideDown(300);
+      }
    });
 
    // Toggle add category panel
    $("#smdp-add-category-btn").on("click", function() {
-      $("#smdp-add-category-panel").slideToggle(300);
-      $("#smdp-category-order-panel").hide();
+      var $panel = $("#smdp-add-category-panel");
+      var wasVisible = $panel.is(":visible");
+
+      closeAllPanels("#smdp-add-category-panel");
+
+      if (wasVisible) {
+         // Was open, close it
+         $panel.hide();
+      } else {
+         // Was closed, open it
+         $panel.slideDown(300);
+      }
    });
 
    // Create new category
@@ -837,17 +997,41 @@ jQuery(document).ready(function($) {
        });
    });
 
-   // Floating save button functionality
-   var $floatingSave = $("#smdp-floating-save");
-   var $regularSave = $("#smdp-items-form .submit");
+   // Delete Category handler (custom categories only)
+   $(".smdp-delete-category-btn").on("click", function() {
+       var $btn = $(this);
+       var catId = $btn.data("catid");
+       var catName = $btn.data("catname");
+       var $catGroup = $btn.closest(".smdp-category-group");
 
-   // Show/hide floating button based on scroll
-   $(window).on("scroll", function() {
-       if ($(window).scrollTop() > 300) {
-           $floatingSave.fadeIn(200);
-       } else {
-           $floatingSave.fadeOut(200);
+       if (!confirm("Are you sure you want to delete the category '" + catName + "'?\n\nAll items in this category will be moved to Unassigned. This action cannot be undone.")) {
+           return;
        }
+
+       $btn.prop("disabled", true);
+       $btn.html('<span class="dashicons dashicons-update dashicons-spin" style="vertical-align:middle;"></span> Deleting...');
+
+       $.post(ajaxurl, {
+           action: "smdp_delete_category",
+           category_id: catId,
+           _ajax_nonce: "<?php echo wp_create_nonce('smdp_delete_category'); ?>"
+       }, function(response) {
+           if (response.success) {
+               // Fade out and remove the category group
+               $catGroup.fadeOut(300, function() {
+                   $(this).remove();
+               });
+               alert("Category deleted successfully.");
+           } else {
+               alert("Error deleting category: " + (response.data || "Unknown error"));
+               $btn.prop("disabled", false);
+               $btn.html('<span class="dashicons dashicons-trash" style="vertical-align:middle;"></span> Delete');
+           }
+       }).fail(function() {
+           alert("Failed to delete category. Please try again.");
+           $btn.prop("disabled", false);
+           $btn.html('<span class="dashicons dashicons-trash" style="vertical-align:middle;"></span> Delete');
+       });
    });
 
    // Floating save button click
@@ -984,20 +1168,35 @@ jQuery(document).ready(function($) {
        });
    });
 
+   // Toggle category management table
+   $("#smdp-toggle-category-mgmt").on("click", function() {
+       var $panel = $("#smdp-category-mgmt-container");
+       var wasVisible = $panel.is(":visible");
+
+       closeAllPanels("#smdp-category-mgmt-container");
+
+       if (wasVisible) {
+           // Was open, close it
+           $panel.hide();
+       } else {
+           // Was closed, open it
+           $panel.slideDown(300);
+       }
+   });
+
    // Toggle advanced items table
    $("#smdp-toggle-items-table").on("click", function() {
-       var $btn = $(this);
-       var $container = $("#smdp-items-table-container");
-       var $toggleText = $btn.find(".toggle-text");
+       var $panel = $("#smdp-items-table-container");
+       var wasVisible = $panel.is(":visible");
 
-       if ($container.is(":visible")) {
-           $container.slideUp(300);
-           $toggleText.text("Show Items Table");
-           $btn.find(".dashicons").removeClass("dashicons-arrow-up-alt2").addClass("dashicons-list-view");
+       closeAllPanels("#smdp-items-table-container");
+
+       if (wasVisible) {
+           // Was open, close it
+           $panel.hide();
        } else {
-           $container.slideDown(300);
-           $toggleText.text("Hide Items Table");
-           $btn.find(".dashicons").removeClass("dashicons-list-view").addClass("dashicons-arrow-up-alt2");
+           // Was closed, open it
+           $panel.slideDown(300);
        }
    });
 
@@ -1103,6 +1302,33 @@ jQuery(document).ready(function($) {
        });
    });
 
+   // Cleanup Duplicates button
+   $("#smdp-cleanup-duplicates-btn").on("click", function() {
+       if (!confirm("This will remove duplicate items from categories. Continue?")) {
+           return;
+       }
+
+       var $btn = $(this);
+       var originalText = $btn.html();
+       $btn.prop("disabled", true).html('<span class="dashicons dashicons-update dashicons-spin" style="vertical-align:middle;"></span> Cleaning...');
+
+       $.post(ajaxurl, {
+           action: 'smdp_cleanup_duplicates',
+           _ajax_nonce: '<?php echo wp_create_nonce("smdp_cleanup_duplicates"); ?>'
+       }, function(response) {
+           if (response.success) {
+               alert(response.data.message + ' Page will reload.');
+               location.reload();
+           } else {
+               alert('Error: ' + (response.data || 'Unknown error'));
+               $btn.prop("disabled", false).html(originalText);
+           }
+       }).fail(function() {
+           alert('Failed to cleanup duplicates. Please try again.');
+           $btn.prop("disabled", false).html(originalText);
+       });
+   });
+
    // Hide Image Change Handler (for debugging/visual feedback).
    $(".smdp-hide-image").on("change", function() {
        var $chk = $(this);
@@ -1126,6 +1352,12 @@ jQuery(document).ready(function($) {
      width: 200px;
      height: 200px;
      margin: 3px;
+  }
+  .smdp-cat-placeholder {
+     border: 2px dashed #2271b1;
+     background: #f0f6fc;
+     border-radius: 4px;
+     min-height: 80px;
   }
   .smdp-add-item-option.selected {
       background: #e0e0e0;

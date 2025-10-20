@@ -1427,18 +1427,20 @@ class SMDP_Admin_Pages {
         // Retrieve mapping
         $mapping = get_option(SMDP_MAPPING_OPTION, array());
 
-        // Sort active categories: visible ones first, then hidden (sorted by name)
+        // Sort active categories by order, then by name
         $cat_array = array();
         foreach ($categories as $cat) {
             $cat_array[] = $cat;
         }
         usort($cat_array, function($a, $b) {
-            $a_hidden = (isset($a['hidden']) && $a['hidden']) ? 1 : 0;
-            $b_hidden = (isset($b['hidden']) && $b['hidden']) ? 1 : 0;
-            if ($a_hidden == $b_hidden) {
-                return strcmp($a['name'], $b['name']);
+            // First sort by order field
+            $a_order = isset($a['order']) ? intval($a['order']) : 0;
+            $b_order = isset($b['order']) ? intval($b['order']) : 0;
+            if ($a_order !== $b_order) {
+                return $a_order - $b_order;
             }
-            return $a_hidden - $b_hidden;
+            // If order is the same, sort by name
+            return strcmp($a['name'], $b['name']);
         });
 
         // Group items by category - now supports multiple instances per item

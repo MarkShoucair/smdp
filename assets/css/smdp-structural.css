@@ -83,7 +83,7 @@ body.admin-bar .smdp-menu-app-fe {
 /* Left layout adjustments */
 .smdp-menu-app-fe.layout-left {
 	display: grid;
-	grid-template-columns: 260px 1fr;
+	grid-template-columns: auto 1fr;
 	gap: 0;
 }
 
@@ -93,6 +93,7 @@ body.admin-bar .smdp-menu-app-fe {
 	align-self: start;
 	max-height: 100vh;
 	overflow-y: auto;
+	min-width: 260px;
 }
 
 .smdp-menu-app-fe.layout-left .smdp-cat-bar {
@@ -184,13 +185,9 @@ body.admin-bar .smdp-menu-app-fe {
 	line-height: 1.4 !important;
 }
 
-/* When font size increases, button grows */
+/* Font size can be customized - removed inherit to allow hardcoded padding to work */
 .smdp-cat-btn {
 	font-size: inherit !important;
-	padding-top: inherit !important;
-	padding-bottom: inherit !important;
-	padding-left: inherit !important;
-	padding-right: inherit !important;
 }
 
 /* Ensure text doesn't get cut off */
@@ -201,7 +198,7 @@ body.admin-bar .smdp-menu-app-fe {
 
 /* Left layout grid adjustment */
 .smdp-menu-app-fe.layout-left {
-	grid-template-columns: 260px 1fr !important;
+	grid-template-columns: auto 1fr !important;
 }
 
 /* ============================================
@@ -237,7 +234,7 @@ body.admin-bar .smdp-menu-app-fe {
 	border: 1px solid #01669c;
 	font-size: 25px;
 	font-weight: normal;
-	padding: 12px 50px;
+	padding: 16px 40px;
 	border-radius: 500px;
 	transition: all 0.3s ease;
 }
@@ -256,7 +253,7 @@ body.admin-bar .smdp-menu-app-fe {
 
 /* Left layout - adjust padding and font size to fit in sidebar */
 .smdp-menu-app-fe.layout-left .smdp-cat-btn {
-	padding: 12px 30px;
+	padding: 16px 32px;
 	font-size: 18px;
 	width: 100%;
 	text-align: left;

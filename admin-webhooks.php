@@ -18,6 +18,15 @@ use Square\Types\WebhookSubscription;
 function smdp_render_webhooks_page() {
     if ( ! current_user_can( 'manage_options' ) ) return;
 
+    // Check if using OAuth authentication FIRST - before any form processing
+    $oauth_token = get_option( 'smdp_oauth_access_token', '' );
+    $is_using_oauth = ! empty( $oauth_token );
+
+    // If using OAuth, skip all form processing and webhook functionality (no warning needed - it's in Settings)
+    if ( $is_using_oauth ) {
+        return; // Stop rendering - webhooks not available with OAuth
+    }
+
     // Handle "Delete Webhook" button click
     if ( isset( $_POST['smdp_delete_webhook_nonce'] )
       && wp_verify_nonce( $_POST['smdp_delete_webhook_nonce'], 'smdp_delete_webhook' ) ) {
@@ -119,27 +128,6 @@ function smdp_render_webhooks_page() {
 
     // Don't create wrap div - this page is now embedded in a tab
     echo '<h2 style="margin-top:0;">Square Webhooks</h2>';
-
-    // Check if using OAuth authentication
-    $oauth_token = get_option( 'smdp_oauth_access_token', '' );
-    if ( ! empty( $oauth_token ) ) {
-        echo '<div class="notice notice-warning" style="padding:15px;margin:20px 0;">';
-        echo '<h3 style="margin-top:0;">⚠️ Webhooks Not Available with OAuth</h3>';
-        echo '<p><strong>Square webhook subscriptions are application-level and require a personal access token.</strong></p>';
-        echo '<p>You are currently using OAuth authentication, which provides merchant-specific tokens. To use webhooks:</p>';
-        echo '<ol>';
-        echo '<li>Go to <strong>Square Menu Settings</strong></li>';
-        echo '<li>Disconnect from OAuth (click "Disconnect from Square")</li>';
-        echo '<li>Enter a <strong>personal access token</strong> from your Square Developer Dashboard</li>';
-        echo '<li>Save settings and return here to configure webhooks</li>';
-        echo '</ol>';
-        echo '<p><em>Note: Automatic catalog syncing via webhooks will only work with personal access tokens.</em></p>';
-        echo '</div>';
-        return; // Stop rendering the rest of the page (no closing div needed)
-    }
-
-    // Always show webhooks (removed button requirement for better UX)
-    $show_webhooks = true;
 
     // Webhook action buttons
     echo '<div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">';
