@@ -1268,6 +1268,15 @@ class SMDP_Menu_App_Builder {
       }
     }
 
+    // DEBUG: Log mapping style and custom categories
+    error_log('[SMDP Menu Builder] Mapping style: ' . ($is_new_style ? 'NEW (instance-based)' : 'OLD (item-based)'));
+    error_log('[SMDP Menu Builder] Total categories: ' . count($categories));
+    $custom_cats = array_filter($categories, function($cat, $id) {
+      return strpos($id, 'cat_') === 0;
+    }, ARRAY_FILTER_USE_BOTH);
+    error_log('[SMDP Menu Builder] Custom categories found: ' . count($custom_cats) . ' - ' . implode(', ', array_column($custom_cats, 'name')));
+    error_log('[SMDP Menu Builder] Total mapping entries: ' . count($mapping));
+
     $normalized = array();
 
     if ($is_new_style) {
@@ -1280,6 +1289,7 @@ class SMDP_Menu_App_Builder {
       }
 
       // Process each instance in the mapping
+      $custom_cat_items = array();
       foreach ($mapping as $instance_id => $map_data) {
         if (!isset($map_data['item_id']) || !isset($items_by_id[$map_data['item_id']])) continue;
 
@@ -1288,6 +1298,12 @@ class SMDP_Menu_App_Builder {
 
         $cat_id = isset($map_data['category']) ? $map_data['category'] : '';
         $cat_name = isset($categories[$cat_id]['name']) ? $categories[$cat_id]['name'] : 'Uncategorized';
+
+        // DEBUG: Track custom category assignments
+        if (strpos($cat_id, 'cat_') === 0) {
+          if (!isset($custom_cat_items[$cat_id])) $custom_cat_items[$cat_id] = array();
+          $custom_cat_items[$cat_id][] = $data['name'];
+        }
 
         $img = '';
         if (!empty($data['image_ids'][0])) {
@@ -1339,6 +1355,14 @@ class SMDP_Menu_App_Builder {
       }
     }
 
+    // DEBUG: Log items assigned to custom categories
+    if ($is_new_style && !empty($custom_cat_items)) {
+      error_log('[SMDP Menu Builder] Items assigned to custom categories:');
+      foreach ($custom_cat_items as $cat_id => $items) {
+        error_log('  - ' . $cat_id . ' (' . $categories[$cat_id]['name'] . '): ' . implode(', ', $items));
+      }
+    }
+
     update_option(self::OPT_CATALOG, wp_json_encode($normalized));
 
     $cat_sorted = $categories;
@@ -1385,6 +1409,12 @@ class SMDP_Menu_App_Builder {
       // Always add category, even if empty (important for custom categories)
       $name = isset($cat['name']) ? $cat['name'] : 'Category';
       $menu['categories'][] = array('name'=>$name, 'items'=>$items);
+
+      // DEBUG: Log category being added to menu
+      $is_custom = (strpos($cid, 'cat_') === 0);
+      if ($is_custom) {
+        error_log('[SMDP Menu Builder] Adding custom category to menu: ' . $name . ' (ID: ' . $cid . ') with ' . count($items) . ' items');
+      }
     }
 
     if (!empty($by_cat['uncategorized'])) {
