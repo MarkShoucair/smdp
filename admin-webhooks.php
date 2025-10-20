@@ -167,16 +167,12 @@ function smdp_render_webhooks_page() {
     echo '<strong>Refresh Webhooks:</strong> Syncs the signature keys from Square. <strong>Use this if you\'re getting 403 errors in Square webhook logs.</strong>';
     echo '</em></p>';
 
-    // Check if we have a stored webhook key
+    // Only show warning if webhook key is missing
     $stored_key = smdp_get_webhook_key();
     if ( empty( $stored_key ) ) {
         echo '<div class="notice notice-warning" style="margin-top:15px; padding:10px;">';
         echo '<p><strong>⚠️ Warning:</strong> No webhook signature key is currently stored. Webhooks from Square will be rejected.</p>';
         echo '<p><strong>Action Required:</strong> Click "Refresh Webhooks" above to sync the signature key from your existing webhook subscription.</p>';
-        echo '</div>';
-    } else {
-        echo '<div class="notice notice-success" style="margin-top:15px; padding:10px;">';
-        echo '<p style="margin:0;"><strong>✓ Webhook configured and ready.</strong> Signature key is synced.</p>';
         echo '</div>';
     }
 

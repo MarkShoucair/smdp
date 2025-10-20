@@ -534,11 +534,51 @@ class SMDP_Admin_Pages {
                 <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
                     <h3>Clear Cached Data</h3>
                     <p>This will delete all locally cached data (items, mappings, categories, API logs) while preserving your Square Access Token.</p>
-                    <form method="post">
+                    <form method="post" id="smdp-clear-cache-form">
                         <?php wp_nonce_field( 'smdp_clear_all_data', 'smdp_clear_data_nonce' ); ?>
-                        <?php submit_button( 'Clear All Cached Data', 'secondary', 'clear_all_data', false, array( 'onclick' => 'return confirm("Are you sure you want to clear all cached data? This cannot be undone.");' ) ); ?>
+                        <button type="button" id="smdp-clear-cache-btn" class="button button-secondary">Clear All Cached Data</button>
                     </form>
                 </div>
+
+                <!-- Double Confirmation Modal for Clear Cache -->
+                <div id="smdp-clear-cache-modal" class="smdp-confirmation-modal" style="display:none;">
+                    <div class="smdp-modal-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:99999;"></div>
+                    <div class="smdp-modal-content" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);max-width:500px;width:90%;z-index:100000;">
+                        <div style="text-align:center;margin-bottom:20px;">
+                            <span class="dashicons dashicons-warning" style="font-size:48px;color:#f56e28;width:48px;height:48px;"></span>
+                        </div>
+                        <h2 style="margin:0 0 15px 0;text-align:center;color:#d63638;">Warning: This Will Delete All Cached Data</h2>
+                        <p style="font-size:14px;line-height:1.6;margin-bottom:15px;">
+                            <strong>This action will permanently delete all locally cached data from WordPress.</strong>
+                        </p>
+                        <p style="font-size:14px;line-height:1.6;margin-bottom:20px;">
+                            This includes:
+                        </p>
+                        <ul style="margin:0 0 20px 20px;font-size:14px;line-height:1.8;">
+                            <li>All cached menu items</li>
+                            <li>Category assignments and custom ordering</li>
+                            <li>Menu item mappings</li>
+                            <li>API logs and cached responses</li>
+                        </ul>
+                        <p style="font-size:14px;line-height:1.6;margin-bottom:20px;padding:12px;background:#fff3cd;border-left:4px solid:#f56e28;color:#856404;">
+                            <strong>Note:</strong> Your Square Access Token will be preserved. You can re-sync data from Square after clearing.
+                        </p>
+                        <div style="margin-bottom:20px;">
+                            <label style="display:flex;align-items:center;font-size:14px;cursor:pointer;">
+                                <input type="checkbox" id="smdp-clear-confirm-check" style="margin-right:8px;">
+                                <span>I understand this will delete all cached data</span>
+                            </label>
+                        </div>
+                        <div style="display:flex;gap:10px;justify-content:center;">
+                            <button type="button" class="button button-large" id="smdp-clear-cancel" style="min-width:120px;">Cancel</button>
+                            <button type="button" class="button button-primary button-large" id="smdp-clear-confirm" disabled style="min-width:120px;background:#d63638;border-color:#d63638;">
+                                <span class="dashicons dashicons-warning" style="vertical-align:middle;margin-right:5px;"></span>
+                                Clear All Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div><!-- End Tab: Reset -->
 
             <!-- Tab: API Log -->
@@ -696,9 +736,11 @@ class SMDP_Admin_Pages {
 
             <script>
             jQuery(document).ready(function($) {
-                // Restore last active tab from localStorage
-                var lastTab = localStorage.getItem('smdp_settings_active_tab');
-                if (lastTab && $(lastTab).length) {
+                // Check if we should restore the tab (only if sessionStorage flag is set)
+                var shouldRestore = sessionStorage.getItem('smdp_settings_restore_tab');
+                var lastTab = sessionStorage.getItem('smdp_settings_active_tab');
+
+                if (shouldRestore === 'true' && lastTab && $(lastTab).length) {
                     // Update nav tabs
                     $('.nav-tab').removeClass('nav-tab-active');
                     $('.nav-tab[href="' + lastTab + '"]').addClass('nav-tab-active');
@@ -708,13 +750,16 @@ class SMDP_Admin_Pages {
                     $(lastTab).show().addClass('active');
                 }
 
+                // Clear the restore flag after use
+                sessionStorage.removeItem('smdp_settings_restore_tab');
+
                 // Tab switching
                 $('.nav-tab').on('click', function(e) {
                     e.preventDefault();
                     var target = $(this).attr('href');
 
-                    // Save active tab to localStorage
-                    localStorage.setItem('smdp_settings_active_tab', target);
+                    // Save active tab to sessionStorage
+                    sessionStorage.setItem('smdp_settings_active_tab', target);
 
                     // Update nav tabs
                     $('.nav-tab').removeClass('nav-tab-active');
@@ -723,6 +768,47 @@ class SMDP_Admin_Pages {
                     // Update tab content
                     $('.smdp-settings-tab').hide().removeClass('active');
                     $(target).show().addClass('active');
+                });
+
+                // Set restore flag when any form is submitted
+                $('form').on('submit', function() {
+                    sessionStorage.setItem('smdp_settings_restore_tab', 'true');
+                });
+
+                // Clear Cache Modal - Show modal
+                $("#smdp-clear-cache-btn").on("click", function(e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    $("#smdp-clear-cache-modal").fadeIn(200);
+                    $("#smdp-clear-confirm-check").prop("checked", false);
+                    $("#smdp-clear-confirm").prop("disabled", true);
+                    return false;
+                });
+
+                // Clear Cache Modal - Enable confirm button when checkbox is checked
+                $("#smdp-clear-confirm-check").on("change", function() {
+                    $("#smdp-clear-confirm").prop("disabled", !$(this).is(":checked"));
+                });
+
+                // Clear Cache Modal - Cancel
+                $("#smdp-clear-cancel, #smdp-clear-cache-modal .smdp-modal-overlay").on("click", function() {
+                    $("#smdp-clear-cache-modal").fadeOut(200);
+                });
+
+                // Clear Cache Modal - Confirm and submit form
+                $("#smdp-clear-confirm").on("click", function() {
+                    $("#smdp-clear-cache-modal").fadeOut(200);
+
+                    // Add a hidden input to trigger the clear action
+                    var $form = $("#smdp-clear-cache-form");
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'clear_all_data',
+                        value: '1'
+                    }).appendTo($form);
+
+                    // Submit the form
+                    $form.submit();
                 });
             });
             </script>
@@ -791,9 +877,11 @@ class SMDP_Admin_Pages {
             </style>
             <script>
             jQuery(document).ready(function($) {
-                // Restore last active tab from localStorage
-                var lastTab = localStorage.getItem('smdp_menu_mgmt_active_tab');
-                if (lastTab && $(lastTab).length) {
+                // Check if we should restore the tab (only if sessionStorage flag is set)
+                var shouldRestore = sessionStorage.getItem('smdp_menu_mgmt_restore_tab');
+                var lastTab = sessionStorage.getItem('smdp_menu_mgmt_active_tab');
+
+                if (shouldRestore === 'true' && lastTab && $(lastTab).length) {
                     // Update nav tabs
                     $('.nav-tab').removeClass('nav-tab-active');
                     $('.nav-tab[href="' + lastTab + '"]').addClass('nav-tab-active');
@@ -803,13 +891,16 @@ class SMDP_Admin_Pages {
                     $(lastTab).show().addClass('active');
                 }
 
+                // Clear the restore flag after use
+                sessionStorage.removeItem('smdp_menu_mgmt_restore_tab');
+
                 // Tab switching
                 $('.nav-tab').on('click', function(e) {
                     e.preventDefault();
                     var target = $(this).attr('href');
 
-                    // Save active tab to localStorage
-                    localStorage.setItem('smdp_menu_mgmt_active_tab', target);
+                    // Save active tab to sessionStorage
+                    sessionStorage.setItem('smdp_menu_mgmt_active_tab', target);
 
                     // Update nav tabs
                     $('.nav-tab').removeClass('nav-tab-active');
@@ -818,6 +909,11 @@ class SMDP_Admin_Pages {
                     // Update tab content
                     $('.smdp-menu-mgmt-tab').hide().removeClass('active');
                     $(target).show().addClass('active');
+                });
+
+                // Set restore flag when any form is submitted
+                $('form').on('submit', function() {
+                    sessionStorage.setItem('smdp_menu_mgmt_restore_tab', 'true');
                 });
             });
             </script>
