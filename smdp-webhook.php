@@ -230,9 +230,23 @@ function smdp_ensure_webhook_subscription( $force = false ) {
             if ( wp_remote_retrieve_response_code( $detail ) === 200 ) {
                 $j   = json_decode( wp_remote_retrieve_body( $detail ), true );
                 $key = $j['subscription']['signature_key'] ?? '';
+                error_log( '[SMDP] Retrieved signature key from webhook details: ' . substr($key, 0, 20) . '... (length: ' . strlen($key) . ')' );
                 if ( $key ) {
-                    smdp_store_webhook_key( $key );
+                    $store_result = smdp_store_webhook_key( $key );
+                    error_log( '[SMDP] Store webhook key result: ' . ($store_result ? 'SUCCESS' : 'FAILED') );
+
+                    // Verify it was stored correctly
+                    $retrieved = smdp_get_webhook_key();
+                    if ( $retrieved === $key ) {
+                        error_log( '[SMDP] ✓ Webhook key stored and verified successfully' );
+                    } else {
+                        error_log( '[SMDP] ✗ WARNING: Stored key does not match! Retrieved: ' . substr($retrieved, 0, 20) . '...' );
+                    }
+                } else {
+                    error_log( '[SMDP] ERROR: No signature_key found in webhook details response' );
                 }
+            } else {
+                error_log( '[SMDP] Failed to retrieve webhook details. HTTP code: ' . wp_remote_retrieve_response_code( $detail ) );
             }
             // Cache that we verified the webhook (24 hours)
             set_transient( $cache_key, time(), DAY_IN_SECONDS );
@@ -271,9 +285,18 @@ function smdp_ensure_webhook_subscription( $force = false ) {
     }
     $res = json_decode( wp_remote_retrieve_body( $create ), true );
     $k   = $res['subscription']['signature_key'] ?? '';
+    error_log( '[SMDP] Created webhook signature key: ' . substr($k, 0, 20) . '... (length: ' . strlen($k) . ')' );
     if ( $k ) {
-        smdp_store_webhook_key( $k );
-        error_log( '[SMDP] Webhook subscription created and signature key saved (encrypted)' );
+        $store_result = smdp_store_webhook_key( $k );
+        error_log( '[SMDP] Webhook subscription created and signature key saved: ' . ($store_result ? 'SUCCESS' : 'FAILED') );
+
+        // Verify it was stored correctly
+        $retrieved = smdp_get_webhook_key();
+        if ( $retrieved === $k ) {
+            error_log( '[SMDP] ✓ Webhook key stored and verified successfully' );
+        } else {
+            error_log( '[SMDP] ✗ WARNING: Stored key does not match! Retrieved: ' . substr($retrieved, 0, 20) . '...' );
+        }
     }
 
     // Cache that we verified the webhook (24 hours)
