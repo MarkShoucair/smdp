@@ -12,6 +12,43 @@ document.addEventListener('click', function(e){
 jQuery(document).ready(function($) {
     console.log("[SMDP] Admin JS loaded");
 
+    // Sync Locations button
+    $("#smdp-sync-locations-btn").on("click", function() {
+        var $btn = $(this);
+        var $status = $("#smdp-sync-locations-status");
+        var originalHtml = $btn.html();
+
+        $btn.prop("disabled", true);
+        $btn.html('<span class="dashicons dashicons-update dashicons-spin" style="vertical-align:middle;"></span> Syncing...');
+        $status.html('<span style="color:#666;">Fetching locations...</span>');
+
+        $.ajax({
+            url: ajaxurl,
+            method: "POST",
+            data: {
+                action: "smdp_sync_locations",
+                nonce: smdpAdmin.sync_locations_nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    $status.html('<span style="color:#46b450;">✓ ' + response.data.message + '</span>');
+                    setTimeout(function() {
+                        location.reload(); // Reload to show the locations
+                    }, 1000);
+                } else {
+                    $status.html('<span style="color:#dc3232;">✗ ' + (response.data || 'Error syncing locations') + '</span>');
+                    $btn.prop("disabled", false);
+                    $btn.html(originalHtml);
+                }
+            },
+            error: function() {
+                $status.html('<span style="color:#dc3232;">✗ Connection error</span>');
+                $btn.prop("disabled", false);
+                $btn.html(originalHtml);
+            }
+        });
+    });
+
     // Radio button visual feedback
     $("input[name='smdp_bill_lookup_method']").on("change", function() {
         $(".smdp-radio-option").removeClass("active");

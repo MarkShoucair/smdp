@@ -22,6 +22,7 @@ class SMDP_Help_Request {
   private string $opt_disabled_mods = 'smdp_disabled_modifiers';
   private string $opt_bill_lookup_method = 'smdp_bill_lookup_method';
   private string $opt_table_items = 'smdp_table_item_ids';
+  private string $opt_locations_cache = 'smdp_square_locations';
   private string $nonce_action = 'smdp_help_admin';
 
   /* ══════════════════════  Boot  ══════════════════════ */
@@ -37,6 +38,7 @@ class SMDP_Help_Request {
     add_action( 'wp_ajax_nopriv_smdp_request_bill', [ $this, 'ajax_bill' ] );
     add_action( 'wp_ajax_smdp_get_bill',            [ $this, 'ajax_get_bill' ] );
     add_action( 'wp_ajax_nopriv_smdp_get_bill',     [ $this, 'ajax_get_bill' ] );
+    add_action( 'wp_ajax_smdp_sync_locations',      [ $this, 'ajax_sync_locations' ] );
 
     // admin
     add_action( 'admin_menu',            [ $this, 'add_admin_page' ] );
@@ -101,6 +103,10 @@ class SMDP_Help_Request {
     if( empty($_GET['page']) || $_GET['page'] !== 'smdp-help-tables' ) return;
     wp_enqueue_script( 'jquery' ); // Ensure jQuery is loaded for inline scripts
     wp_enqueue_script( 'smdp-help-admin', plugins_url( '../assets/js/help-admin.js', __FILE__ ), ['jquery'], null, true );
+    wp_localize_script( 'smdp-help-admin', 'smdpAdmin', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'sync_locations_nonce' => wp_create_nonce('smdp_sync_locations')
+    ]);
   }
 
   /* ══════════════════  Square order helper  ══════════════════ */
@@ -444,6 +450,36 @@ class SMDP_Help_Request {
   }
 
   /**
+   * AJAX handler to sync locations from Square
+   */
+  public function ajax_sync_locations(): void {
+    check_ajax_referer('smdp_sync_locations', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+
+    $locations = $this->fetch_square_locations();
+
+    if (empty($locations)) {
+        wp_send_json_error('Failed to fetch locations from Square. Please check your access token.');
+        return;
+    }
+
+    // Cache the locations
+    update_option($this->opt_locations_cache, $locations);
+
+    error_log('[SMDP] Successfully synced ' . count($locations) . ' locations from Square');
+
+    wp_send_json_success([
+        'message' => 'Successfully synced ' . count($locations) . ' location(s)',
+        'count' => count($locations),
+        'locations' => $locations
+    ]);
+  }
+
+  /**
    * Handle clear rate limits action
    */
   public function handle_clear_rate_limits(): void {
@@ -618,8 +654,8 @@ class SMDP_Help_Request {
         return strcmp($a['name'], $b['name']);
     });
 
-    // Fetch locations from Square API
-    $locations_list = $this->fetch_square_locations();
+    // Get cached locations (don't fetch on every page load)
+    $locations_list = get_option($this->opt_locations_cache, []);
 
     echo '<div class="wrap"><h1>Help &amp; Bill</h1>';
 
@@ -800,8 +836,14 @@ class SMDP_Help_Request {
 
     // Location Picker
     echo '<tr><th>Location</th><td>';
+    echo '<div style="margin-bottom:10px;">';
+    echo '<button type="button" id="smdp-sync-locations-btn" class="button button-secondary">';
+    echo '<span class="dashicons dashicons-update" style="vertical-align:middle;"></span> Sync Locations from Square';
+    echo '</button>';
+    echo '<span id="smdp-sync-locations-status" style="margin-left:10px;"></span>';
+    echo '</div>';
     if (empty($locations_list)) {
-        echo '<p style="color:#d63638;">⚠️ Unable to fetch locations from Square. Please check your access token.</p>';
+        echo '<p style="color:#666;"><em>No locations cached. Click "Sync Locations" above to fetch from Square.</em></p>';
         echo '<input name="smdp_location_id" value="'.$loc.'" class="regular-text" placeholder="Enter Location ID manually">';
     } else {
         echo '<div class="smdp-item-picker">';
