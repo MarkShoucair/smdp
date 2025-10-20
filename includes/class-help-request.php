@@ -393,6 +393,57 @@ class SMDP_Help_Request {
   }
 
   /**
+   * Fetch locations from Square API
+   *
+   * @return array List of locations with id and name
+   */
+  private function fetch_square_locations(): array {
+    $token = smdp_get_access_token();
+    if (!$token) {
+        error_log('[SMDP] Cannot fetch locations: No access token configured');
+        return [];
+    }
+
+    $response = wp_remote_get('https://connect.squareup.com/v2/locations', [
+        'headers' => [
+            'Authorization' => "Bearer {$token}",
+            'Content-Type' => 'application/json',
+            'Square-Version' => '2025-04-22',
+        ],
+        'timeout' => 15
+    ]);
+
+    if (is_wp_error($response)) {
+        error_log('[SMDP] Error fetching locations: ' . $response->get_error_message());
+        return [];
+    }
+
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+
+    if (!isset($data['locations']) || !is_array($data['locations'])) {
+        error_log('[SMDP] No locations found in Square API response');
+        return [];
+    }
+
+    $locations = [];
+    foreach ($data['locations'] as $location) {
+        $locations[] = [
+            'id' => $location['id'] ?? '',
+            'name' => $location['name'] ?? 'Unnamed Location',
+            'status' => $location['status'] ?? 'UNKNOWN'
+        ];
+    }
+
+    // Sort alphabetically by name
+    usort($locations, function($a, $b) {
+        return strcmp($a['name'], $b['name']);
+    });
+
+    return $locations;
+  }
+
+  /**
    * Handle clear rate limits action
    */
   public function handle_clear_rate_limits(): void {
@@ -532,13 +583,13 @@ class SMDP_Help_Request {
   }
 
   public function render_admin(): void {
-    $help=esc_attr(get_option($this->opt_help,'')); 
+    $help=esc_attr(get_option($this->opt_help,''));
     $bill=esc_attr(get_option($this->opt_bill,''));
     $loc=esc_attr(get_option($this->opt_loc,''));
     $tables=(array)get_option($this->opt_tables,[]);
     $lookup_method = get_option($this->opt_bill_lookup_method, 'customer');
     $table_items = (array)get_option($this->opt_table_items, []);
-    
+
     // Get all items from cache for the item picker
     $all_items = get_option(SMDP_ITEMS_OPTION, []);
     $items_list = [];
@@ -547,13 +598,13 @@ class SMDP_Help_Request {
             $item_data = $obj['item_data'];
             $item_id = $obj['id'];
             $item_name = $item_data['name'] ?? 'Unnamed Item';
-            
+
             // Get first variation ID if exists
             $variation_id = '';
             if (!empty($item_data['variations'][0]['id'])) {
                 $variation_id = $item_data['variations'][0]['id'];
             }
-            
+
             $items_list[] = [
                 'id' => $item_id,
                 'variation_id' => $variation_id,
@@ -561,11 +612,14 @@ class SMDP_Help_Request {
             ];
         }
     }
-    
+
     // Sort alphabetically
     usort($items_list, function($a, $b) {
         return strcmp($a['name'], $b['name']);
     });
+
+    // Fetch locations from Square API
+    $locations_list = $this->fetch_square_locations();
 
     echo '<div class="wrap"><h1>Help &amp; Bill</h1>';
 
@@ -743,8 +797,39 @@ class SMDP_Help_Request {
     echo '</div>';
     echo '</div>';
     echo '</td></tr>';
-    
-    echo '<tr><th>Location ID</th><td><input name="smdp_location_id" value="'.$loc.'" class="regular-text"></td></tr>';
+
+    // Location Picker
+    echo '<tr><th>Location</th><td>';
+    if (empty($locations_list)) {
+        echo '<p style="color:#d63638;">⚠️ Unable to fetch locations from Square. Please check your access token.</p>';
+        echo '<input name="smdp_location_id" value="'.$loc.'" class="regular-text" placeholder="Enter Location ID manually">';
+    } else {
+        echo '<div class="smdp-item-picker">';
+        echo '<div class="smdp-selected-item' . ($loc ? ' active' : '') . '" id="location-selected">';
+        $loc_name = '';
+        foreach ($locations_list as $location) {
+            if ($location['id'] === $loc) {
+                $loc_name = $location['name'];
+                break;
+            }
+        }
+        echo '<strong>Selected:</strong> ' . esc_html($loc_name ?: 'None') . ' ';
+        echo '<a href="#" class="smdp-clear-selection" data-target="location">Clear</a>';
+        echo '</div>';
+        echo '<input type="text" class="smdp-search-box" id="location-search" placeholder="Search for location..." autocomplete="off">';
+        echo '<input type="hidden" name="smdp_location_id" id="location-item-id" value="' . $loc . '">';
+        echo '<div class="smdp-item-dropdown" id="location-dropdown">';
+        foreach ($locations_list as $location) {
+            $status_badge = $location['status'] === 'ACTIVE' ? '<span style="color:#46b450;">● Active</span>' : '<span style="color:#999;">○ ' . esc_html($location['status']) . '</span>';
+            echo '<div class="smdp-item-option" data-id="' . esc_attr($location['id']) . '" data-name="' . esc_attr($location['name']) . '" data-target="location">';
+            echo esc_html($location['name']) . ' ' . $status_badge;
+            echo '<br><small style="color:#666;">ID: ' . esc_html($location['id']) . '</small>';
+            echo '</div>';
+        }
+        echo '</div>';
+        echo '</div>';
+    }
+    echo '</td></tr>';
     echo '</table>';
     
     // Bill Lookup Method Section

@@ -51,7 +51,7 @@ jQuery(document).ready(function($) {
 
         // Build the correct hidden field ID
         var hiddenFieldId;
-        if (target === "help" || target === "bill") {
+        if (target === "help" || target === "bill" || target === "location") {
             hiddenFieldId = "#" + target + "-item-id";
         } else if (target === "table-item") {
             hiddenFieldId = "#table-item-id";
@@ -65,7 +65,15 @@ jQuery(document).ready(function($) {
 
         var $selected = $("#" + target + "-selected");
         $selected.addClass("active");
-        $selected.find(".selected-name").text(name);
+
+        // Update the selected text properly
+        if ($selected.find(".selected-name").length) {
+            $selected.find(".selected-name").text(name);
+        } else {
+            // For simple selected items without .selected-name span
+            var clearLink = $selected.find(".smdp-clear-selection").prop("outerHTML") || "";
+            $selected.html("<strong>Selected:</strong> " + name + " " + clearLink);
+        }
 
         console.log("[SMDP] Hidden field " + hiddenFieldId + " value set to:", $(hiddenFieldId).val());
     });
@@ -77,7 +85,7 @@ jQuery(document).ready(function($) {
 
         // Build the correct hidden field ID
         var hiddenFieldId;
-        if (target === "help" || target === "bill") {
+        if (target === "help" || target === "bill" || target === "location") {
             hiddenFieldId = "#" + target + "-item-id";
         } else if (target === "table-item") {
             hiddenFieldId = "#table-item-id";

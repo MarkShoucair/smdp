@@ -442,12 +442,12 @@ if ( ! defined( 'ABSPATH' ) ) {
                         </button>
                      </div>
                      <input type="text" class="smdp-item-search" placeholder="Search items..." style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ddd; border-radius:3px;" />
-                     <div class="smdp-items-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; max-height:400px; overflow-y:auto; padding:5px;">
+                     <div class="smdp-items-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; max-height:400px; overflow-y:auto; padding:5px; margin-bottom:15px;">
                         <!-- Items will be populated here by JavaScript -->
                      </div>
-                     <div style="margin-top:10px; text-align:right;">
-                        <button type="button" class="smdp-add-selected-items button button-primary">
-                           <span class="dashicons dashicons-plus" style="vertical-align:middle;"></span> Add Selected Items
+                     <div style="text-align:center; border-top:2px solid #ddd; padding-top:15px;">
+                        <button type="button" class="smdp-add-selected-items button button-primary button-hero">
+                           <span class="dashicons dashicons-plus" style="vertical-align:middle; font-size:20px;"></span> Add Selected Items
                         </button>
                      </div>
                   </div>
@@ -1368,5 +1368,32 @@ jQuery(document).ready(function($) {
   }
   .hidden-category {
       opacity: 0.6;
+  }
+
+  /* Add Items Panel Button Styling */
+  .smdp-add-selected-items.button-hero {
+      font-size: 16px;
+      padding: 12px 24px;
+      height: auto;
+      line-height: 1.5;
+  }
+
+  /* Better scrolling for items grid */
+  .smdp-items-grid::-webkit-scrollbar {
+      width: 8px;
+  }
+
+  .smdp-items-grid::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+  }
+
+  .smdp-items-grid::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+  }
+
+  .smdp-items-grid::-webkit-scrollbar-thumb:hover {
+      background: #555;
   }
 </style>
