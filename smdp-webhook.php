@@ -133,32 +133,41 @@ function smdp_verify_square_signature( $signature, $body, $url ) {
         return false;
     }
 
-    // 1) Convert from URL-safe to standard Base64
-    $b64 = strtr( $encoded_key, '-_', '+/' );
-    error_log( '[SMDP] VERIFY: After URL-safe conversion: ' . $b64 . ' (length: ' . strlen($b64) . ')' );
+    // Try Method 1: Use the key AS-IS (maybe it's not base64-encoded?)
+    $payload_to_sign = $url . $body;
+    $computed_method1 = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $encoded_key, true ) );
+    error_log( '[SMDP] VERIFY METHOD 1 (key as-is): ' . $computed_method1 );
 
-    // 2) Add padding if needed
+    // Try Method 2: Decode from URL-safe base64
+    $b64 = strtr( $encoded_key, '-_', '+/' );
     $pad = strlen( $b64 ) % 4;
     if ( $pad > 0 ) {
         $b64 .= str_repeat( '=', 4 - $pad );
-        error_log( '[SMDP] VERIFY: After padding: ' . $b64 . ' (length: ' . strlen($b64) . ')' );
+    }
+    $secret_method2 = base64_decode( $b64, true );
+    if ( $secret_method2 !== false ) {
+        $computed_method2 = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret_method2, true ) );
+        error_log( '[SMDP] VERIFY METHOD 2 (URL-safe decode): ' . $computed_method2 );
     }
 
-    // 3) Decode to raw secret
-    $secret = base64_decode( $b64, true );
-    if ( $secret === false ) {
-        error_log( '[SMDP] Failed to base64-decode signature key: ' . $b64 );
-        return false;
+    // Try Method 3: Decode from standard base64 (no conversion)
+    $b64_std = $encoded_key;
+    $pad_std = strlen( $b64_std ) % 4;
+    if ( $pad_std > 0 ) {
+        $b64_std .= str_repeat( '=', 4 - $pad_std );
     }
-    error_log( '[SMDP] VERIFY: Decoded secret length: ' . strlen($secret) . ' bytes' );
+    $secret_method3 = base64_decode( $b64_std, true );
+    if ( $secret_method3 !== false ) {
+        $computed_method3 = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret_method3, true ) );
+        error_log( '[SMDP] VERIFY METHOD 3 (standard decode): ' . $computed_method3 );
+    }
 
-    // 4) Compute HMAC-SHA256 over URL + raw body
-    $payload_to_sign = $url . $body;
-    error_log( '[SMDP] VERIFY: Payload to sign: URL=' . $url . ', body_length=' . strlen($body) );
-    error_log( '[SMDP] VERIFY: Full payload (first 200 chars): ' . substr($payload_to_sign, 0, 200) );
-    $computed = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret, true ) );
-    error_log( '[SMDP] VERIFY: Computed signature: ' . $computed );
     error_log( '[SMDP] VERIFY: Received signature: ' . $signature );
+    error_log( '[SMDP] VERIFY: Checking which method matches...' );
+
+    // Check which method works
+    $computed = $computed_method2; // Default to method 2
+    $secret = $secret_method2;
 
     // Try alternative: notification_url from the webhook subscription
     // Square might use the exact URL from the subscription, not the canonical URL
