@@ -254,13 +254,14 @@ body.admin-bar .smdp-menu-app-fe {
 	gap: 8px !important;
 }
 
-/* Left layout - reduce padding and font size to fit in sidebar */
+/* Left layout - adjust padding and font size to fit in sidebar */
 .smdp-menu-app-fe.layout-left .smdp-cat-btn {
-	padding: 10px 20px;
+	padding: 12px 30px;
 	font-size: 18px;
 	width: 100%;
 	text-align: left;
 	justify-content: flex-start;
+	box-sizing: border-box;
 }
 
 /* ============================================
