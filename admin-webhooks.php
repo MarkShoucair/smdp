@@ -53,9 +53,12 @@ function smdp_render_webhooks_page() {
     // Handle "Refresh Webhooks" button click
     if ( isset( $_POST['smdp_refresh_webhook_nonce'] )
       && wp_verify_nonce( $_POST['smdp_refresh_webhook_nonce'], 'smdp_refresh_webhook' ) ) {
+        // Clear the webhook verification cache to force a fresh check
+        delete_transient( 'smdp_webhook_verified' );
+
         if ( function_exists( 'smdp_ensure_webhook_subscription' ) ) {
             smdp_ensure_webhook_subscription( true ); // Force refresh
-            echo '<div class="updated"><p><strong>Webhooks refreshed successfully!</strong> Signature keys have been synced.</p></div>';
+            echo '<div class="updated"><p><strong>Webhooks refreshed successfully!</strong> Signature keys have been synced and cache cleared.</p></div>';
         }
     }
 

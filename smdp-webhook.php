@@ -125,77 +125,44 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
  * Verify Square HMAC-SHA256 signature, fixing URL-safe base64 & padding.
  */
 function smdp_verify_square_signature( $signature, $body, $url ) {
-    $encoded_key = smdp_get_webhook_key();
-    error_log( '[SMDP] VERIFY: Retrieved encoded_key from DB: ' . $encoded_key . ' (length: ' . strlen($encoded_key) . ')' );
+    $signature_key = smdp_get_webhook_key();
 
-    if ( empty( $encoded_key ) ) {
-        error_log( '[SMDP] VERIFY: No encoded_key - returning false' );
+    if ( empty( $signature_key ) ) {
+        error_log( '[SMDP] VERIFY: No signature key stored' );
         return false;
     }
 
-    // Try Method 1: Use the key AS-IS (maybe it's not base64-encoded?)
+    // Square's signature key is used AS-IS (not base64-decoded)
+    // Compute HMAC-SHA256 over URL + body, then base64 encode the result
     $payload_to_sign = $url . $body;
-    $computed_method1 = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $encoded_key, true ) );
-    error_log( '[SMDP] VERIFY METHOD 1 (key as-is): ' . $computed_method1 );
+    $computed = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $signature_key, true ) );
 
-    // Try Method 2: Decode from URL-safe base64
-    $b64 = strtr( $encoded_key, '-_', '+/' );
-    $pad = strlen( $b64 ) % 4;
-    if ( $pad > 0 ) {
-        $b64 .= str_repeat( '=', 4 - $pad );
-    }
-    $secret_method2 = base64_decode( $b64, true );
-    if ( $secret_method2 !== false ) {
-        $computed_method2 = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret_method2, true ) );
-        error_log( '[SMDP] VERIFY METHOD 2 (URL-safe decode): ' . $computed_method2 );
-    }
-
-    // Try Method 3: Decode from standard base64 (no conversion)
-    $b64_std = $encoded_key;
-    $pad_std = strlen( $b64_std ) % 4;
-    if ( $pad_std > 0 ) {
-        $b64_std .= str_repeat( '=', 4 - $pad_std );
-    }
-    $secret_method3 = base64_decode( $b64_std, true );
-    if ( $secret_method3 !== false ) {
-        $computed_method3 = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret_method3, true ) );
-        error_log( '[SMDP] VERIFY METHOD 3 (standard decode): ' . $computed_method3 );
-    }
-
-    error_log( '[SMDP] VERIFY: Received signature: ' . $signature );
-    error_log( '[SMDP] VERIFY: Checking which method matches...' );
-
-    // Check which method works
-    $computed = $computed_method2; // Default to method 2
-    $secret = $secret_method2;
-
-    // Try alternative: notification_url from the webhook subscription
-    // Square might use the exact URL from the subscription, not the canonical URL
-    error_log( '[SMDP] VERIFY: Trying to debug - URL used: ' . $url );
-    error_log( '[SMDP] VERIFY: rest_url result: ' . rest_url( 'smdp/v1/webhook' ) );
-    error_log( '[SMDP] VERIFY: rtrim result: ' . rtrim( rest_url( 'smdp/v1/webhook' ), '/' ) );
-
-    // 5) Compare
+    // Compare signatures
     $match = hash_equals( $computed, $signature );
-    error_log( '[SMDP] VERIFY: Signatures match: ' . ($match ? 'YES' : 'NO') );
+
+    if ( ! $match ) {
+        error_log( '[SMDP] VERIFY FAILED: Signature mismatch' );
+        error_log( '[SMDP] VERIFY: URL used: ' . $url );
+        error_log( '[SMDP] VERIFY: Body length: ' . strlen($body) );
+        error_log( '[SMDP] VERIFY: Computed: ' . $computed );
+        error_log( '[SMDP] VERIFY: Received: ' . $signature );
+    } else {
+        error_log( '[SMDP] VERIFY SUCCESS: Signature matched!' );
+    }
+
     return $match;
 }
 
 /**
- * Compute signature (for logging) with correct padding.
+ * Compute signature (for logging/debugging).
  */
 function smdp_compute_signature( $body, $url ) {
-    $encoded_key = smdp_get_webhook_key();
-    if ( empty( $encoded_key ) ) {
+    $signature_key = smdp_get_webhook_key();
+    if ( empty( $signature_key ) ) {
         return false;
     }
-    // Repeat same conversion/padding
-    $b64 = strtr( $encoded_key, '-_', '+/' );
-    if ( strlen( $b64 ) % 4 ) {
-        $b64 .= str_repeat( '=', 4 - ( strlen( $b64 ) % 4 ) );
-    }
-    $secret = base64_decode( $b64 );
-    return base64_encode( hash_hmac( 'sha256', $url . $body, $secret, true ) );
+    // Use the signature key as-is (not base64-decoded)
+    return base64_encode( hash_hmac( 'sha256', $url . $body, $signature_key, true ) );
 }
 
 // 5) Auto-create or sync subscription
