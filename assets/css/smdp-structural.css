@@ -231,27 +231,27 @@ body.admin-bar .smdp-menu-app-fe {
 }
 
 /* ============================================
-   CATEGORY BUTTON STYLES (HARD-CODED)
+   CATEGORY BUTTON STYLES (DEFAULT)
    ============================================ */
 
 /* Default Button Style */
 .smdp-cat-btn {
-	background-color: #ffffff !important;
-	color: #000000 !important;
-	border: 1px solid #01669c !important;
-	font-size: 25px !important;
-	font-weight: normal !important;
-	padding: 12px 50px !important;
-	border-radius: 500px !important;
-	transition: all 0.3s ease !important;
+	background-color: #ffffff;
+	color: #000000;
+	border: 1px solid #01669c;
+	font-size: 25px;
+	font-weight: normal;
+	padding: 12px 50px;
+	border-radius: 500px;
+	transition: all 0.3s ease;
 }
 
 /* Active Button Style */
 .smdp-cat-btn.active,
 .smdp-cat-btn:hover {
-	background-color: #0986bf !important;
-	color: #ffffff !important;
-	border-color: #0986bf !important;
+	background-color: #0986bf;
+	color: #ffffff;
+	border-color: #0986bf;
 }
 
 .smdp-cat-bar {
@@ -260,7 +260,7 @@ body.admin-bar .smdp-menu-app-fe {
 
 /* Left layout - maintain horizontal padding */
 .smdp-menu-app-fe.layout-left .smdp-cat-btn {
-	padding: 12px 50px !important;
+	padding: 12px 50px;
 }
 
 /* ============================================

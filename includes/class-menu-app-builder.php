@@ -1382,10 +1382,9 @@ class SMDP_Menu_App_Builder {
           $items[] = array('id'=>$it['id'], 'name'=>$it['name'], 'image'=>$it['image']);
         }
       }
-      if (!empty($items)) {
-        $name = isset($cat['name']) ? $cat['name'] : 'Category';
-        $menu['categories'][] = array('name'=>$name, 'items'=>$items);
-      }
+      // Always add category, even if empty (important for custom categories)
+      $name = isset($cat['name']) ? $cat['name'] : 'Category';
+      $menu['categories'][] = array('name'=>$name, 'items'=>$items);
     }
 
     if (!empty($by_cat['uncategorized'])) {

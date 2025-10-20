@@ -242,6 +242,11 @@ class SMDP_Ajax_Handler {
         // Save updated categories
         update_option( SMDP_CATEGORIES_OPTION, $categories );
 
+        // Trigger menu cache rebuild to apply new category order
+        if ( class_exists( 'SMDP_Menu_App_Builder' ) ) {
+            SMDP_Menu_App_Builder::rest_bootstrap_from_cache( null );
+        }
+
         wp_send_json_success( 'Category order saved successfully.' );
     }
 
