@@ -1277,6 +1277,15 @@ class SMDP_Menu_App_Builder {
     error_log('[SMDP Menu Builder] Custom categories found: ' . count($custom_cats) . ' - ' . implode(', ', array_column($custom_cats, 'name')));
     error_log('[SMDP Menu Builder] Total mapping entries: ' . count($mapping));
 
+    // DEBUG: Count how many mapping entries belong to custom categories
+    $custom_mappings = 0;
+    foreach ($mapping as $instance_id => $map_data) {
+      if (isset($map_data['category']) && strpos($map_data['category'], 'cat_') === 0) {
+        $custom_mappings++;
+      }
+    }
+    error_log('[SMDP Menu Builder] Mapping entries for custom categories: ' . $custom_mappings);
+
     $normalized = array();
 
     if ($is_new_style) {
@@ -1383,6 +1392,15 @@ class SMDP_Menu_App_Builder {
       if (!isset($by_cat[$cid])) $by_cat[$cid] = array();
       $by_cat[$cid][] = $it;
     }
+
+    // DEBUG: Show which custom categories have items in by_cat
+    error_log('[SMDP Menu Builder] Custom categories in $by_cat array:');
+    foreach ($by_cat as $cid => $items) {
+      if (strpos($cid, 'cat_') === 0) {
+        error_log('  - ' . $cid . ': ' . count($items) . ' items - ' . implode(', ', array_column($items, 'name')));
+      }
+    }
+
     foreach ($by_cat as $cid => $arr) {
       usort($arr, function($a,$b){
         $oa = isset($a['order']) ? intval($a['order']) : 0;
