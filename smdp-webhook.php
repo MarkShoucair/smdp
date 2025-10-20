@@ -29,27 +29,14 @@ add_action( 'rest_api_init', function() {
 
 // 2) Handle incoming webhook POSTs
 function smdp_handle_webhook( WP_REST_Request $request ) {
-    // Log the incoming request immediately
-    error_log( '[SMDP] Webhook received at ' . date_i18n( 'c' ) );
-
     $body      = $request->get_body();
     $signature = $request->get_header( 'x-square-hmacsha256-signature' );
-
-    // Log headers for debugging (truncated for security)
-    error_log( '[SMDP] Received signature: ' . substr( $signature, 0, 20 ) . '...' );
-
-    // Use the canonical webhook URL for signature verification
-    // This prevents HTTP Host header injection attacks
-    $url = rtrim( rest_url( 'smdp/v1/webhook' ), '/' );
-
-    error_log( '[SMDP] Webhook URL: ' . $url );
-    error_log( '[SMDP] Request body length: ' . strlen($body) );
-    error_log( '[SMDP] Request body content: ' . $body );
+    $url       = rtrim( rest_url( 'smdp/v1/webhook' ), '/' );
 
     // Verify the webhook signature
     $sig_key = smdp_get_webhook_key();
     if ( empty( $sig_key ) ) {
-        error_log( '[SMDP] ERROR: No signature key stored. Rejecting webhook.' );
+        error_log( '[SMDP] Webhook rejected: No signature key configured' );
         $response = rest_ensure_response( [
             'success' => false,
             'error' => 'Webhook not configured'
@@ -59,30 +46,16 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
     }
 
     if ( ! smdp_verify_square_signature( $signature, $body, $url ) ) {
-        error_log( '[SMDP] SECURITY: Webhook signature verification FAILED!' );
-        error_log( '[SMDP] Header signature: ' . substr( $signature, 0, 20 ) . '...' );
-        error_log( '[SMDP] Signing URL: ' . $url );
-
-        // Compute what we expected for debugging
-        $computed = smdp_compute_signature( $body, $url );
-        error_log( '[SMDP] Computed signature: ' . substr( $computed, 0, 20 ) . '...' );
-        error_log( '[SMDP] Stored key (first 20 chars): ' . substr( smdp_get_webhook_key(), 0, 20 ) . '...' );
-
-        // Try to help diagnose the issue
-        error_log( '[SMDP] POSSIBLE CAUSES:' );
-        error_log( '[SMDP] 1. Webhook signature key not synced - try clicking "Refresh Webhooks"' );
-        error_log( '[SMDP] 2. Multiple webhooks exist with different keys - check webhook subscriptions' );
-        error_log( '[SMDP] 3. URL mismatch - webhook may be configured with different URL scheme (http vs https)' );
-
+        error_log( '[SMDP] Webhook rejected: Signature verification failed' );
         $response = rest_ensure_response( [
             'success' => false,
-            'error' => 'Invalid signature - webhook key may need to be refreshed'
+            'error' => 'Invalid signature'
         ] );
         $response->set_status( 403 );
         return $response;
     }
 
-    error_log( '[SMDP] Webhook signature verified successfully' );
+    error_log( '[SMDP] Webhook received and verified successfully' );
 
     $payload = json_decode( $body, true );
     $type    = $payload['type'] ?? '(none)';
@@ -128,7 +101,6 @@ function smdp_verify_square_signature( $signature, $body, $url ) {
     $signature_key = smdp_get_webhook_key();
 
     if ( empty( $signature_key ) ) {
-        error_log( '[SMDP] VERIFY: No signature key stored' );
         return false;
     }
 
@@ -138,19 +110,7 @@ function smdp_verify_square_signature( $signature, $body, $url ) {
     $computed = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $signature_key, true ) );
 
     // Compare signatures
-    $match = hash_equals( $computed, $signature );
-
-    if ( ! $match ) {
-        error_log( '[SMDP] VERIFY FAILED: Signature mismatch' );
-        error_log( '[SMDP] VERIFY: URL used: ' . $url );
-        error_log( '[SMDP] VERIFY: Body length: ' . strlen($body) );
-        error_log( '[SMDP] VERIFY: Computed: ' . $computed );
-        error_log( '[SMDP] VERIFY: Received: ' . $signature );
-    } else {
-        error_log( '[SMDP] VERIFY SUCCESS: Signature matched!' );
-    }
-
-    return $match;
+    return hash_equals( $computed, $signature );
 }
 
 /**
@@ -165,7 +125,75 @@ function smdp_compute_signature( $body, $url ) {
     return base64_encode( hash_hmac( 'sha256', $url . $body, $signature_key, true ) );
 }
 
-// 5) Auto-create or sync subscription
+// 5) Refresh/sync webhook signature keys (doesn't create new webhooks)
+function smdp_refresh_webhook_keys() {
+    // Check if using OAuth
+    $oauth_token = get_option( 'smdp_oauth_access_token', '' );
+    if ( ! empty( $oauth_token ) ) {
+        error_log( '[SMDP] Webhooks not supported with OAuth authentication.' );
+        return false;
+    }
+
+    $token      = smdp_get_access_token();
+    $notify_url = rtrim( rest_url( 'smdp/v1/webhook' ), '/' );
+    $api_ver    = '2025-04-16';
+    $base_url   = ( defined('SMDP_ENVIRONMENT') && SMDP_ENVIRONMENT === 'sandbox' )
+                  ? 'https://connect.squareupsandbox.com'
+                  : 'https://connect.squareup.com';
+
+    if ( empty( $token ) ) {
+        error_log( '[SMDP] No Square access token.' );
+        return false;
+    }
+
+    // List existing subscriptions
+    $resp = wp_remote_get( "$base_url/v2/webhooks/subscriptions?include_disabled=true", [
+        'headers' => [
+            'Authorization'  => "Bearer $token",
+            'Square-Version' => $api_ver,
+        ],
+    ] );
+
+    if ( is_wp_error( $resp ) ) {
+        error_log( '[SMDP] List error: ' . $resp->get_error_message() );
+        return false;
+    }
+
+    $body_data = wp_remote_retrieve_body( $resp );
+    $data      = json_decode( $body_data, true ) ?: [];
+    $subs      = $data['subscriptions'] ?? [];
+
+    // Check for our subscription
+    foreach ( $subs as $sub ) {
+        if ( in_array( 'catalog.version.updated', (array) $sub['event_types'], true )
+          && rtrim( $sub['notification_url'], '/' ) === $notify_url ) {
+            // Retrieve details to get signature_key
+            $detail = wp_remote_get( "$base_url/v2/webhooks/subscriptions/{$sub['id']}", [
+                'headers' => [
+                    'Authorization'  => "Bearer $token",
+                    'Square-Version' => $api_ver,
+                ],
+            ] );
+
+            if ( wp_remote_retrieve_response_code( $detail ) === 200 ) {
+                $j   = json_decode( wp_remote_retrieve_body( $detail ), true );
+                $key = $j['subscription']['signature_key'] ?? '';
+
+                if ( $key ) {
+                    smdp_store_webhook_key( $key );
+                    error_log( '[SMDP] Webhook signature key refreshed successfully' );
+                    return true;
+                }
+            }
+        }
+    }
+
+    // No webhook found - don't create one
+    error_log( '[SMDP] No webhook found to refresh. Use "Activate Webhooks" to create one.' );
+    return false;
+}
+
+// 6) Auto-create or sync subscription
 function smdp_ensure_webhook_subscription( $force = false ) {
     // Check if using OAuth - webhooks are application-level and not supported with OAuth
     $oauth_token = get_option( 'smdp_oauth_access_token', '' );

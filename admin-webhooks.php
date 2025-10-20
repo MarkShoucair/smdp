@@ -56,9 +56,13 @@ function smdp_render_webhooks_page() {
         // Clear the webhook verification cache to force a fresh check
         delete_transient( 'smdp_webhook_verified' );
 
-        if ( function_exists( 'smdp_ensure_webhook_subscription' ) ) {
-            smdp_ensure_webhook_subscription( true ); // Force refresh
-            echo '<div class="updated"><p><strong>Webhooks refreshed successfully!</strong> Signature keys have been synced and cache cleared.</p></div>';
+        if ( function_exists( 'smdp_refresh_webhook_keys' ) ) {
+            $result = smdp_refresh_webhook_keys();
+            if ( $result ) {
+                echo '<div class="updated"><p><strong>Webhook signature key refreshed successfully!</strong></p></div>';
+            } else {
+                echo '<div class="notice notice-warning"><p><strong>No webhook found to refresh.</strong> Use "Activate Webhooks" to create one first.</p></div>';
+            }
         }
     }
 
@@ -167,18 +171,12 @@ function smdp_render_webhooks_page() {
     $stored_key = smdp_get_webhook_key();
     if ( empty( $stored_key ) ) {
         echo '<div class="notice notice-warning" style="margin-top:15px; padding:10px;">';
-        echo '<p><strong>⚠️ Warning:</strong> No webhook signature key is currently stored. Webhooks from Square will be rejected with 403 errors.</p>';
+        echo '<p><strong>⚠️ Warning:</strong> No webhook signature key is currently stored. Webhooks from Square will be rejected.</p>';
         echo '<p><strong>Action Required:</strong> Click "Refresh Webhooks" above to sync the signature key from your existing webhook subscription.</p>';
         echo '</div>';
     } else {
         echo '<div class="notice notice-success" style="margin-top:15px; padding:10px;">';
-        echo '<p><strong>✓ Webhook signature key is configured.</strong></p>';
-        echo '<p>Key (first 20 chars): <code>' . esc_html( substr($stored_key, 0, 20) ) . '...</code> (Length: ' . strlen($stored_key) . ' characters)</p>';
-        echo '<details style="margin-top:10px;">';
-        echo '<summary style="cursor:pointer; color:#2271b1;"><strong>Show full key for debugging</strong></summary>';
-        echo '<pre style="background:#f5f5f5; padding:10px; margin-top:10px; overflow:auto; font-size:11px;">' . esc_html($stored_key) . '</pre>';
-        echo '</details>';
-        echo '<p style="margin-top:10px;">If Square webhook logs show 403 errors, click "Refresh Webhooks" to re-sync the key.</p>';
+        echo '<p style="margin:0;"><strong>✓ Webhook configured and ready.</strong> Signature key is synced.</p>';
         echo '</div>';
     }
 
@@ -228,7 +226,7 @@ function smdp_render_webhooks_page() {
                     echo '</div>';
                 } elseif ( $subs ) {
                     echo '<table class="widefat fixed striped"><thead><tr>'
-                       . '<th>ID</th><th>Events</th><th>URL</th><th>Signature Key</th><th>Key Length</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
+                       . '<th>ID</th><th>Events</th><th>URL</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
                     foreach ( $subs as $sub ) {
                         // Check if this is the catalog.version.updated webhook
                         $is_catalog_webhook = in_array('catalog.version.updated', $sub['event_types'], true);
@@ -236,22 +234,14 @@ function smdp_render_webhooks_page() {
                             ? smdp_get_webhook_key()
                             : smdp_get_webhook_key( "smdp_webhook_signature_key_{$sub['id']}" );
 
-                        // Check if key is too short (should be 43-44 chars for proper HMAC-SHA256)
-                        $key_length = $stored ? strlen($stored) : 0;
-                        $key_warning = $key_length > 0 && $key_length < 40 ? ' style="color:#d63638; font-weight:bold;"' : '';
+                        // Determine status
+                        $status = $stored ? '<span style="color:#46b450;">✓ Active</span>' : '<span style="color:#999;">Not synced</span>';
 
                         echo '<tr>'
                            . '<td>' . esc_html( $sub['id'] ) . '</td>'
                            . '<td>' . esc_html( implode(', ', $sub['event_types']) ) . '</td>'
                            . '<td><code>' . esc_url( $sub['notification_url'] ) . '</code></td>'
-                           . '<td><code>' . esc_html( $stored ? substr($stored, 0, 20) . '...' : '(not stored)' ) . '</code></td>'
-                           . '<td' . $key_warning . '>' . esc_html( $key_length > 0 ? $key_length . ' chars' : 'N/A' );
-
-                        if ( $key_length > 0 && $key_length < 40 ) {
-                            echo ' <strong>⚠️ TOO SHORT!</strong>';
-                        }
-
-                        echo '</td>'
+                           . '<td>' . $status . '</td>'
                            . '<td>' . esc_html( $sub['created_at'] ) . '</td>'
                            . '<td>'
                            . '<form method="post" style="display:inline-block; margin:0;">';
