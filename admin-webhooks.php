@@ -137,9 +137,24 @@ function smdp_render_webhooks_page() {
 
     echo '<p style="margin-top: 15px;"><em>';
     echo '<strong>Activate Webhooks:</strong> Creates the webhook subscription automatically if it doesn\'t exist. Only needs to be done once.<br>';
-    echo '<strong>Refresh Webhooks:</strong> Syncs the signature keys from Square without creating new webhooks.<br>';
+    echo '<strong>Refresh Webhooks:</strong> Syncs the signature keys from Square. <strong>Use this if you\'re getting 403 errors in Square webhook logs.</strong><br>';
     echo '<strong>View Existing Webhooks:</strong> Fetches and displays current webhook subscriptions from Square (makes an API call).';
     echo '</em></p>';
+
+    // Check if we have a stored webhook key
+    $stored_key = smdp_get_webhook_key();
+    if ( empty( $stored_key ) ) {
+        echo '<div class="notice notice-warning" style="margin-top:15px; padding:10px;">';
+        echo '<p><strong>⚠️ Warning:</strong> No webhook signature key is currently stored. Webhooks from Square will be rejected with 403 errors.</p>';
+        echo '<p><strong>Action Required:</strong> Click "Refresh Webhooks" above to sync the signature key from your existing webhook subscription.</p>';
+        echo '</div>';
+    } else {
+        echo '<div class="notice notice-success" style="margin-top:15px; padding:10px;">';
+        echo '<p><strong>✓ Webhook signature key is configured.</strong> Key stored: ' . esc_html( substr($stored_key, 0, 20) ) . '...</p>';
+        echo '<p>If Square webhook logs show 403 errors, click "Refresh Webhooks" to re-sync the key.</p>';
+        echo '</div>';
+    }
+
     echo '</div>';
 
     // Only list existing subscriptions if "View Existing Webhooks" button was clicked

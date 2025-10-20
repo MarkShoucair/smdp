@@ -61,9 +61,21 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
         error_log( '[SMDP] SECURITY: Webhook signature verification FAILED!' );
         error_log( '[SMDP] Header signature: ' . substr( $signature, 0, 20 ) . '...' );
         error_log( '[SMDP] Signing URL: ' . $url );
+
+        // Compute what we expected for debugging
+        $computed = smdp_compute_signature( $body, $url );
+        error_log( '[SMDP] Computed signature: ' . substr( $computed, 0, 20 ) . '...' );
+        error_log( '[SMDP] Stored key (first 20 chars): ' . substr( smdp_get_webhook_key(), 0, 20 ) . '...' );
+
+        // Try to help diagnose the issue
+        error_log( '[SMDP] POSSIBLE CAUSES:' );
+        error_log( '[SMDP] 1. Webhook signature key not synced - try clicking "Refresh Webhooks"' );
+        error_log( '[SMDP] 2. Multiple webhooks exist with different keys - check webhook subscriptions' );
+        error_log( '[SMDP] 3. URL mismatch - webhook may be configured with different URL scheme (http vs https)' );
+
         $response = rest_ensure_response( [
             'success' => false,
-            'error' => 'Invalid signature'
+            'error' => 'Invalid signature - webhook key may need to be refreshed'
         ] );
         $response->set_status( 403 );
         return $response;
