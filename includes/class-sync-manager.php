@@ -330,6 +330,15 @@ class SMDP_Sync_Manager {
             }
         }
 
+        // First, preserve custom categories (IDs starting with 'cat_')
+        foreach ( $existing_categories as $cat_id => $cat_data ) {
+            if ( strpos( $cat_id, 'cat_' ) === 0 ) {
+                // This is a custom category, preserve it
+                $final_categories[$cat_id] = $cat_data;
+                $by_slug[ $cat_data['slug'] ] = $cat_id;
+            }
+        }
+
         // Now process Square categories
         foreach ( $objects as $obj ) {
             if ( isset( $obj['type'] ) && $obj['type'] === 'CATEGORY' ) {
