@@ -227,10 +227,16 @@ function smdp_ensure_webhook_subscription( $force = false ) {
                     'Square-Version' => $api_ver,
                 ],
             ] );
-            if ( wp_remote_retrieve_response_code( $detail ) === 200 ) {
-                $j   = json_decode( wp_remote_retrieve_body( $detail ), true );
+            $detail_code = wp_remote_retrieve_response_code( $detail );
+            $detail_body = wp_remote_retrieve_body( $detail );
+            error_log( '[SMDP] Webhook detail API response code: ' . $detail_code );
+
+            if ( $detail_code === 200 ) {
+                $j   = json_decode( $detail_body, true );
+                error_log( '[SMDP] Full webhook subscription object: ' . print_r($j, true) );
                 $key = $j['subscription']['signature_key'] ?? '';
                 error_log( '[SMDP] Retrieved signature key from webhook details: ' . substr($key, 0, 20) . '... (length: ' . strlen($key) . ')' );
+                error_log( '[SMDP] Full signature key: ' . $key );
                 if ( $key ) {
                     $store_result = smdp_store_webhook_key( $key );
                     error_log( '[SMDP] Store webhook key result: ' . ($store_result ? 'SUCCESS' : 'FAILED') );
