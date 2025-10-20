@@ -18,6 +18,38 @@ use Square\Types\WebhookSubscription;
 function smdp_render_webhooks_page() {
     if ( ! current_user_can( 'manage_options' ) ) return;
 
+    // Handle "Delete Webhook" button click
+    if ( isset( $_POST['smdp_delete_webhook_nonce'] )
+      && wp_verify_nonce( $_POST['smdp_delete_webhook_nonce'], 'smdp_delete_webhook' ) ) {
+        $webhook_id = sanitize_text_field( $_POST['webhook_id'] );
+        $token = smdp_get_access_token();
+        $api_ver = '2025-04-16';
+        $base_url = ( defined('SMDP_ENVIRONMENT') && SMDP_ENVIRONMENT === 'sandbox' )
+                  ? 'https://connect.squareupsandbox.com'
+                  : 'https://connect.squareup.com';
+
+        $delete_resp = wp_remote_request( "$base_url/v2/webhooks/subscriptions/$webhook_id", [
+            'method' => 'DELETE',
+            'headers' => [
+                'Authorization'  => "Bearer $token",
+                'Square-Version' => $api_ver,
+            ],
+        ] );
+
+        if ( is_wp_error( $delete_resp ) ) {
+            echo '<div class="error"><p>Failed to delete webhook: ' . esc_html( $delete_resp->get_error_message() ) . '</p></div>';
+        } else {
+            $code = wp_remote_retrieve_response_code( $delete_resp );
+            if ( $code === 200 ) {
+                // Clear cached verification
+                delete_transient( 'smdp_webhook_verified' );
+                echo '<div class="updated"><p><strong>Webhook deleted successfully!</strong> Webhook ID: ' . esc_html( $webhook_id ) . '</p></div>';
+            } else {
+                echo '<div class="error"><p>Failed to delete webhook. HTTP code: ' . esc_html( $code ) . '</p></div>';
+            }
+        }
+    }
+
     // Handle "Refresh Webhooks" button click
     if ( isset( $_POST['smdp_refresh_webhook_nonce'] )
       && wp_verify_nonce( $_POST['smdp_refresh_webhook_nonce'], 'smdp_refresh_webhook' ) ) {
@@ -193,19 +225,40 @@ function smdp_render_webhooks_page() {
                     echo '</div>';
                 } elseif ( $subs ) {
                     echo '<table class="widefat fixed striped"><thead><tr>'
-                       . '<th>ID</th><th>Events</th><th>URL</th><th>Signature Key</th><th>Created</th></tr></thead><tbody>';
+                       . '<th>ID</th><th>Events</th><th>URL</th><th>Signature Key</th><th>Key Length</th><th>Created</th><th>Actions</th></tr></thead><tbody>';
                     foreach ( $subs as $sub ) {
                         // Check if this is the catalog.version.updated webhook
                         $is_catalog_webhook = in_array('catalog.version.updated', $sub['event_types'], true);
                         $stored = $is_catalog_webhook
                             ? smdp_get_webhook_key()
                             : smdp_get_webhook_key( "smdp_webhook_signature_key_{$sub['id']}" );
+
+                        // Check if key is too short (should be 43-44 chars for proper HMAC-SHA256)
+                        $key_length = $stored ? strlen($stored) : 0;
+                        $key_warning = $key_length > 0 && $key_length < 40 ? ' style="color:#d63638; font-weight:bold;"' : '';
+
                         echo '<tr>'
                            . '<td>' . esc_html( $sub['id'] ) . '</td>'
                            . '<td>' . esc_html( implode(', ', $sub['event_types']) ) . '</td>'
                            . '<td><code>' . esc_url( $sub['notification_url'] ) . '</code></td>'
                            . '<td><code>' . esc_html( $stored ? substr($stored, 0, 20) . '...' : '(not stored)' ) . '</code></td>'
+                           . '<td' . $key_warning . '>' . esc_html( $key_length > 0 ? $key_length . ' chars' : 'N/A' );
+
+                        if ( $key_length > 0 && $key_length < 40 ) {
+                            echo ' <strong>⚠️ TOO SHORT!</strong>';
+                        }
+
+                        echo '</td>'
                            . '<td>' . esc_html( $sub['created_at'] ) . '</td>'
+                           . '<td>'
+                           . '<form method="post" style="display:inline-block; margin:0;">';
+                        wp_nonce_field( 'smdp_delete_webhook', 'smdp_delete_webhook_nonce' );
+                        echo '<input type="hidden" name="webhook_id" value="' . esc_attr( $sub['id'] ) . '">'
+                           . '<button type="submit" class="button button-small" onclick="return confirm(\'Are you sure you want to delete this webhook?\');" style="background:#d63638; color:#fff; border-color:#d63638;">'
+                           . '<span class="dashicons dashicons-trash" style="vertical-align:middle; font-size:16px; margin-top:2px;"></span> Delete'
+                           . '</button>'
+                           . '</form>'
+                           . '</td>'
                            . '</tr>';
                     }
                     echo '</tbody></table>';

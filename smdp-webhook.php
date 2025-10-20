@@ -125,17 +125,22 @@ function smdp_handle_webhook( WP_REST_Request $request ) {
  */
 function smdp_verify_square_signature( $signature, $body, $url ) {
     $encoded_key = smdp_get_webhook_key();
+    error_log( '[SMDP] VERIFY: Retrieved encoded_key from DB: ' . $encoded_key . ' (length: ' . strlen($encoded_key) . ')' );
+
     if ( empty( $encoded_key ) ) {
+        error_log( '[SMDP] VERIFY: No encoded_key - returning false' );
         return false;
     }
 
     // 1) Convert from URL-safe to standard Base64
     $b64 = strtr( $encoded_key, '-_', '+/' );
+    error_log( '[SMDP] VERIFY: After URL-safe conversion: ' . $b64 . ' (length: ' . strlen($b64) . ')' );
 
     // 2) Add padding if needed
     $pad = strlen( $b64 ) % 4;
     if ( $pad > 0 ) {
         $b64 .= str_repeat( '=', 4 - $pad );
+        error_log( '[SMDP] VERIFY: After padding: ' . $b64 . ' (length: ' . strlen($b64) . ')' );
     }
 
     // 3) Decode to raw secret
@@ -144,12 +149,19 @@ function smdp_verify_square_signature( $signature, $body, $url ) {
         error_log( '[SMDP] Failed to base64-decode signature key: ' . $b64 );
         return false;
     }
+    error_log( '[SMDP] VERIFY: Decoded secret length: ' . strlen($secret) . ' bytes' );
 
     // 4) Compute HMAC-SHA256 over URL + raw body
-    $computed = base64_encode( hash_hmac( 'sha256', $url . $body, $secret, true ) );
+    $payload_to_sign = $url . $body;
+    error_log( '[SMDP] VERIFY: Payload to sign: URL=' . $url . ', body_length=' . strlen($body) );
+    $computed = base64_encode( hash_hmac( 'sha256', $payload_to_sign, $secret, true ) );
+    error_log( '[SMDP] VERIFY: Computed signature: ' . $computed );
+    error_log( '[SMDP] VERIFY: Received signature: ' . $signature );
 
     // 5) Compare
-    return hash_equals( $computed, $signature );
+    $match = hash_equals( $computed, $signature );
+    error_log( '[SMDP] VERIFY: Signatures match: ' . ($match ? 'YES' : 'NO') );
+    return $match;
 }
 
 /**
