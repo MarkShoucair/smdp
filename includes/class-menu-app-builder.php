@@ -1259,30 +1259,84 @@ class SMDP_Menu_App_Builder {
       }
     }
 
+    // Check if this is old-style mapping or new-style mapping with instance IDs
+    $is_new_style = false;
+    foreach ($mapping as $key => $data) {
+      if (isset($data['instance_id'])) {
+        $is_new_style = true;
+        break;
+      }
+    }
+
     $normalized = array();
-    foreach ($all_items as $obj) {
-      if (empty($obj['type']) || $obj['type']!=='ITEM') continue;
-      $id   = $obj['id'];
-      $data = isset($obj['item_data']) ? $obj['item_data'] : array();
 
-      $cat_id = isset($mapping[$id]['category']) ? $mapping[$id]['category'] : '';
-      $cat_name = isset($categories[$cat_id]['name']) ? $categories[$cat_id]['name'] : 'Uncategorized';
-
-      $img = '';
-      if (!empty($data['image_ids'][0])) {
-        $img_id = $data['image_ids'][0];
-        $img = isset($images[$img_id]) ? $images[$img_id] : '';
+    if ($is_new_style) {
+      // New-style mapping: instance_id => {item_id, instance_id, category, order, hide_image}
+      // Build a lookup of item_id => item_obj
+      $items_by_id = array();
+      foreach ($all_items as $obj) {
+        if (empty($obj['type']) || $obj['type'] !== 'ITEM') continue;
+        $items_by_id[$obj['id']] = $obj;
       }
 
-      $normalized[] = array(
-        'id'          => $id,
-        'name'        => isset($data['name']) ? $data['name'] : '',
-        'desc'        => isset($data['description']) ? $data['description'] : '',
-        'image'       => $img,
-        'category'    => $cat_name,
-        'category_id' => $cat_id,
-        'order'       => isset($mapping[$id]['order']) ? intval($mapping[$id]['order']) : 0,
-      );
+      // Process each instance in the mapping
+      foreach ($mapping as $instance_id => $map_data) {
+        if (!isset($map_data['item_id']) || !isset($items_by_id[$map_data['item_id']])) continue;
+
+        $obj = $items_by_id[$map_data['item_id']];
+        $data = isset($obj['item_data']) ? $obj['item_data'] : array();
+
+        $cat_id = isset($map_data['category']) ? $map_data['category'] : '';
+        $cat_name = isset($categories[$cat_id]['name']) ? $categories[$cat_id]['name'] : 'Uncategorized';
+
+        $img = '';
+        if (!empty($data['image_ids'][0])) {
+          $img_id = $data['image_ids'][0];
+          $img = isset($images[$img_id]) ? $images[$img_id] : '';
+        }
+
+        // Check hide_image flag from mapping
+        if (!empty($map_data['hide_image'])) {
+          $img = '';
+        }
+
+        $normalized[] = array(
+          'id'          => $obj['id'],
+          'name'        => isset($data['name']) ? $data['name'] : '',
+          'desc'        => isset($data['description']) ? $data['description'] : '',
+          'image'       => $img,
+          'category'    => $cat_name,
+          'category_id' => $cat_id,
+          'order'       => isset($map_data['order']) ? intval($map_data['order']) : 0,
+          'instance_id' => $instance_id,
+        );
+      }
+    } else {
+      // Old-style mapping: item_id => {category, order}
+      foreach ($all_items as $obj) {
+        if (empty($obj['type']) || $obj['type']!=='ITEM') continue;
+        $id   = $obj['id'];
+        $data = isset($obj['item_data']) ? $obj['item_data'] : array();
+
+        $cat_id = isset($mapping[$id]['category']) ? $mapping[$id]['category'] : '';
+        $cat_name = isset($categories[$cat_id]['name']) ? $categories[$cat_id]['name'] : 'Uncategorized';
+
+        $img = '';
+        if (!empty($data['image_ids'][0])) {
+          $img_id = $data['image_ids'][0];
+          $img = isset($images[$img_id]) ? $images[$img_id] : '';
+        }
+
+        $normalized[] = array(
+          'id'          => $id,
+          'name'        => isset($data['name']) ? $data['name'] : '',
+          'desc'        => isset($data['description']) ? $data['description'] : '',
+          'image'       => $img,
+          'category'    => $cat_name,
+          'category_id' => $cat_id,
+          'order'       => isset($mapping[$id]['order']) ? intval($mapping[$id]['order']) : 0,
+        );
+      }
     }
 
     update_option(self::OPT_CATALOG, wp_json_encode($normalized));

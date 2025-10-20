@@ -365,7 +365,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                          <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                          Hide Image
                                      </label>
-                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="position:absolute; top:5px; left:5px; width:24px; height:24px; border-radius:50%; background:#d63638; color:#fff; border:none; cursor:pointer; font-size:16px; line-height:1; padding:0; display:flex; align-items:center; justify-content:center; font-weight:bold; z-index:10;" title="Remove from category">×</button>
+                                     <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" title="Remove from category">×</button>
                                  </div>
                              </li>
                              <?php
@@ -420,7 +420,7 @@ if ( ! defined( 'ABSPATH' ) ) {
                                      <input type="checkbox" class="smdp-hide-image" data-instance-id="<?php echo esc_attr($instance_id); ?>" value="1" <?php checked($item['hide_image'], 1); ?>>
                                      Hide Image
                                  </label>
-                                 <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" style="position:absolute; top:5px; left:5px; width:24px; height:24px; border-radius:50%; background:#d63638; color:#fff; border:none; cursor:pointer; font-size:16px; line-height:1; padding:0; display:flex; align-items:center; justify-content:center; font-weight:bold; z-index:10;" title="Remove from category">×</button>
+                                 <button type="button" class="smdp-remove-item" data-instance-id="<?php echo esc_attr($instance_id); ?>" title="Remove from category">×</button>
                              </div>
                          </li>
                          <?php
