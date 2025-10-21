@@ -17,7 +17,8 @@
       "Bash(move \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\PRODUCTION-READY.md\" \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\documentation\\PRODUCTION-READY.md\")",
       "Bash(move:*)",
       "Bash(cat:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(php -r:*)"
     ],
     "deny": [],
     "ask": []

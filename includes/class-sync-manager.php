@@ -160,6 +160,10 @@ class SMDP_Sync_Manager {
 
         error_log('[SMDP Sync] Fetched ' . count($all_objects) . ' catalog objects');
 
+        // DEBUG: Count object types
+        $types = array_count_values( array_column( $all_objects, 'type' ) );
+        error_log('[SMDP Sync DEBUG] Object types: ' . print_r($types, true));
+
         // Remove deleted items
         $all_objects = $this->filter_deleted( $all_objects );
         error_log('[SMDP Sync] After filtering deleted: ' . count($all_objects) . ' objects remain');
@@ -293,18 +297,46 @@ class SMDP_Sync_Manager {
         $existing_mapping = get_option( SMDP_MAPPING_OPTION, array() );
         $new_mapping = $existing_mapping;
 
+        // First pass: Build list of valid category IDs from CATEGORY objects
+        $valid_category_ids = array();
+        foreach ( $objects as $obj ) {
+            if ( $obj['type'] === 'CATEGORY' ) {
+                $valid_category_ids[] = $obj['id'];
+            }
+        }
+        error_log('[SMDP Sync DEBUG] Found ' . count($valid_category_ids) . ' valid category IDs');
+
+        // Second pass: Assign items to categories
         foreach ( $objects as $obj ) {
             if ( $obj['type'] === 'ITEM' ) {
                 $item_id = $obj['id'];
                 $cat = 'unassigned';
 
                 // Priority 1: Use display categories array (first category if multiple)
+                // BUT only if that category actually exists in our catalog
                 if ( ! empty( $obj['item_data']['categories'] ) && is_array( $obj['item_data']['categories'] ) ) {
-                    $cat = $obj['item_data']['categories'][0]['id'];
+                    foreach ( $obj['item_data']['categories'] as $category_ref ) {
+                        if ( in_array( $category_ref['id'], $valid_category_ids, true ) ) {
+                            $cat = $category_ref['id'];
+                            break; // Use first valid category
+                        }
+                    }
                 }
-                // Priority 2: Fall back to reporting category if no display categories
-                elseif ( ! empty( $obj['item_data']['reporting_category']['id'] ) ) {
-                    $cat = $obj['item_data']['reporting_category']['id'];
+
+                // Priority 2: If no valid display category found, try reporting category
+                if ( $cat === 'unassigned' && ! empty( $obj['item_data']['reporting_category']['id'] ) ) {
+                    $reporting_cat_id = $obj['item_data']['reporting_category']['id'];
+                    if ( in_array( $reporting_cat_id, $valid_category_ids, true ) ) {
+                        $cat = $reporting_cat_id;
+                    }
+                }
+
+                // Priority 3: Still unassigned? Log for debugging
+                if ( $cat === 'unassigned' ) {
+                    $item_name = $obj['item_data']['name'] ?? 'Unknown';
+                    $display_cats = ! empty( $obj['item_data']['categories'] ) ? wp_json_encode( array_column( $obj['item_data']['categories'], 'id' ) ) : 'none';
+                    $reporting_cat = $obj['item_data']['reporting_category']['id'] ?? 'none';
+                    error_log("[SMDP Sync DEBUG] Item '{$item_name}' has no valid category. Display cats: {$display_cats}, Reporting cat: {$reporting_cat}");
                 }
 
                 if ( ! isset( $existing_mapping[ $item_id ] ) ) {
