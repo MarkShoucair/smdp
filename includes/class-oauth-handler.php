@@ -172,7 +172,7 @@ class SMDP_OAuth_Handler {
         // SECURITY: Only log sensitive data in debug mode
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
             error_log( '[SMDP OAuth] App ID retrieved: ' . ( $app_id ? 'YES' : 'NO' ) );
-            error_log( '[SMDP OAuth] App Secret retrieved: ' . ( $app_secret ? 'YES (length: ' . strlen($app_secret) . ')' : 'NO' ) );
+            error_log( '[SMDP OAuth] App Secret retrieved: ' . ( $app_secret ? 'YES' : 'NO' ) );
             error_log( '[SMDP OAuth] Redirect URI: ' . $this->get_callback_url() );
         }
 
@@ -399,9 +399,6 @@ class SMDP_OAuth_Handler {
         // Debug logging (only log occasionally to avoid spam)
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG && isset( $_GET['page'] ) && $_GET['page'] === 'smdp_main' ) {
             error_log( '[SMDP OAuth] Authorization check: ' . ( $is_authorized ? 'AUTHORIZED' : 'NOT AUTHORIZED' ) );
-            if ( $is_authorized ) {
-                error_log( '[SMDP OAuth] Token preview: ' . substr( $access_token, 0, 20 ) . '...' );
-            }
         }
 
         return $is_authorized;

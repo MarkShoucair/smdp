@@ -257,10 +257,7 @@ function smdp_ensure_webhook_subscription( $force = false ) {
 
             if ( $detail_code === 200 ) {
                 $j   = json_decode( $detail_body, true );
-                error_log( '[SMDP] Full webhook subscription object: ' . print_r($j, true) );
                 $key = $j['subscription']['signature_key'] ?? '';
-                error_log( '[SMDP] Retrieved signature key from webhook details: ' . substr($key, 0, 20) . '... (length: ' . strlen($key) . ')' );
-                error_log( '[SMDP] Full signature key: ' . $key );
                 if ( $key ) {
                     $store_result = smdp_store_webhook_key( $key );
                     error_log( '[SMDP] Store webhook key result: ' . ($store_result ? 'SUCCESS' : 'FAILED') );
@@ -270,7 +267,7 @@ function smdp_ensure_webhook_subscription( $force = false ) {
                     if ( $retrieved === $key ) {
                         error_log( '[SMDP] ✓ Webhook key stored and verified successfully' );
                     } else {
-                        error_log( '[SMDP] ✗ WARNING: Stored key does not match! Retrieved: ' . substr($retrieved, 0, 20) . '...' );
+                        error_log( '[SMDP] ✗ WARNING: Stored key does not match!' );
                     }
                 } else {
                     error_log( '[SMDP] ERROR: No signature_key found in webhook details response' );
@@ -315,7 +312,6 @@ function smdp_ensure_webhook_subscription( $force = false ) {
     }
     $res = json_decode( wp_remote_retrieve_body( $create ), true );
     $k   = $res['subscription']['signature_key'] ?? '';
-    error_log( '[SMDP] Created webhook signature key: ' . substr($k, 0, 20) . '... (length: ' . strlen($k) . ')' );
     if ( $k ) {
         $store_result = smdp_store_webhook_key( $k );
         error_log( '[SMDP] Webhook subscription created and signature key saved: ' . ($store_result ? 'SUCCESS' : 'FAILED') );
@@ -325,7 +321,7 @@ function smdp_ensure_webhook_subscription( $force = false ) {
         if ( $retrieved === $k ) {
             error_log( '[SMDP] ✓ Webhook key stored and verified successfully' );
         } else {
-            error_log( '[SMDP] ✗ WARNING: Stored key does not match! Retrieved: ' . substr($retrieved, 0, 20) . '...' );
+            error_log( '[SMDP] ✗ WARNING: Stored key does not match!' );
         }
     }
 

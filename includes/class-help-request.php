@@ -290,28 +290,24 @@ class SMDP_Help_Request {
     }
     
     $data = json_decode(wp_remote_retrieve_body($response), true);
-    error_log('[SMDP Bill] Search response: ' . print_r($data, true));
-    
+
     $orders = $data['orders'] ?? [];
-    
+
     if (empty($orders)) {
         wp_send_json_error("No open orders found. Make sure a 'Table {$table}' item is added to the order in Square POS.");
     }
-    
+
     // Find order containing the table item
     $matching_order = null;
     foreach ($orders as $order) {
         if (empty($order['line_items'])) continue;
-        
+
         foreach ($order['line_items'] as $line_item) {
             // Check if this line item matches our table item
             $catalog_object_id = $line_item['catalog_object_id'] ?? '';
-            
-            error_log("[SMDP Bill] Checking line item {$catalog_object_id} against table item {$table_item_id}");
-            
+
             if ($catalog_object_id === $table_item_id) {
                 $matching_order = $order;
-                error_log("[SMDP Bill] Found matching order: {$order['id']}");
                 break 2;
             }
         }
@@ -375,20 +371,16 @@ class SMDP_Help_Request {
     }
     
     $data = json_decode(wp_remote_retrieve_body($response), true);
-    
-    // Log for debugging
-    error_log('[SMDP Bill] Search response: ' . print_r($data, true));
-    
+
     $orders = $data['orders'] ?? [];
-    
+
     if (empty($orders)) {
         wp_send_json_error("No open orders found for Table {$table}. Make sure the customer 'Table {$table}' is attached to the order in Square POS.");
     }
-    
+
     // Return the most recent order
     $order = $orders[0];
-    error_log('[SMDP Bill] Returning order: ' . $order['id']);
-    
+
     wp_send_json_success($order);
   }
 
@@ -653,12 +645,11 @@ class SMDP_Help_Request {
         $item_id = smdp_sanitize_text_field($_POST['table_item_id'] ?? '', 100); // Square item IDs
         
         error_log("[SMDP] Add table item - Table: $table_num, Item ID: $item_id");
-        
+
         if(!empty($table_num) && !empty($item_id)){
             $table_items[$table_num] = $item_id;
             $result = update_option($this->opt_table_items, $table_items);
-            
-            error_log("[SMDP] Table items after save: " . print_r($table_items, true));
+
             error_log("[SMDP] Update result: " . ($result ? 'success' : 'failed'));
             
             echo '<div class="notice notice-success is-dismissible"><p>Table ' . esc_html($table_num) . ' item added successfully!</p></div>';

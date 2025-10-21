@@ -10,21 +10,18 @@
     // Only initialize if menu app is present and NOT a category filter
     var menuApp = document.querySelector('.smdp-menu-app-fe');
     if (!menuApp) {
-      console.log('Menu app not found - table setup skipped');
       return;
     }
 
     // Check if this is a category filter page (should not show table selector)
     var isCategoryFilter = menuApp.getAttribute('data-category-filter') === '1';
     if (isCategoryFilter) {
-      console.log('Category filter detected - table setup skipped');
       return;
     }
 
     // Check if table selector is disabled
     var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true, enableTableBadge: true, enableTableSelector: true };
     if (!buttonSettings.enableTableSelector) {
-      console.log('Table selector disabled - table setup skipped');
       return;
     }
 
@@ -33,7 +30,6 @@
     if (urlTable) {
       currentTable = urlTable;
       localStorage.setItem('smdp_table_number', urlTable);
-      console.log('Table set from URL:', urlTable);
     } else {
       // Check localStorage
       currentTable = localStorage.getItem('smdp_table_number');
@@ -160,7 +156,6 @@
         updateTableDisplay();
         initializeButtons();
         updateManifest(tableNum);
-        console.log('Table number saved:', tableNum);
       } else {
         input.style.borderColor = '#e74c3c';
         input.focus();
@@ -200,14 +195,12 @@
     // Only show buttons if menu app is present on the page (not in admin/editor)
     var menuApp = document.querySelector('.smdp-menu-app-fe');
     if (!menuApp) {
-      console.log('Menu app not found on page - buttons hidden');
       return;
     }
 
     // Check if this is a category filter page (should not show buttons)
     var isCategoryFilter = menuApp.getAttribute('data-category-filter') === '1';
     if (isCategoryFilter) {
-      console.log('Category filter detected - buttons hidden');
       return;
     }
 
@@ -216,7 +209,6 @@
 
     // Check if anything is enabled at all - if not, skip everything
     if (!buttonSettings.enableHelp && !buttonSettings.enableBill && !buttonSettings.enableViewBill && !buttonSettings.enableTableBadge) {
-      console.log('All action buttons and table badge disabled - nothing to show');
       return;
     }
 
@@ -329,8 +321,6 @@
     });
 
     document.body.appendChild(container);
-
-    console.log('Action buttons initialized for table:', currentTable, 'Settings:', buttonSettings);
   }
   
   // Setup gesture listeners
@@ -603,7 +593,6 @@
       var pageId = params.get('page_id');
       var newUrl = baseUrl + '?page_id=' + pageId + '&table=' + encodeURIComponent(tableNum);
       manifestLink.href = newUrl;
-      console.log('[SMDP] Manifest updated with table:', tableNum);
     }
   }
 
@@ -614,7 +603,6 @@
     var buttons = document.getElementById('smdp-action-buttons');
     if (buttons) buttons.remove();
     showSetupModal();
-    console.log('[SMDP] Table number reset');
   }
 
   // Expose for external use

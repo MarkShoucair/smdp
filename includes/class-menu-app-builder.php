@@ -1565,23 +1565,6 @@ class SMDP_Menu_App_Builder {
       }
     }
 
-    // DEBUG: Log mapping style and custom categories
-    error_log('[SMDP Menu Builder] Mapping style: ' . ($is_new_style ? 'NEW (instance-based)' : 'OLD (item-based)'));
-    error_log('[SMDP Menu Builder] Total categories: ' . count($categories));
-    $custom_cats = array_filter($categories, function($cat, $id) {
-      return strpos($id, 'cat_') === 0;
-    }, ARRAY_FILTER_USE_BOTH);
-    error_log('[SMDP Menu Builder] Custom categories found: ' . count($custom_cats) . ' - ' . implode(', ', array_column($custom_cats, 'name')));
-    error_log('[SMDP Menu Builder] Total mapping entries: ' . count($mapping));
-
-    // DEBUG: Count how many mapping entries belong to custom categories
-    $custom_mappings = 0;
-    foreach ($mapping as $instance_id => $map_data) {
-      if (isset($map_data['category']) && strpos($map_data['category'], 'cat_') === 0) {
-        $custom_mappings++;
-      }
-    }
-    error_log('[SMDP Menu Builder] Mapping entries for custom categories: ' . $custom_mappings);
 
     $normalized = array();
 
@@ -1661,13 +1644,6 @@ class SMDP_Menu_App_Builder {
       }
     }
 
-    // DEBUG: Log items assigned to custom categories
-    if ($is_new_style && !empty($custom_cat_items)) {
-      error_log('[SMDP Menu Builder] Items assigned to custom categories:');
-      foreach ($custom_cat_items as $cat_id => $items) {
-        error_log('  - ' . $cat_id . ' (' . $categories[$cat_id]['name'] . '): ' . implode(', ', $items));
-      }
-    }
 
     update_option(self::OPT_CATALOG, wp_json_encode($normalized));
 
@@ -1690,13 +1666,6 @@ class SMDP_Menu_App_Builder {
       $by_cat[$cid][] = $it;
     }
 
-    // DEBUG: Show which custom categories have items in by_cat
-    error_log('[SMDP Menu Builder] Custom categories in $by_cat array:');
-    foreach ($by_cat as $cid => $items) {
-      if (strpos($cid, 'cat_') === 0) {
-        error_log('  - ' . $cid . ': ' . count($items) . ' items - ' . implode(', ', array_column($items, 'name')));
-      }
-    }
 
     foreach ($by_cat as $cid => $arr) {
       usort($arr, function($a,$b){
@@ -1724,12 +1693,6 @@ class SMDP_Menu_App_Builder {
       // Always add category, even if empty (important for custom categories)
       $name = isset($cat['name']) ? $cat['name'] : 'Category';
       $menu['categories'][] = array('name'=>$name, 'items'=>$items);
-
-      // DEBUG: Log category being added to menu
-      $is_custom = (strpos($cid, 'cat_') === 0);
-      if ($is_custom) {
-        error_log('[SMDP Menu Builder] Adding custom category to menu: ' . $name . ' (ID: ' . $cid . ') with ' . count($items) . ' items');
-      }
     }
 
     if (!empty($by_cat['uncategorized'])) {

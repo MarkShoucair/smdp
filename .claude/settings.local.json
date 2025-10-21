@@ -9,7 +9,8 @@
       "Read(//c/Users/mark/OneDrive/Desktop/Oct 7 Stable/3.0/**)",
       "Bash(git checkout:*)",
       "Bash(copy:*)",
-      "Read(//c/Users/mark/OneDrive/Desktop/**)"
+      "Read(//c/Users/mark/OneDrive/Desktop/**)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
