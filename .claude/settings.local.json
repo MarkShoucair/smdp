@@ -11,7 +11,8 @@
       "Bash(copy:*)",
       "Read(//c/Users/mark/OneDrive/Desktop/**)",
       "Bash(find:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(php -l:*)"
     ],
     "deny": [],
     "ask": []

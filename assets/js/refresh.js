@@ -351,7 +351,94 @@ if (typeof jQuery === 'undefined') {
     refreshNext(0);
   }
 
-  // Refresh a single menu container
+  // Store content hashes for each menu to detect changes
+  var contentHashes = {};
+
+  // Refresh only sold-out status for items (lightweight, no full reload)
+  // Automatically detects if content changed and triggers full refresh if needed
+  function refreshSoldOutStatus($container, silent) {
+    var menuId = $container.data('menu-id');
+
+    if (!menuId) {
+      log('⚠️ Cannot refresh - container has no menu-id attribute');
+      return;
+    }
+
+    log('🔄 Refreshing sold-out status for: ' + menuId);
+
+    $.ajax({
+      url: smdpRefresh.ajaxurl,
+      type: 'POST',
+      timeout: 5000,
+      data: {
+        action: 'smdp_get_sold_out_status',
+        nonce: smdpRefresh.nonce,
+        menu_id: menuId
+      },
+      success: function(response) {
+        if (response.success && response.data) {
+          var data = response.data;
+          var soldOutItems = data.sold_out_items || [];
+          var newHash = data.content_hash;
+          var itemCount = data.item_count;
+          var cachedHash = contentHashes[menuId];
+
+          log('✅ Sold-out status received: ' + menuId);
+
+          // Check if menu content has changed (new items, prices, etc.)
+          if (cachedHash && newHash !== cachedHash) {
+            log('🔄 Menu content changed (hash mismatch) - triggering full refresh');
+            log('   Old hash: ' + cachedHash);
+            log('   New hash: ' + newHash);
+
+            // Content changed - do full refresh instead
+            contentHashes[menuId] = newHash; // Update cache
+            refreshSingleMenu($container, silent);
+            return;
+          }
+
+          // Check if item count changed (items added/removed)
+          var currentItemCount = $container.find('[data-item-id]').length;
+          if (currentItemCount > 0 && itemCount !== currentItemCount) {
+            log('🔄 Item count changed (' + currentItemCount + ' → ' + itemCount + ') - triggering full refresh');
+
+            // Item count changed - do full refresh
+            contentHashes[menuId] = newHash; // Update cache
+            refreshSingleMenu($container, silent);
+            return;
+          }
+
+          // Store hash for next comparison
+          contentHashes[menuId] = newHash;
+
+          // Content unchanged - just update sold-out badges (lightweight)
+          log('✅ Content unchanged - updating badges only');
+
+          // Remove all existing sold-out badges in this container
+          $container.find('.smdp-sold-out-badge').remove();
+
+          // Add badges to items that are sold out
+          soldOutItems.forEach(function(itemId) {
+            var $item = $container.find('[data-item-id="' + itemId + '"]');
+            if ($item.length && !$item.find('.smdp-sold-out-badge').length) {
+              $item.append('<div class="smdp-sold-out-badge">Sold Out</div>');
+            }
+          });
+
+          log('✅ Updated ' + soldOutItems.length + ' sold-out badges');
+        } else {
+          log('❌ Sold-out status update failed: ' + menuId, response);
+        }
+      },
+      error: function(xhr, status, error) {
+        // Fail silently - offline mode or server issue
+        // Menu still displays with cached sold-out status
+        log('⚠️ Could not update sold-out status (offline?): ' + menuId);
+      }
+    });
+  }
+
+  // Refresh a single menu container (full reload - used sparingly)
   function refreshSingleMenu($container, silent) {
     var menuId = $container.data('menu-id');
 
@@ -417,9 +504,9 @@ if (typeof jQuery === 'undefined') {
       return;
     }
 
-    // Refresh visible menu container(s) on page load
+    // Refresh sold-out status on page load (lightweight, no double-load effect)
     setTimeout(function() {
-      log('📋 Performing initial menu refresh for visible containers...');
+      log('📋 Performing initial sold-out status check for visible containers...');
 
       // Check if we're in a menu app
       var $menuApp = $('.smdp-menu-app-fe');
@@ -431,13 +518,13 @@ if (typeof jQuery === 'undefined') {
         if ($visibleSection.length) {
           var $container = $visibleSection.find('.smdp-menu-container');
           if ($container.length) {
-            refreshSingleMenu($container, true); // Silent on initial load
+            refreshSoldOutStatus($container, true); // Silent on initial load
           }
         }
       } else {
         // Standalone shortcode(s) - refresh all visible containers
         $('.smdp-menu-container').each(function() {
-          refreshSingleMenu($(this), true); // Silent on initial load
+          refreshSoldOutStatus($(this), true); // Silent on initial load
         });
       }
     }, 2000);
@@ -446,7 +533,8 @@ if (typeof jQuery === 'undefined') {
   });
 
   // Expose refresh functions globally
-  window.smdpRefreshMenu = refreshSingleMenu; // For category switching
+  window.smdpRefreshMenu = refreshSoldOutStatus; // Lightweight sold-out update for category switching
+  window.smdpRefreshMenuFull = refreshSingleMenu; // Full reload (rarely used)
 
   window.smdpRefreshOnPromoDismiss = function() {
     log('🎯 Promo dismissed - fetching fresh cache version from server...');

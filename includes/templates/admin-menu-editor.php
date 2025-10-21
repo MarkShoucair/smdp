@@ -991,7 +991,7 @@ jQuery(document).ready(function($) {
                if(response.data.hidden) {
                    $catGroup.addClass("hidden-category");
                    $btn.text("Show Category");
-                   $("#smdp-items-container").append($catGroup);
+                   // Don't move to bottom - keep in current position
                } else {
                    $catGroup.removeClass("hidden-category");
                    $btn.text("Hide Category");

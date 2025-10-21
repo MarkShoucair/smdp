@@ -290,13 +290,33 @@ class SMDP_Shortcode {
     private function is_item_sold_out( $item_id, $item, $mapping ) {
         $override = $mapping[$item_id]['sold_out_override'] ?? '';
 
+        // Check manual override first (highest priority)
         if ( $override === 'sold' ) {
             return true;
         } elseif ( $override === 'available' ) {
             return false;
-        } else {
-            return ! empty( $item['sold_out'] );
         }
+
+        // Auto mode: check Square data
+        // Check location_overrides for sold_out flag (same logic as sync)
+        $item_data = $item['item_data'] ?? array();
+        if ( ! empty( $item_data['variations'] ) ) {
+            foreach ( $item_data['variations'] as $var ) {
+                $location_overrides = $var['item_variation_data']['location_overrides'] ?? array();
+                foreach ( $location_overrides as $override_data ) {
+                    if ( ! empty( $override_data['sold_out'] ) ) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // Check item-level sold_out flag (fallback)
+        if ( ! empty( $item_data['sold_out'] ) ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

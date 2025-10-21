@@ -69,6 +69,9 @@ class SMDP_Ajax_Handler {
         add_action( 'wp_ajax_nopriv_smdp_refresh_menu', array( $this, 'refresh_menu' ) );
         add_action( 'wp_ajax_smdp_refresh_menu', array( $this, 'refresh_menu' ) );
 
+        add_action( 'wp_ajax_nopriv_smdp_get_sold_out_status', array( $this, 'get_sold_out_status' ) );
+        add_action( 'wp_ajax_smdp_get_sold_out_status', array( $this, 'get_sold_out_status' ) );
+
         add_action( 'wp_ajax_smdp_check_version', array( $this, 'check_version' ) );
         add_action( 'wp_ajax_nopriv_smdp_check_version', array( $this, 'check_version' ) );
 
@@ -460,6 +463,93 @@ class SMDP_Ajax_Handler {
 
         // Return that HTML as JSON
         wp_send_json_success( $html );
+    }
+
+    /**
+     * AJAX: Get sold-out status only (lightweight, no HTML generation)
+     * Returns array of sold-out item IDs for client-side badge updates
+     */
+    public function get_sold_out_status() {
+        check_ajax_referer( 'smdp_refresh_nonce', 'nonce' );
+
+        // Rate limiting: 20 requests per 30 seconds (more lenient since it's lightweight)
+        if ( smdp_is_rate_limited( 'get_sold_out_status', 20, 30 ) ) {
+            wp_send_json_error( 'Too many status requests. Please wait a moment.' );
+        }
+
+        // Get the category slug
+        $slug = isset( $_POST['menu_id'] ) ? sanitize_text_field( wp_unslash( $_POST['menu_id'] ) ) : '';
+
+        if ( empty( $slug ) ) {
+            wp_send_json_error( 'No menu ID provided' );
+        }
+
+        // Get all items and mappings
+        $all_items = get_option( SMDP_ITEMS_OPTION, array() );
+        $mapping = get_option( SMDP_MAPPING_OPTION, array() );
+        $categories = get_option( SMDP_CATEGORIES_OPTION, array() );
+
+        // Find the category by slug
+        $category_id = null;
+        foreach ( $categories as $cat_id => $cat_data ) {
+            if ( isset( $cat_data['slug'] ) && $cat_data['slug'] === $slug ) {
+                $category_id = $cat_id;
+                break;
+            }
+        }
+
+        if ( ! $category_id ) {
+            wp_send_json_error( 'Category not found' );
+        }
+
+        // Find all items in this category that are sold out
+        // Also build a content hash to detect menu changes
+        $sold_out_items = array();
+        $content_data = array(); // For hash generation
+
+        foreach ( $mapping as $item_id => $map_data ) {
+            // Check if item is in this category
+            if ( isset( $map_data['category'] ) && $map_data['category'] === $category_id ) {
+                // Find the actual item data
+                $item_data = null;
+                foreach ( $all_items as $obj ) {
+                    if ( isset( $obj['type'] ) && $obj['type'] === 'ITEM' && $obj['id'] === $item_id ) {
+                        $item_data = $obj['item_data'] ?? array();
+                        break;
+                    }
+                }
+
+                if ( $item_data ) {
+                    // Check if sold out using same logic as shortcode
+                    $is_sold = $this->determine_sold_out_status( $item_id, $item_data, $mapping );
+                    if ( $is_sold ) {
+                        $sold_out_items[] = $item_id;
+                    }
+
+                    // Build content signature for change detection
+                    // Include: item name, description, price, variations, order
+                    $content_data[] = array(
+                        'id' => $item_id,
+                        'name' => $item_data['name'] ?? '',
+                        'description' => $item_data['description'] ?? '',
+                        'variations' => wp_json_encode( $item_data['variations'] ?? array() ),
+                        'order' => $map_data['order'] ?? 0,
+                    );
+                }
+            }
+        }
+
+        // Generate content hash to detect if menu structure changed
+        // If hash differs from client's cached hash, client should do full refresh
+        $content_hash = md5( wp_json_encode( $content_data ) );
+
+        wp_send_json_success( array(
+            'sold_out_items' => $sold_out_items,
+            'category' => $slug,
+            'count' => count( $sold_out_items ),
+            'content_hash' => $content_hash, // New: for change detection
+            'item_count' => count( $content_data ), // New: for quick count check
+        ) );
     }
 
     /**
