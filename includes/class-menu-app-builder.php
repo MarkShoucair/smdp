@@ -107,6 +107,11 @@ class SMDP_Menu_App_Builder {
             $sanitized['enable_view_bill_btn'] = isset($input['enable_view_bill_btn']) ? '1' : '0';
             $sanitized['enable_table_badge'] = isset($input['enable_table_badge']) ? '1' : '0';
             $sanitized['enable_table_selector'] = isset($input['enable_table_selector']) ? '1' : '0';
+
+            // Item detail modal settings
+            $sanitized['enable_modal_shortcode'] = isset($input['enable_modal_shortcode']) ? '1' : '0';
+            $sanitized['enable_modal_menuapp'] = isset($input['enable_modal_menuapp']) ? '1' : '0';
+            $sanitized['enable_modal_filter'] = isset($input['enable_modal_filter']) ? '1' : '0';
         }
 
         // Promo timeout - only update if present
@@ -1064,6 +1069,30 @@ class SMDP_Menu_App_Builder {
 
       <p class="description" style="margin-top:10px;">Uncheck "Table Number Selector" to skip the table selection popup entirely. The other options control which buttons appear after a table is set.</p>
     </fieldset>
+
+    <hr style="margin:25px 0; border:none; border-top:1px solid #ddd;">
+
+    <fieldset>
+      <legend style="font-weight:600; font-size:14px; margin-bottom:10px;">Item Detail Modal</legend>
+      <p class="description" style="margin-bottom:15px;">Control where the item detail modal (tap to view details) is enabled.</p>
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_shortcode]" value="1" <?php checked(isset($settings['enable_modal_shortcode']) ? $settings['enable_modal_shortcode'] : '1', '1'); ?>>
+        <strong>Enable for Category Shortcodes</strong> <code>[square_menu category="..."]</code>
+      </label>
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_menuapp]" value="1" <?php checked(isset($settings['enable_modal_menuapp']) ? $settings['enable_modal_menuapp'] : '1', '1'); ?>>
+        <strong>Enable for Menu App</strong> (full menu app view)
+      </label>
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_filter]" value="1" <?php checked(isset($settings['enable_modal_filter']) ? $settings['enable_modal_filter'] : '1', '1'); ?>>
+        <strong>Enable for Menu App Category Filters</strong> (category filter pages)
+      </label>
+
+      <p class="description" style="margin-top:10px;">When disabled, tapping on menu items will not open the detail modal in that context.</p>
+    </fieldset>
     <?php
   }
 
@@ -1883,9 +1912,23 @@ class SMDP_Menu_App_Builder {
       return '<p>No categories with items found. Please assign items in Menu → Items.</p>';
     }
 
+    // Get modal settings
+    $enable_modal_shortcode = isset($settings['enable_modal_shortcode']) ? $settings['enable_modal_shortcode'] : '1';
+    $enable_modal_menuapp = isset($settings['enable_modal_menuapp']) ? $settings['enable_modal_menuapp'] : '1';
+    $enable_modal_filter = isset($settings['enable_modal_filter']) ? $settings['enable_modal_filter'] : '1';
+
+    // Determine context and modal enabled state
+    $is_category_filter = !empty($atts['category']);
+    $context = $is_category_filter ? 'filter' : 'menuapp';
+    $modal_enabled = $is_category_filter ? $enable_modal_filter : $enable_modal_menuapp;
+
     ob_start();
     ?>
-      <div class="smdp-menu-app-fe layout-<?php echo esc_attr($layout); ?>" data-promo-enabled="<?php echo !empty($promo_images) ? '1' : '0'; ?>" data-category-filter="<?php echo !empty($atts['category']) ? '1' : '0'; ?>">
+      <div class="smdp-menu-app-fe layout-<?php echo esc_attr($layout); ?>"
+           data-promo-enabled="<?php echo !empty($promo_images) ? '1' : '0'; ?>"
+           data-category-filter="<?php echo $is_category_filter ? '1' : '0'; ?>"
+           data-context="<?php echo esc_attr($context); ?>"
+           data-modal-enabled="<?php echo esc_attr($modal_enabled); ?>">
   <div class="smdp-app-header">
     <div class="smdp-cat-bar" role="tablist" aria-label="Menu Categories">
 

@@ -81,9 +81,13 @@ class SMDP_Shortcode {
         // Build output
         $output = $this->build_menu_grid( $items_to_show, $all_items, $mapping, $disabled_mods );
 
+        // Get modal settings
+        $settings = get_option( 'smdp_app_settings', array() );
+        $enable_modal_shortcode = isset($settings['enable_modal_shortcode']) ? $settings['enable_modal_shortcode'] : '1';
+
         // Wrap it with menu container
         $menu_id = esc_attr( $atts['category'] );
-        $html  = '<div class="smdp-menu-container" data-menu-id="' . $menu_id . '">';
+        $html  = '<div class="smdp-menu-container" data-menu-id="' . $menu_id . '" data-context="shortcode" data-modal-enabled="' . esc_attr($enable_modal_shortcode) . '">';
         $html .= $output;
         $html .= '</div>';
 

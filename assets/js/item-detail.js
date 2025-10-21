@@ -142,8 +142,28 @@ jQuery(document).ready(function($){
   $(document).on('click', '.smdp-item-tile, .smdp-menu-item', function(e){
     e.preventDefault();
     e.stopPropagation();
-    
+
     var $t = $(this);
+
+    // Check if modal is enabled for this context
+    // First check if we're inside a menu app (takes precedence)
+    var $menuApp = $t.closest('.smdp-menu-app-fe');
+    var $shortcodeContainer = $t.closest('.smdp-menu-container');
+
+    var modalEnabled = '1'; // Default to enabled
+
+    if ($menuApp.length) {
+      // Inside menu app - use menu app's setting
+      modalEnabled = $menuApp.attr('data-modal-enabled');
+    } else if ($shortcodeContainer.length) {
+      // Standalone shortcode - use shortcode's setting
+      modalEnabled = $shortcodeContainer.attr('data-modal-enabled');
+    }
+
+    // If modal is explicitly disabled, don't open it
+    if (modalEnabled === '0') {
+      return;
+    }
 
     // Prevent body scroll
     $('body').addClass('smdp-modal-open');
