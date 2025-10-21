@@ -164,8 +164,8 @@ class SMDP_Sync_Manager {
         $all_objects = $this->filter_deleted( $all_objects );
         error_log('[SMDP Sync] After filtering deleted: ' . count($all_objects) . ' objects remain');
 
-        // Cache the full catalog
-        update_option( SMDP_ITEMS_OPTION, $all_objects );
+        // Cache the full catalog (don't autoload - can be large)
+        update_option( SMDP_ITEMS_OPTION, $all_objects, false );
         error_log('[SMDP Sync] Cached catalog objects to ' . SMDP_ITEMS_OPTION);
 
         // Update item mappings
@@ -302,7 +302,7 @@ class SMDP_Sync_Manager {
             }
         }
 
-        update_option( SMDP_MAPPING_OPTION, $new_mapping );
+        update_option( SMDP_MAPPING_OPTION, $new_mapping, false );
     }
 
     /**
@@ -362,7 +362,7 @@ class SMDP_Sync_Manager {
             }
         }
 
-        update_option( SMDP_CATEGORIES_OPTION, $final_categories );
+        update_option( SMDP_CATEGORIES_OPTION, $final_categories, false );
     }
 
     /**
@@ -409,7 +409,7 @@ class SMDP_Sync_Manager {
             $mapping[ $item_id ]['sold_out_override'] = $is_sold ? 'sold' : 'available';
         }
 
-        update_option( SMDP_MAPPING_OPTION, $mapping );
+        update_option( SMDP_MAPPING_OPTION, $mapping, false );
     }
 
     /**
@@ -442,7 +442,7 @@ class SMDP_Sync_Manager {
             $api_log = array_slice( $api_log, 0, 10 );
         }
 
-        update_option( SMDP_API_LOG_OPTION, $api_log );
+        update_option( SMDP_API_LOG_OPTION, $api_log, false );
     }
 }
 

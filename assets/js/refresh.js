@@ -1,36 +1,38 @@
 // Check if jQuery is loaded
 if (typeof jQuery === 'undefined') {
-  console.error('[SMDP Refresh] ERROR: jQuery not loaded. Script cannot initialize.');
+  // jQuery not loaded - cannot initialize
 } else {
   (function($) {
     // Check if smdpRefresh is available
     if (typeof smdpRefresh === 'undefined') {
-      console.error('[SMDP Refresh] ERROR: smdpRefresh not defined. Check wp_localize_script() in PHP.');
+      // smdpRefresh not defined - cannot initialize
       return;
     }
 
   var isPWA = false;
 
   function log(msg, data) {
-    var timestamp = new Date().toISOString();
-    var logMsg = '[SMDP Refresh ' + timestamp + '] ' + msg;
-
-    if (data !== undefined) {
-      console.log(logMsg, data);
-    } else {
-      console.log(logMsg);
+    // Only log in debug mode
+    if (typeof smdpRefresh !== 'undefined' && smdpRefresh.debugMode) {
+      var timestamp = new Date().toISOString();
+      var logMsg = '[SMDP Refresh ' + timestamp + '] ' + msg;
+      if (data !== undefined) {
+        console.log(logMsg, data);
+      } else {
+        console.log(logMsg);
+      }
     }
 
     // Store in localStorage for debugging (with error handling)
     try {
       var logs = JSON.parse(localStorage.getItem('smdp_debug_logs') || '[]');
+      var timestamp = new Date().toISOString();
       logs.push({ time: timestamp, msg: msg, data: data });
       if (logs.length > 100) logs.shift();
       localStorage.setItem('smdp_debug_logs', JSON.stringify(logs));
     } catch (e) {
       // Corrupted logs - reset them
       localStorage.removeItem('smdp_debug_logs');
-      console.warn('[SMDP Refresh] Debug logs corrupted, resetting. Error:', e.message);
     }
   }
 

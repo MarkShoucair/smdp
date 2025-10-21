@@ -1,7 +1,4 @@
 (function(){
-  console.log('SMDP Menu App: Script loaded');
-  console.log('SMDP Promo config:', window.smdpPromo);
-  
   // Idle timer state (simplified for single image)
   var idleTimer = null;
   var promoShown = false;
@@ -25,7 +22,7 @@
     
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch(function(err) {
-        console.log('Fullscreen request failed:', err);
+        // Fullscreen request failed silently
       });
     } else if (elem.webkitRequestFullscreen) {
       elem.webkitRequestFullscreen();
@@ -57,8 +54,6 @@
   function showPromo() {
     var promo = document.getElementById('smdp-promo-screen');
     if (!promo) return;
-
-    console.log('📺 Showing promo screen...');
 
     // Close item detail modal if open
     var itemModal = document.getElementById('smdp-item-modal');
@@ -168,10 +163,7 @@
 
       // Call refresh function when promo is dismissed
       if (typeof window.smdpRefreshOnPromoDismiss === 'function') {
-        console.log('🎯 Promo dismissed - triggering menu refresh');
         window.smdpRefreshOnPromoDismiss();
-      } else {
-        console.warn('⚠️ smdpRefreshOnPromoDismiss function not found');
       }
     }, 650);
   }
@@ -319,15 +311,13 @@
         setupIdleDetection();
       }
     } catch(e) {
-      console.log('Promo setup skipped:', e);
+      // Promo setup skipped
     }
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('SMDP: DOMContentLoaded fired');
       document.querySelectorAll('.smdp-menu-app-fe').forEach(function(root) {
-        console.log('SMDP: Setting up root', root);
         setup(root);
         if (root.classList.contains('layout-left') && !supportsSticky()) {
           stickyFallback(root);
@@ -335,9 +325,7 @@
       });
     });
   } else {
-    console.log('SMDP: DOM already ready');
     document.querySelectorAll('.smdp-menu-app-fe').forEach(function(root) {
-      console.log('SMDP: Setting up root', root);
       setup(root);
       if (root.classList.contains('layout-left') && !supportsSticky()) {
         stickyFallback(root);
