@@ -87,8 +87,12 @@
 
   /**
    * Show custom install banner
+   * DISABLED: Install prompt is too intrusive
    */
   function showInstallBanner() {
+    // Install prompt disabled - users can still install via browser menu
+    return;
+
     if (!deferredPrompt) {
       return;
     }
@@ -341,10 +345,10 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
       init();
-      setTimeout(diagnose, 1000); // Run diagnostics after 1 second
+      // Diagnostics can be run manually via window.smdpPWAInstall.diagnose()
     });
   } else {
     init();
-    setTimeout(diagnose, 1000);
+    // Diagnostics can be run manually via window.smdpPWAInstall.diagnose()
   }
 })();

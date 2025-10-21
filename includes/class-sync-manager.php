@@ -296,8 +296,6 @@ class SMDP_Sync_Manager {
         // First pass: Build list of valid category IDs from CATEGORY objects
         // Only include REGULAR_CATEGORY types (not MENU_CATEGORY which is POS-only)
         $valid_category_ids = array();
-        $category_names = array(); // For debugging
-        $skipped_menu_cats = 0;
         foreach ( $objects as $obj ) {
             if ( $obj['type'] === 'CATEGORY' ) {
                 // Check if this is a REGULAR_CATEGORY (for menu display) vs MENU_CATEGORY (POS only)
@@ -305,13 +303,9 @@ class SMDP_Sync_Manager {
 
                 if ( $category_type === 'REGULAR_CATEGORY' ) {
                     $valid_category_ids[] = $obj['id'];
-                    $category_names[$obj['id']] = $obj['category_data']['name'] ?? 'Unknown';
-                } else {
-                    $skipped_menu_cats++;
                 }
             }
         }
-        error_log('[SMDP Sync] Found ' . count($valid_category_ids) . ' REGULAR categories (skipped ' . $skipped_menu_cats . ' MENU categories): ' . wp_json_encode($category_names));
 
         // Second pass: Assign items to categories
         foreach ( $objects as $obj ) {
@@ -336,21 +330,6 @@ class SMDP_Sync_Manager {
                     if ( in_array( $reporting_cat_id, $valid_category_ids, true ) ) {
                         $cat = $reporting_cat_id;
                     }
-                }
-
-                // Debug unassigned items
-                if ( $cat === 'unassigned' ) {
-                    $item_name = $obj['item_data']['name'] ?? 'Unknown';
-                    $display_cats = ! empty( $obj['item_data']['categories'] ) ? wp_json_encode( array_column( $obj['item_data']['categories'], 'id' ) ) : 'none';
-                    $reporting_cat = $obj['item_data']['reporting_category']['id'] ?? 'none';
-                    error_log("[SMDP Sync] UNASSIGNED: '{$item_name}' - Display cats: {$display_cats}, Reporting: {$reporting_cat}");
-                }
-
-                // Debug items being assigned to categories
-                if ( $cat !== 'unassigned' ) {
-                    $item_name = $obj['item_data']['name'] ?? 'Unknown';
-                    $cat_name = $category_names[$cat] ?? $cat;
-                    error_log("[SMDP Sync] ASSIGNED: '{$item_name}' → '{$cat_name}' ({$cat})");
                 }
 
                 // Create mapping entry for new items only (preserve existing mappings)
