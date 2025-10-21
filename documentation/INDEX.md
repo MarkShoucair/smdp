@@ -29,6 +29,7 @@ For general plugin information, see [README.md](../README.md) in the root direct
 | **[CONTENT-CHANGE-DETECTION.md](CONTENT-CHANGE-DETECTION.md)** | Technical documentation of the intelligent content change detection system that automatically detects menu updates and triggers appropriate refresh type |
 | **[FIXES-SOLD-OUT-CUSTOM-CATEGORIES.md](FIXES-SOLD-OUT-CUSTOM-CATEGORIES.md)** | Details fixes for sold-out badge styling and custom category item count issues, including new-style vs old-style mapping |
 | **[PWA-SCOPE-FIX.md](PWA-SCOPE-FIX.md)** | Explains how PWA install prompts were restricted to menu app pages only, preventing install buttons from appearing site-wide |
+| **[MIXED-MAPPING-FIX.md](MIXED-MAPPING-FIX.md)** | Fix for "Undefined array key 'item_id'" errors when menu editor encounters mixed old-style and new-style mapping entries |
 
 ### Testing & Quality Assurance
 

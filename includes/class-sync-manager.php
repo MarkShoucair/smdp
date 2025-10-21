@@ -160,10 +160,6 @@ class SMDP_Sync_Manager {
 
         error_log('[SMDP Sync] Fetched ' . count($all_objects) . ' catalog objects');
 
-        // DEBUG: Count object types
-        $types = array_count_values( array_column( $all_objects, 'type' ) );
-        error_log('[SMDP Sync DEBUG] Object types: ' . print_r($types, true));
-
         // Remove deleted items
         $all_objects = $this->filter_deleted( $all_objects );
         error_log('[SMDP Sync] After filtering deleted: ' . count($all_objects) . ' objects remain');
@@ -304,7 +300,6 @@ class SMDP_Sync_Manager {
                 $valid_category_ids[] = $obj['id'];
             }
         }
-        error_log('[SMDP Sync DEBUG] Found ' . count($valid_category_ids) . ' valid category IDs');
 
         // Second pass: Assign items to categories
         foreach ( $objects as $obj ) {
@@ -331,14 +326,7 @@ class SMDP_Sync_Manager {
                     }
                 }
 
-                // Priority 3: Still unassigned? Log for debugging
-                if ( $cat === 'unassigned' ) {
-                    $item_name = $obj['item_data']['name'] ?? 'Unknown';
-                    $display_cats = ! empty( $obj['item_data']['categories'] ) ? wp_json_encode( array_column( $obj['item_data']['categories'], 'id' ) ) : 'none';
-                    $reporting_cat = $obj['item_data']['reporting_category']['id'] ?? 'none';
-                    error_log("[SMDP Sync DEBUG] Item '{$item_name}' has no valid category. Display cats: {$display_cats}, Reporting cat: {$reporting_cat}");
-                }
-
+                // Create mapping entry for new items only (preserve existing mappings)
                 if ( ! isset( $existing_mapping[ $item_id ] ) ) {
                     $new_mapping[ $item_id ] = array(
                         'category'   => $cat,

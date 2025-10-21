@@ -1467,8 +1467,16 @@ class SMDP_Admin_Pages {
 
         if ($is_new_style) {
             // New-style mapping: instance_id => {item_id, instance_id, category, order, hide_image}
+            // Note: Can contain mixed old-style and new-style entries
             foreach ( $mapping as $instance_id => $map_data ) {
-                $item_id = $map_data['item_id'];
+                // Check if this specific entry is new-style or old-style
+                if (isset($map_data['item_id'])) {
+                    // New-style entry: has both instance_id (key) and item_id (field)
+                    $item_id = $map_data['item_id'];
+                } else {
+                    // Old-style entry mixed in: key IS the item_id
+                    $item_id = $instance_id;
+                }
                 if (!isset($items_by_id[$item_id])) continue;
 
                 $item_obj = $items_by_id[$item_id];
@@ -1520,8 +1528,10 @@ class SMDP_Admin_Pages {
             // Add any items that aren't in the mapping at all to unassigned
             foreach ( $items_by_id as $item_id => $item_obj ) {
                 $found = false;
-                foreach ($mapping as $map_data) {
-                    if ($map_data['item_id'] === $item_id) {
+                foreach ($mapping as $key => $map_data) {
+                    // Check both new-style (item_id field) and old-style (key is item_id)
+                    $mapped_item_id = isset($map_data['item_id']) ? $map_data['item_id'] : $key;
+                    if ($mapped_item_id === $item_id) {
                         $found = true;
                         break;
                     }
