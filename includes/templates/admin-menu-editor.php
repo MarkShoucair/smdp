@@ -408,6 +408,7 @@ if ( ! defined( 'ABSPATH' ) ) {
             foreach ($cat_array as $cat) {
                 $hidden_class = (isset($cat['hidden']) && $cat['hidden']) ? 'hidden-category' : '';
                 $shortcode = '[square_menu category="' . esc_attr($cat['slug']) . '"]';
+                $category_url = home_url('/menu-app/category/' . $cat['slug'] . '/');
                 ?>
                 <div class="smdp-category-group <?php echo $hidden_class; ?>" data-category="<?php echo esc_attr($cat['id']); ?>" style="margin-bottom:30px; border:1px solid #ddd; padding:15px; background:#f5f5f5; border-radius:4px;">
                   <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -416,6 +417,10 @@ if ( ! defined( 'ABSPATH' ) ) {
                        <button type="button" class="smdp-shortcode button button-secondary" data-shortcode="<?php echo esc_attr($shortcode); ?>" style="margin-left:10px;vertical-align:middle;">
                          <span class="dashicons dashicons-clipboard" style="vertical-align:middle;margin-right:3px;"></span>
                          Copy Shortcode
+                       </button>
+                       <button type="button" class="smdp-copy-link button button-secondary" data-url="<?php echo esc_attr($category_url); ?>" style="margin-left:5px;vertical-align:middle;">
+                         <span class="dashicons dashicons-admin-links" style="vertical-align:middle;margin-right:3px;"></span>
+                         Copy Link
                        </button>
                     </div>
                     <div>
@@ -1118,6 +1123,41 @@ jQuery(document).ready(function($) {
            var tempInput = $("<textarea>");
            $("body").append(tempInput);
            tempInput.val(shortcodeText).select();
+           document.execCommand("copy");
+           tempInput.remove();
+           $btn.html('<span class="dashicons dashicons-yes" style="vertical-align:middle;margin-right:3px;"></span>Copied!');
+           $btn.css("background-color", "#46b450");
+           setTimeout(function() {
+               $btn.html(originalHtml);
+               $btn.css("background-color", "");
+           }, 2000);
+       }
+   });
+
+   // Copy link handler with improved feedback
+   $(".smdp-copy-link").on("click", function() {
+       var $btn = $(this);
+       var urlText = $btn.data("url");
+       var originalHtml = $btn.html();
+
+       if(navigator.clipboard) {
+           navigator.clipboard.writeText(urlText).then(function() {
+               $btn.html('<span class="dashicons dashicons-yes" style="vertical-align:middle;margin-right:3px;"></span>Copied!');
+               $btn.css("background-color", "#46b450");
+               setTimeout(function() {
+                   $btn.html(originalHtml);
+                   $btn.css("background-color", "");
+               }, 2000);
+           }, function(err) {
+               $btn.html('<span class="dashicons dashicons-no" style="vertical-align:middle;margin-right:3px;"></span>Failed');
+               setTimeout(function() {
+                   $btn.html(originalHtml);
+               }, 2000);
+           });
+       } else {
+           var tempInput = $("<textarea>");
+           $("body").append(tempInput);
+           tempInput.val(urlText).select();
            document.execCommand("copy");
            tempInput.remove();
            $btn.html('<span class="dashicons dashicons-yes" style="vertical-align:middle;margin-right:3px;"></span>Copied!');

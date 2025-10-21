@@ -190,7 +190,7 @@ class SMDP_Plugin_Activation {
      * Also used by SMDP_Standalone_Menu_App class on 'init' hook.
      */
     public static function register_menu_app_rewrite_rules() {
-        // Add rewrite rule: /menu-app/ or /menu-app/table/5/
+        // Add rewrite rule: /menu-app/ or /menu-app/table/5/ or /menu-app/category/appetizers/
         add_rewrite_rule(
             '^menu-app/?$',
             'index.php?smdp_menu_app=1',
@@ -200,6 +200,12 @@ class SMDP_Plugin_Activation {
         add_rewrite_rule(
             '^menu-app/table/([0-9]+)/?$',
             'index.php?smdp_menu_app=1&smdp_table=$matches[1]',
+            'top'
+        );
+
+        add_rewrite_rule(
+            '^menu-app/category/([^/]+)/?$',
+            'index.php?smdp_menu_app=1&smdp_category=$matches[1]',
             'top'
         );
     }

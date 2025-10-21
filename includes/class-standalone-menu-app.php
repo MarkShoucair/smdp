@@ -88,6 +88,7 @@ class SMDP_Standalone_Menu_App {
     public function add_query_vars( $vars ) {
         $vars[] = 'smdp_menu_app';
         $vars[] = 'smdp_table';
+        $vars[] = 'smdp_category';
         return $vars;
     }
 
@@ -104,8 +105,11 @@ class SMDP_Standalone_Menu_App {
         // Get table number if provided
         $table = get_query_var( 'smdp_table' );
 
+        // Get category slug if provided
+        $category = get_query_var( 'smdp_category' );
+
         // Render blank page with menu app
-        $this->render_standalone_page( $table );
+        $this->render_standalone_page( $table, $category );
         exit;
     }
 
@@ -113,8 +117,9 @@ class SMDP_Standalone_Menu_App {
      * Render standalone menu app page
      *
      * @param string $table Table number (optional).
+     * @param string $category Category slug (optional).
      */
-    private function render_standalone_page( $table = '' ) {
+    private function render_standalone_page( $table = '', $category = '' ) {
         // Get settings for colors, etc.
         $settings = get_option( 'smdp_app_settings', array() );
         $theme_color = ! empty( $settings['theme_color'] ) ? $settings['theme_color'] : '#5C7BA6';
@@ -221,7 +226,12 @@ class SMDP_Standalone_Menu_App {
     <div id="smdp-standalone-app">
         <?php
         // Render the menu app shortcode
-        echo do_shortcode( '[smdp_menu_app]' );
+        // If category is provided, pass it to the shortcode
+        if ( $category ) {
+            echo do_shortcode( '[smdp_menu_app category="' . esc_attr( $category ) . '"]' );
+        } else {
+            echo do_shortcode( '[smdp_menu_app]' );
+        }
         ?>
     </div>
 

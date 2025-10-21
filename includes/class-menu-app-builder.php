@@ -1450,7 +1450,7 @@ class SMDP_Menu_App_Builder {
   /** ---------------- Frontend ---------------- */
 
   public static function shortcode_render($atts) {
-    $atts = shortcode_atts(array('id' => 'default', 'layout' => ''), $atts, 'smdp_menu_app');
+    $atts = shortcode_atts(array('id' => 'default', 'layout' => '', 'category' => ''), $atts, 'smdp_menu_app');
 
     $cat_opt = defined('SMDP_CATEGORIES_OPTION') ? SMDP_CATEGORIES_OPTION : 'square_menu_categories';
     $map_opt = defined('SMDP_MAPPING_OPTION')    ? SMDP_MAPPING_OPTION    : 'square_menu_item_mapping';
@@ -1467,16 +1467,62 @@ class SMDP_Menu_App_Builder {
     $valid_items = array();
     foreach ($items as $o) { if (!empty($o['type']) && $o['type']==='ITEM') $valid_items[$o['id']] = true; }
 
+    // Check if this is new-style mapping (instance_id => data with item_id field)
+    $is_new_style = false;
+    foreach ($mapping as $key => $data) {
+      if (isset($data['item_id']) && isset($data['instance_id'])) {
+        $is_new_style = true;
+        break;
+      }
+    }
+
     $counts = array();
-    foreach ($mapping as $item_id => $m) {
-      if (!isset($valid_items[$item_id])) continue;
+    $skipped_invalid = 0;
+    foreach ($mapping as $key => $m) {
+      // For new-style mapping, use item_id field; for old-style, use the key
+      $item_id = $is_new_style ? (isset($m['item_id']) ? $m['item_id'] : '') : $key;
+
+      if (!$item_id || !isset($valid_items[$item_id])) {
+        $skipped_invalid++;
+        continue;
+      }
       $cid = isset($m['category']) ? $m['category'] : '';
       if ($cid==='') continue;
       if (!isset($counts[$cid])) $counts[$cid] = 0;
       $counts[$cid]++;
     }
 
+    // DEBUG: Log category counts and mapping details
+    error_log('[SMDP Menu App] Total mapping entries: ' . count($mapping));
+    error_log('[SMDP Menu App] Skipped invalid items: ' . $skipped_invalid);
+    error_log('[SMDP Menu App] Valid items count: ' . count($valid_items));
+    error_log('[SMDP Menu App] Category item counts: ' . print_r($counts, true));
+    error_log('[SMDP Menu App] All categories: ' . print_r(array_keys($categories), true));
+
+    // Check specifically for custom categories
+    $custom_cat_mappings = array();
+    foreach ($mapping as $item_id => $m) {
+      $cid = isset($m['category']) ? $m['category'] : '';
+      if (strpos($cid, 'cat_') === 0) {
+        if (!isset($custom_cat_mappings[$cid])) $custom_cat_mappings[$cid] = array();
+        $custom_cat_mappings[$cid][] = $item_id . ' (valid: ' . (isset($valid_items[$item_id]) ? 'yes' : 'no') . ')';
+      }
+    }
+    if (!empty($custom_cat_mappings)) {
+      error_log('[SMDP Menu App] Custom category mappings found: ' . print_r($custom_cat_mappings, true));
+    }
+
     $cats = array_values($categories);
+
+    // Filter by category slug if provided
+    if (!empty($atts['category'])) {
+      $category_slug = $atts['category'];
+      $cats = array_filter($cats, function($c) use ($category_slug) {
+        return isset($c['slug']) && $c['slug'] === $category_slug;
+      });
+      $cats = array_values($cats); // Re-index after filter
+    }
+
     usort($cats, function($a,$b){
       $oa = isset($a['order']) ? intval($a['order']) : 0;
       $ob = isset($b['order']) ? intval($b['order']) : 0;
@@ -1491,12 +1537,22 @@ class SMDP_Menu_App_Builder {
     $cats_to_show = array();
     foreach ($cats as $c) {
       $hidden = !empty($c['hidden']);
-      if ($hidden) continue;
+      if ($hidden) {
+        error_log('[SMDP Menu App] Skipping hidden category: ' . ($c['name'] ?? 'unknown'));
+        continue;
+      }
       $cid = isset($c['id']) ? $c['id'] : '';
-      if (!$cid) continue;
-      if (empty($counts[$cid])) continue;
+      if (!$cid) {
+        error_log('[SMDP Menu App] Skipping category with no ID: ' . print_r($c, true));
+        continue;
+      }
+      if (empty($counts[$cid])) {
+        error_log('[SMDP Menu App] Skipping category with 0 items: ' . ($c['name'] ?? 'unknown') . ' (ID: ' . $cid . ')');
+        continue;
+      }
       $cats_to_show[] = $c;
     }
+    error_log('[SMDP Menu App] Categories to show: ' . print_r(array_map(function($c) { return $c['name'] . ' (' . $c['id'] . ')'; }, $cats_to_show), true));
 
     // Enqueue hardcoded CSS files (structural CSS is a dependency of menu-app CSS)
     wp_enqueue_style('smdp-structural');
