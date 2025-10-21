@@ -8,20 +8,13 @@
    * Initialize PWA install prompt
    */
   function init() {
-    console.log('[SMDP PWA Install] Initializing...');
-    console.log('[SMDP PWA Install] Script loaded successfully');
-
     // Check if already running as PWA
     if (isPWA()) {
-      console.log('[SMDP PWA Install] Already running as installed PWA - hiding prompt');
       return;
     }
 
-    console.log('[SMDP PWA Install] Not running as PWA, waiting for beforeinstallprompt event...');
-
     // Listen for beforeinstallprompt event
     window.addEventListener('beforeinstallprompt', function(e) {
-      console.log('[SMDP PWA Install] ✅ beforeinstallprompt event received!');
 
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
@@ -35,7 +28,6 @@
 
     // Listen for successful install
     window.addEventListener('appinstalled', function() {
-      console.log('[SMDP PWA] App installed successfully!');
       deferredPrompt = null;
       hideInstallBanner();
       showInstallSuccess();
@@ -77,7 +69,6 @@
     const tableNum = localStorage.getItem('smdp_table_number');
 
     if (!tableNum) {
-      console.log('[SMDP PWA] Table number not set yet, waiting...');
       // Listen for table number being set
       document.addEventListener('smdp-table-set', function() {
         showInstallBanner();
@@ -94,12 +85,10 @@
    */
   function showInstallBanner() {
     if (!deferredPrompt) {
-      console.log('[SMDP PWA] Install prompt not available');
       return;
     }
 
     if (installBanner) {
-      console.log('[SMDP PWA] Install banner already shown');
       return;
     }
 
@@ -208,12 +197,9 @@
     // Check if previously dismissed
     const dismissedUntil = localStorage.getItem('smdp_pwa_install_dismissed');
     if (dismissedUntil && Date.now() < parseInt(dismissedUntil)) {
-      console.log('[SMDP PWA] Install prompt dismissed recently, not showing');
       hideInstallBanner();
       return;
     }
-
-    console.log('[SMDP PWA] Install banner shown');
   }
 
   /**
@@ -221,11 +207,8 @@
    */
   async function handleInstallClick() {
     if (!deferredPrompt) {
-      console.error('[SMDP PWA] No install prompt available');
       return;
     }
-
-    console.log('[SMDP PWA] Install button clicked');
 
     // Show the install prompt
     deferredPrompt.prompt();
@@ -233,15 +216,10 @@
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
 
-    console.log('[SMDP PWA] User choice:', outcome);
-
     if (outcome === 'accepted') {
-      console.log('[SMDP PWA] User accepted the install');
       hideInstallBanner();
-    } else {
-      console.log('[SMDP PWA] User dismissed the install');
-      // Don't auto-hide, let user dismiss manually if they want
     }
+    // Don't auto-hide if dismissed, let user dismiss manually if they want
 
     // We can't use the prompt again
     deferredPrompt = null;
@@ -332,22 +310,23 @@
 
   /**
    * Diagnostic function to check PWA requirements
+   * Only logs when explicitly called from debug interface
    */
   function diagnose() {
-    console.log('=== SMDP PWA Diagnostic ===');
-    console.log('1. HTTPS:', window.location.protocol === 'https:' ? '✅' : '❌');
-    console.log('2. Service Worker Support:', 'serviceWorker' in navigator ? '✅' : '❌');
-    console.log('3. Manifest Link:', document.querySelector('link[rel="manifest"]') ? '✅' : '❌');
-
     const manifestLink = document.querySelector('link[rel="manifest"]');
-    if (manifestLink) {
-      console.log('   Manifest URL:', manifestLink.href);
-    }
-
-    console.log('4. Table Number Set:', localStorage.getItem('smdp_table_number') || 'NOT SET');
-    console.log('5. Running as PWA:', isPWA() ? 'YES' : 'NO');
-    console.log('6. Install Prompt Available:', deferredPrompt ? 'YES' : 'WAITING...');
+    const diagnosticInfo = {
+      https: window.location.protocol === 'https:',
+      serviceWorker: 'serviceWorker' in navigator,
+      manifest: !!document.querySelector('link[rel="manifest"]'),
+      manifestUrl: manifestLink ? manifestLink.href : null,
+      tableNumber: localStorage.getItem('smdp_table_number') || 'NOT SET',
+      isPWA: isPWA(),
+      installPromptAvailable: !!deferredPrompt
+    };
+    console.log('=== SMDP PWA Diagnostic ===');
+    console.log(diagnosticInfo);
     console.log('===========================');
+    return diagnosticInfo;
   }
 
   // Expose diagnostic

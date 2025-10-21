@@ -321,7 +321,7 @@ jQuery(document).ready(function($) {
               // Step 4: Unregister all service workers
               if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                  console.log('[SMDP Debug] Unregistering ' + registrations.length + ' service workers');
+                  //  Unregistering ' + registrations.length + ' service workers');
                   for (var registration of registrations) {
                     registration.unregister();
                   }
@@ -331,13 +331,13 @@ jQuery(document).ready(function($) {
               // Step 5: Clear all cache storage
               if ('caches' in window) {
                 caches.keys().then(function(names) {
-                  console.log('[SMDP Debug] Clearing ' + names.length + ' cache storages');
+                  //  Clearing ' + names.length + ' cache storages');
                   var deletePromises = names.map(function(name) {
                     return caches.delete(name);
                   });
                   
                   Promise.all(deletePromises).then(function() {
-                    console.log('[SMDP Debug] All caches cleared, performing hard reload...');
+                    //  All caches cleared, performing hard reload...');
                     
                     // Step 6: Force reload from server (bypass all caches)
                     setTimeout(function() {
@@ -361,7 +361,7 @@ jQuery(document).ready(function($) {
                 });
               } else {
                 // No cache API, just hard reload
-                console.log('[SMDP Debug] No cache API, performing hard reload...');
+                //  No cache API, performing hard reload...');
                 setTimeout(function() {
                   $('body').removeClass('smdp-debug-pin-modal-open');
                   modal.remove();

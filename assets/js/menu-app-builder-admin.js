@@ -69,7 +69,7 @@
           method: 'POST',
           data: { order: order },
         }).then(function(){ $status.text('Saved.'); })
-        .catch(function(err){ console.error(err); $status.text('Failed.'); });
+        .catch(function(err){ // Error logged $status.text('Failed.'); });
         return;
       }
 
@@ -84,7 +84,7 @@
           body: JSON.stringify({order: order})
         }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
         .then(function(res){ $status.text(res.ok ? 'Saved.' : 'Failed.'); if (!res.ok) console.error(res.j); })
-        .catch(function(err){ console.error(err); $status.text('Failed.'); });
+        .catch(function(err){ // Error logged $status.text('Failed.'); });
       } else {
         $status.text('Failed.');
       }

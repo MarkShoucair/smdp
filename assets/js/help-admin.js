@@ -10,8 +10,6 @@ document.addEventListener('click', function(e){
 
 // Item picker and form functionality
 jQuery(document).ready(function($) {
-    console.log("[SMDP] Admin JS loaded");
-
     // Tab navigation with hash support
     function switchTab(tabId) {
         $(".nav-tab").removeClass("nav-tab-active");
@@ -92,8 +90,6 @@ jQuery(document).ready(function($) {
         var target = $(this).attr("id").replace("-search", "");
         var dropdown = $("#" + target + "-dropdown");
 
-        console.log("[SMDP] Searching:", search, "Target:", target);
-
         if (search.length > 0) {
             dropdown.addClass("active");
             dropdown.find(".smdp-item-option").each(function() {
@@ -114,8 +110,6 @@ jQuery(document).ready(function($) {
         var id = $(this).data("id");
         var name = $(this).data("name");
         var target = $(this).data("target");
-
-        console.log("[SMDP] Item selected - ID:", id, "Name:", name, "Target:", target);
 
         // Build the correct hidden field ID
         var hiddenFieldId;
@@ -142,8 +136,6 @@ jQuery(document).ready(function($) {
             var clearLink = $selected.find(".smdp-clear-selection").prop("outerHTML") || "";
             $selected.html("<strong>Selected:</strong> " + name + " " + clearLink);
         }
-
-        console.log("[SMDP] Hidden field " + hiddenFieldId + " value set to:", $(hiddenFieldId).val());
     });
 
     // Clear selection for all pickers

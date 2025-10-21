@@ -189,6 +189,13 @@ class SMDP_Sync_Manager {
     }
 
     /**
+     * Last API response body for logging
+     *
+     * @var string
+     */
+    private $last_api_response = '';
+
+    /**
      * Fetch catalog from Square API with pagination
      *
      * @param array $headers HTTP headers for API request
@@ -226,6 +233,9 @@ class SMDP_Sync_Manager {
 
             $response_code = wp_remote_retrieve_response_code( $response );
             $body = wp_remote_retrieve_body( $response );
+
+            // Store last response for logging (no extra API call needed)
+            $this->last_api_response = $body;
 
             // Check for HTTP errors
             if ( $response_code !== 200 ) {
@@ -330,15 +340,6 @@ class SMDP_Sync_Manager {
             }
         }
 
-        // First, preserve custom categories (IDs starting with 'cat_')
-        foreach ( $existing_categories as $cat_id => $cat_data ) {
-            if ( strpos( $cat_id, 'cat_' ) === 0 ) {
-                // This is a custom category, preserve it
-                $final_categories[$cat_id] = $cat_data;
-                $by_slug[ $cat_data['slug'] ] = $cat_id;
-            }
-        }
-
         // Now process Square categories
         foreach ( $objects as $obj ) {
             if ( isset( $obj['type'] ) && $obj['type'] === 'CATEGORY' ) {
@@ -405,8 +406,15 @@ class SMDP_Sync_Manager {
                 );
             }
 
-            // Update sold-out override
-            $mapping[ $item_id ]['sold_out_override'] = $is_sold ? 'sold' : 'available';
+            // Only update sold-out status if set to auto-sync (empty string)
+            // Non-empty values ('sold' or 'available') are manual overrides - don't touch them
+            $current_override = $mapping[ $item_id ]['sold_out_override'] ?? '';
+            if ( $current_override === '' ) {
+                // Auto mode: update based on Square status, but keep it as empty to maintain auto mode
+                // The display logic will check Square data when override is empty
+                // So we don't need to set it here - leave it empty for true auto-sync
+            }
+            // If current_override is 'sold' or 'available', it's manual - don't change it
         }
 
         update_option( SMDP_MAPPING_OPTION, $mapping, false );
@@ -415,24 +423,23 @@ class SMDP_Sync_Manager {
     /**
      * Log API response for debugging
      *
-     * @param array $headers HTTP headers used in request
+     * Uses the last stored response from fetch_catalog() instead of making a new API call
+     *
+     * @param array $headers HTTP headers used in request (kept for compatibility)
      */
     private function log_api_response( $headers ) {
-        // Get the last response body (from the final pagination request)
-        $catalog_url = 'https://connect.squareup.com/v2/catalog/list?types=ITEM,IMAGE,CATEGORY,MODIFIER_LIST';
-        $response = wp_remote_get( $catalog_url, array( 'headers' => $headers ) );
-
-        if ( is_wp_error( $response ) ) {
+        // Use stored response instead of making duplicate API call
+        if ( empty( $this->last_api_response ) ) {
             return;
         }
 
-        $body = wp_remote_retrieve_body( $response );
+        $catalog_url = 'https://connect.squareup.com/v2/catalog/list?types=ITEM,IMAGE,CATEGORY,MODIFIER_LIST';
 
         $api_log = get_option( SMDP_API_LOG_OPTION, array() );
         $api_log_entry = array(
             'timestamp'        => current_time( 'mysql' ),
             'catalog_request'  => $catalog_url,
-            'catalog_response' => $body,
+            'catalog_response' => $this->last_api_response,
         );
 
         array_unshift( $api_log, $api_log_entry );
