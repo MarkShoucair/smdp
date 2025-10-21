@@ -247,6 +247,13 @@ class SMDP_Sync_Manager {
 
             $data = json_decode( $body, true );
 
+            // TEMPORARY DEBUG: Log full API response to file for category investigation
+            if ( $page_count === 1 ) { // Only log first page to avoid huge files
+                $debug_file = WP_CONTENT_DIR . '/smdp-api-debug.json';
+                file_put_contents( $debug_file, json_encode( $data, JSON_PRETTY_PRINT ) );
+                error_log( '[SMDP DEBUG] Full API response saved to: ' . $debug_file );
+            }
+
             // Check for JSON decode errors
             if ( json_last_error() !== JSON_ERROR_NONE ) {
                 return new WP_Error(

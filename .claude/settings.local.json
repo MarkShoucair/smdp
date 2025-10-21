@@ -12,7 +12,10 @@
       "Read(//c/Users/mark/OneDrive/Desktop/**)",
       "Bash(find:*)",
       "Bash(git log:*)",
-      "Bash(php -l:*)"
+      "Bash(php -l:*)",
+      "Bash(move \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\LOGGING_AUDIT.md\" \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\documentation\\LOGGING_AUDIT.md\")",
+      "Bash(move \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\PRODUCTION-READY.md\" \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\documentation\\PRODUCTION-READY.md\")",
+      "Bash(move:*)"
     ],
     "deny": [],
     "ask": []

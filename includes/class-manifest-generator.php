@@ -232,9 +232,14 @@ class SMDP_Manifest_Generator {
         // Get icon URLs
         $icons = $this->get_app_icons();
 
+        // Calculate scope - restrict PWA to menu app page only
+        // Scope determines which pages can be part of the PWA
+        // Using page URL as scope ensures only menu-app pages are installable
+        $scope = trailingslashit( parse_url( $page_url, PHP_URL_PATH ) );
+
         // Build manifest
         $manifest = array(
-            'id'               => '/',
+            'id'               => $scope,
             'name'             => $app_name,
             'short_name'       => $short_name,
             'description'      => $custom_description,
@@ -243,7 +248,7 @@ class SMDP_Manifest_Generator {
             'orientation'      => $orientation,
             'background_color' => $background_color,
             'theme_color'      => $theme_color,
-            'scope'            => '/',
+            'scope'            => $scope,
             'icons'            => $icons,
         );
 

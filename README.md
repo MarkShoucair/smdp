@@ -1,6 +1,6 @@
 # Square Menu Display Premium Deluxe Pro
 
-**Version:** 3.0
+**Version:** 3.1
 **Author:** Mark Shoucair (30%) & ChatGPT & Claude (70%)
 **Requires WordPress:** 5.0+
 **Tested up to:** 6.4
@@ -1877,6 +1877,22 @@ A: Menu items and images cached during online use will work offline. New items r
 ---
 
 ## 👨‍💻 Developer Documentation
+
+### 📚 Technical Documentation
+
+> **Note**: All technical documentation was AI-generated (ChatGPT & Claude) for reference and development purposes.
+
+For comprehensive technical documentation including deployment guides, testing procedures, and code analysis, see the **[documentation](documentation/)** folder:
+
+- **[Production Deployment Checklist](documentation/PRODUCTION-READY.md)** - Complete guide for deploying to production
+- **[Content Change Detection System](documentation/CONTENT-CHANGE-DETECTION.md)** - How the intelligent refresh system works
+- **[Testing Guide](documentation/TESTING-GUIDE.md)** - Step-by-step testing procedures
+- **[Sold-Out & Custom Categories Fix](documentation/FIXES-SOLD-OUT-CUSTOM-CATEGORIES.md)** - Technical details of mapping system
+- **[PWA Scope Configuration](documentation/PWA-SCOPE-FIX.md)** - How PWA installation is restricted
+- **[CSS Analysis](documentation/CSS-IMPORTANT-ANALYSIS.md)** - Review of all `!important` declarations
+- **[Logging Audit](documentation/LOGGING_AUDIT.md)** - Console.log removal security audit
+
+See **[documentation/INDEX.md](documentation/INDEX.md)** for the full documentation index.
 
 ### Hooks & Filters
 

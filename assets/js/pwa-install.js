@@ -8,6 +8,11 @@
    * Initialize PWA install prompt
    */
   function init() {
+    // Only run on menu app pages (check for .smdp-menu-app-fe element)
+    if (!document.querySelector('.smdp-menu-app-fe')) {
+      return;
+    }
+
     // Check if already running as PWA
     if (isPWA()) {
       return;
