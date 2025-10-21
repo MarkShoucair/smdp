@@ -21,6 +21,13 @@
       return;
     }
 
+    // Check if table selector is disabled
+    var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true, enableTableBadge: true, enableTableSelector: true };
+    if (!buttonSettings.enableTableSelector) {
+      console.log('Table selector disabled - table setup skipped');
+      return;
+    }
+
     // Check URL parameter first
     var urlTable = getUrlParameter('table');
     if (urlTable) {
@@ -198,7 +205,13 @@
     }
 
     // Get button enable/disable settings (default to enabled if not set)
-    var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true };
+    var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true, enableTableBadge: true };
+
+    // Check if anything is enabled at all - if not, skip everything
+    if (!buttonSettings.enableHelp && !buttonSettings.enableBill && !buttonSettings.enableViewBill && !buttonSettings.enableTableBadge) {
+      console.log('All action buttons and table badge disabled - nothing to show');
+      return;
+    }
 
     // Remove existing buttons
     var existing = document.getElementById('smdp-action-buttons');
@@ -209,13 +222,15 @@
     container.id = 'smdp-action-buttons';
     container.style.cssText = 'position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:1000;align-items:flex-end;';
 
-    // Table badge (on top) - always shown
-    var tableBadge = document.createElement('div');
-    tableBadge.id = 'smdp-table-badge';
-    tableBadge.textContent = 'Table ' + currentTable;
-    container.appendChild(tableBadge);
-
     var buttonsToAnimate = [];
+
+    // Table badge (only if enabled)
+    if (buttonSettings.enableTableBadge) {
+      var tableBadge = document.createElement('div');
+      tableBadge.id = 'smdp-table-badge';
+      tableBadge.textContent = 'Table ' + currentTable;
+      container.appendChild(tableBadge);
+    }
 
     // View Bill button (only if enabled)
     if (buttonSettings.enableViewBill) {

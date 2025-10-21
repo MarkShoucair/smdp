@@ -103,6 +103,8 @@ class SMDP_Menu_App_Builder {
         $sanitized['enable_help_btn'] = isset($input['enable_help_btn']) ? '1' : '0';
         $sanitized['enable_bill_btn'] = isset($input['enable_bill_btn']) ? '1' : '0';
         $sanitized['enable_view_bill_btn'] = isset($input['enable_view_bill_btn']) ? '1' : '0';
+        $sanitized['enable_table_badge'] = isset($input['enable_table_badge']) ? '1' : '0';
+        $sanitized['enable_table_selector'] = isset($input['enable_table_selector']) ? '1' : '0';
 
         // Promo timeout - only update if present
         if (isset($input['promo_timeout'])) {
@@ -1016,6 +1018,8 @@ class SMDP_Menu_App_Builder {
     $enable_help_btn = isset($settings['enable_help_btn']) ? $settings['enable_help_btn'] : '1';
     $enable_bill_btn = isset($settings['enable_bill_btn']) ? $settings['enable_bill_btn'] : '1';
     $enable_view_bill_btn = isset($settings['enable_view_bill_btn']) ? $settings['enable_view_bill_btn'] : '1';
+    $enable_table_badge = isset($settings['enable_table_badge']) ? $settings['enable_table_badge'] : '1';
+    $enable_table_selector = isset($settings['enable_table_selector']) ? $settings['enable_table_selector'] : '1';
     ?>
     <fieldset>
       <label><input type="radio" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[layout]" value="top" <?php checked($layout, 'top'); ?>> Category bar on <strong>top</strong> (default)</label><br>
@@ -1044,7 +1048,19 @@ class SMDP_Menu_App_Builder {
         <strong>Enable "View Bill" button</strong>
       </label>
 
-      <p class="description" style="margin-top:10px;">Uncheck to hide buttons. Table number badge will always show if table is set.</p>
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_table_badge]" value="1" <?php checked($enable_table_badge, '1'); ?>>
+        <strong>Enable Table Number Badge</strong>
+      </label>
+
+      <hr style="margin:15px 0; border:none; border-top:1px solid #e0e0e0;">
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_table_selector]" value="1" <?php checked($enable_table_selector, '1'); ?>>
+        <strong>Enable Table Number Selector</strong>
+      </label>
+
+      <p class="description" style="margin-top:10px;">Uncheck "Table Number Selector" to skip the table selection popup entirely. The other options control which buttons appear after a table is set.</p>
     </fieldset>
     <?php
   }
@@ -1823,11 +1839,15 @@ class SMDP_Menu_App_Builder {
     $enable_help_btn = isset($settings['enable_help_btn']) ? $settings['enable_help_btn'] : '1';
     $enable_bill_btn = isset($settings['enable_bill_btn']) ? $settings['enable_bill_btn'] : '1';
     $enable_view_bill_btn = isset($settings['enable_view_bill_btn']) ? $settings['enable_view_bill_btn'] : '1';
+    $enable_table_badge = isset($settings['enable_table_badge']) ? $settings['enable_table_badge'] : '1';
+    $enable_table_selector = isset($settings['enable_table_selector']) ? $settings['enable_table_selector'] : '1';
 
     wp_localize_script( 'smdp-table-setup', 'smdpButtonSettings', [
       'enableHelp' => $enable_help_btn === '1',
       'enableBill' => $enable_bill_btn === '1',
-      'enableViewBill' => $enable_view_bill_btn === '1'
+      'enableViewBill' => $enable_view_bill_btn === '1',
+      'enableTableBadge' => $enable_table_badge === '1',
+      'enableTableSelector' => $enable_table_selector === '1'
     ]);
 
     // Register and enqueue view-bill
