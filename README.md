@@ -1,6 +1,6 @@
 # Square Menu Display Premium Deluxe Pro
 
-**Version:** 3.0 (Security Hardened)
+**Version:** 3.1 (Enhanced & Optimized)
 **Author:** Mark Shoucair (30%) & Claude AI & ChatGPT (70%)
 **Requires WordPress:** 5.0 or higher
 **Requires PHP:** 7.4 or higher
@@ -46,6 +46,9 @@
 - ✅ **Modifier lists support** with selective display
 - ✅ **Responsive design** works on all devices
 - ✅ **Enterprise-grade security** with encryption and rate limiting
+- ✅ **Item detail modal controls** with granular enable/disable options
+- ✅ **Optimized refresh scripts** for improved performance
+- ✅ **Privacy-focused logging** with sensitive data protection
 
 ### 🤖 AI-Powered Development
 
@@ -83,6 +86,7 @@ The collaboration between human creativity and AI technical capabilities resulte
 - Manual sold-out overrides
 - Category visibility toggle
 - Item-to-category assignment
+- **Item modal controls** - Enable/disable detail popups per display method
 
 #### 3. **Synchronization**
 - Manual sync on-demand
@@ -113,6 +117,7 @@ The collaboration between human creativity and AI technical capabilities resulte
 - View current bill
 - Table number assignment
 - Dual lookup methods (Customer ID or Table Item)
+- **Optimized refresh scripts** for faster menu updates
 
 ---
 
@@ -698,6 +703,12 @@ All menu app settings are managed in **WordPress Admin > Menu App Builder**:
 - **Manual Sync Only:** Disable automatic syncing
 - **Sync Now Button:** Trigger immediate sync
 
+#### Item Detail Modal Controls (NEW in 3.1)
+- **Enable Modal for [square_menu]:** Toggle item detail popups for standard shortcode
+- **Enable Modal for [smdp_menu_app]:** Toggle item detail popups for menu app
+- **Enable Modal for Filtered Views:** Toggle item detail popups for search/filter results
+- Allows creating display-only menus or interactive menus per display type
+
 #### PWA Debug Mode
 - **Enable Debug Mode:** Bypass caching during development
 - **Cache Version:** Force clients to reload assets
@@ -868,6 +879,91 @@ View recent Square API communications.
 
 ---
 
+### 9. Item Detail Modal Controls
+
+**NEW IN VERSION 3.1**: Granular control over item detail modal popups.
+
+#### What Are Item Modals?
+
+Item modals are popup windows that appear when customers click on menu items. They display:
+- Full item description
+- Larger item image
+- Complete pricing information
+- Available modifiers/add-ons
+- Nutritional information (if available)
+
+#### Configuration Options
+
+You can now enable or disable item modals independently for each display method:
+
+**Available Settings:**
+1. **Enable Modal for [square_menu] Shortcode**
+   - Controls modals for standard category-based menu displays
+   - Default: Enabled
+   - When disabled: Clicking items does nothing (display-only mode)
+
+2. **Enable Modal for [smdp_menu_app] Shortcode**
+   - Controls modals for menu app builder displays
+   - Default: Enabled
+   - When disabled: Items are non-clickable in tablet kiosks
+
+3. **Enable Modal for Filtered Views**
+   - Controls modals for search/filter results
+   - Default: Enabled
+   - When disabled: Filtered items are display-only
+
+#### Configuration Location
+
+**Settings Page:**
+1. Go to **Square Menu > Settings**
+2. Scroll to "Item Detail Modal Controls" section
+3. Check/uncheck boxes for each display method
+4. Click **Save Settings**
+
+#### Use Cases
+
+**Disable Modals When:**
+- Using menu for display-only purposes (no ordering)
+- Creating static menu boards
+- Avoiding customer interaction with kiosk tablets
+- Simplifying user experience for elderly customers
+- Preventing accidental taps on mounted tablets
+
+**Enable Modals When:**
+- Customers need detailed item information
+- Displaying complex items with many modifiers
+- Providing nutritional/allergy information
+- Creating interactive browsing experience
+- Allowing customers to explore menu details
+
+#### Example Configurations
+
+**Display-Only Menu Board:**
+```
+☐ Enable modal for [square_menu] shortcode
+☐ Enable modal for [smdp_menu_app] shortcode
+☐ Enable modal for filtered views
+```
+All items are non-clickable. Perfect for wall-mounted displays.
+
+**Interactive Tablet Kiosk:**
+```
+☑ Enable modal for [square_menu] shortcode
+☑ Enable modal for [smdp_menu_app] shortcode
+☑ Enable modal for filtered views
+```
+Full interactivity. Customers can tap items for details.
+
+**Hybrid Approach:**
+```
+☐ Enable modal for [square_menu] shortcode
+☑ Enable modal for [smdp_menu_app] shortcode
+☐ Enable modal for filtered views
+```
+Only menu app allows interaction, standard pages are static.
+
+---
+
 ## 🔔 Webhook Configuration
 
 ### Quick Setup (Recommended)
@@ -1013,6 +1109,16 @@ Example page for Table 5:
 3. Clear browser cache
 4. Enable debug mode
 
+#### Issue: Item Modals Not Opening/Working
+
+**Solutions:**
+1. Check modal controls in **Settings > Item Detail Modal Controls**
+2. Verify the correct setting is enabled for your display method
+3. Clear browser cache and hard refresh (Ctrl+Shift+R)
+4. Check browser console for JavaScript errors
+5. Ensure [item-detail.js](assets/js/item-detail.js) is loading properly
+6. Increment cache version if using PWA
+
 ---
 
 ## 👨‍💻 Developer Documentation
@@ -1092,6 +1198,7 @@ $decrypted = smdp_decrypt($encrypted);
 - ✅ **SQL injection prevention** (Options API)
 - ✅ **Output escaping** (esc_html, esc_attr, esc_url)
 - ✅ **Capability checks** (manage_options)
+- ✅ **Privacy-focused logging** (no PII in logs - NEW in 3.1)
 
 ### Security Best Practices
 
@@ -1164,6 +1271,21 @@ A: Only if you want offline access or app installation.
 **Q: Does PWA work on iOS?**
 A: Yes, iOS 11.3+ supports service workers.
 
+### Modal & Display Questions
+
+**Q: Can I prevent customers from clicking on menu items?**
+A: Yes! Use the Item Detail Modal Controls in Settings. Disable modals for display-only menus.
+
+**Q: Why would I disable item modals?**
+A: Common reasons:
+- Creating static menu boards
+- Preventing accidental taps on wall-mounted tablets
+- Simplifying the experience for elderly customers
+- Display-only purposes when ordering isn't through the website
+
+**Q: Can I have modals on some pages but not others?**
+A: Yes! Use different shortcodes ([square_menu] vs [smdp_menu_app]) and configure each separately in Settings.
+
 ---
 
 ## 📞 Support & Resources
@@ -1172,6 +1294,7 @@ A: Yes, iOS 11.3+ supports service workers.
 - **Plugin README:** You're reading it!
 - **Security Fixes:** See `SECURITY-FIXES-APPLIED.md`
 - **Testing Guide:** See `TESTING-CHECKLIST.md`
+- **Logging Audit:** See `LOGGING_AUDIT.md` (NEW in 3.1)
 
 ### Square Resources
 - [Square Developer Portal](https://developer.squareup.com/)
@@ -1288,6 +1411,39 @@ square-menu-display/
 
 ## 📝 Changelog
 
+### Version 3.1 (Enhanced & Optimized) - 2025-10-20
+
+**✨ New Features:**
+- **Item Modal Controls** - Granular enable/disable options for item detail popups
+  - Separate controls for [square_menu], [smdp_menu_app], and filtered views
+  - Display-only mode for static menu boards
+  - Configurable per display method
+- **Optimized Refresh Scripts** - Enhanced menu refresh performance
+  - Improved table setup script efficiency
+  - Faster menu update propagation
+  - Reduced JavaScript overhead (121 lines optimized)
+
+**🔒 Privacy Enhancements:**
+- **Security Audit - Sensitive Data Logging**
+  - Removed console.log statements exposing PII
+  - Removed error_log statements with customer data
+  - Protected OAuth tokens from logs
+  - Protected webhook signature keys
+  - Created comprehensive `LOGGING_AUDIT.md` documentation
+
+**🐛 Bug Fixes:**
+- Fixed item modal behavior inconsistencies
+- Improved refresh script reliability
+- Enhanced error handling in table setup
+
+**📚 Documentation:**
+- Updated README with version 3.1 features
+- Added Item Modal Controls section
+- Documented refresh optimization improvements
+- Added privacy logging audit documentation
+
+---
+
 ### Version 3.0 (Security Hardened) - 2025-01-17
 
 **🔒 Security Enhancements:**
@@ -1350,6 +1506,6 @@ You should have received a copy of the GNU General Public License along with thi
 
 ---
 
-**Last Updated:** January 17, 2025
+**Last Updated:** October 20, 2025
 
 **END OF README**
