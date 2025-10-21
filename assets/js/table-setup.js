@@ -197,71 +197,88 @@
       return;
     }
 
+    // Get button enable/disable settings (default to enabled if not set)
+    var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true };
+
     // Remove existing buttons
     var existing = document.getElementById('smdp-action-buttons');
     if (existing) existing.remove();
-    
+
     // Create button container - now vertical stack with right alignment
     var container = document.createElement('div');
     container.id = 'smdp-action-buttons';
     container.style.cssText = 'position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:1000;align-items:flex-end;';
-    
-    // Table badge (on top) - same size as View Bill button
+
+    // Table badge (on top) - always shown
     var tableBadge = document.createElement('div');
     tableBadge.id = 'smdp-table-badge';
     tableBadge.textContent = 'Table ' + currentTable;
-    // Styles moved to smdp-structural.css
+    container.appendChild(tableBadge);
 
-    // View Bill button (directly under table badge)
-    var viewBillBtn = document.createElement('button');
-    viewBillBtn.className = 'smdp-view-bill-btn';
-    viewBillBtn.setAttribute('data-table', currentTable);
-    viewBillBtn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="16" y1="13" x2="8" y2="13"></line>
-        <line x1="16" y1="17" x2="8" y2="17"></line>
-        <polyline points="10 9 9 9 8 9"></polyline>
-      </svg>
-      <span>View Bill</span>
-    `;
-    // Styles moved to smdp-structural.css
+    var buttonsToAnimate = [];
 
-    // Bottom row container for Help & Bill buttons
-    var buttonRow = document.createElement('div');
-    buttonRow.className = 'smdp-action-buttons';
-    // Styles moved to smdp-structural.css
+    // View Bill button (only if enabled)
+    if (buttonSettings.enableViewBill) {
+      var viewBillBtn = document.createElement('button');
+      viewBillBtn.className = 'smdp-view-bill-btn';
+      viewBillBtn.setAttribute('data-table', currentTable);
+      viewBillBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>View Bill</span>
+      `;
+      container.appendChild(viewBillBtn);
+      buttonsToAnimate.push(viewBillBtn);
+    }
 
-    // Help button with icon
-    var helpBtn = document.createElement('button');
-    helpBtn.className = 'smdp-help-btn';
-    helpBtn.setAttribute('data-table', currentTable);
-    helpBtn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-      </svg>
-      <span>Request Help</span>
-    `;
-    // Styles moved to smdp-structural.css
+    // Bottom row container for Help & Bill buttons (only if at least one is enabled)
+    if (buttonSettings.enableHelp || buttonSettings.enableBill) {
+      var buttonRow = document.createElement('div');
+      buttonRow.className = 'smdp-action-buttons';
 
-    // Bill button with icon
-    var billBtn = document.createElement('button');
-    billBtn.className = 'smdp-bill-btn';
-    billBtn.setAttribute('data-table', currentTable);
-    billBtn.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;">
-        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-        <line x1="2" y1="10" x2="22" y2="10"></line>
-      </svg>
-      <span>Request Bill</span>
-    `;
-    // Styles moved to smdp-structural.css
-    
-    // Add click animations
-    [helpBtn, billBtn, viewBillBtn].forEach(function(btn) {
+      // Help button (only if enabled)
+      if (buttonSettings.enableHelp) {
+        var helpBtn = document.createElement('button');
+        helpBtn.className = 'smdp-help-btn';
+        helpBtn.setAttribute('data-table', currentTable);
+        helpBtn.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>Request Help</span>
+        `;
+        buttonRow.appendChild(helpBtn);
+        buttonsToAnimate.push(helpBtn);
+      }
+
+      // Bill button (only if enabled)
+      if (buttonSettings.enableBill) {
+        var billBtn = document.createElement('button');
+        billBtn.className = 'smdp-bill-btn';
+        billBtn.setAttribute('data-table', currentTable);
+        billBtn.innerHTML = `
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:8px;">
+            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+          <span>Request Bill</span>
+        `;
+        buttonRow.appendChild(billBtn);
+        buttonsToAnimate.push(billBtn);
+      }
+
+      container.appendChild(buttonRow);
+    }
+
+    // Add click animations to all buttons
+    buttonsToAnimate.forEach(function(btn) {
       btn.addEventListener('click', function() {
         this.style.transform = 'scale(0.95)';
         this.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
@@ -271,16 +288,16 @@
         }, 150);
       });
     });
-    
+
     // Add hover effects (for non-touch devices)
-    [helpBtn, billBtn, viewBillBtn].forEach(function(btn) {
+    buttonsToAnimate.forEach(function(btn) {
       btn.addEventListener('mouseenter', function() {
         if (!('ontouchstart' in window)) {
           this.style.transform = 'translateY(-2px)';
           this.style.boxShadow = '0 6px 15px rgba(0,0,0,0.4)';
         }
       });
-      
+
       btn.addEventListener('mouseleave', function() {
         if (!('ontouchstart' in window)) {
           this.style.transform = 'translateY(0)';
@@ -288,18 +305,10 @@
         }
       });
     });
-    
-    // Assemble the layout: Table Badge -> View Bill -> (Help + Request Bill)
-    buttonRow.appendChild(helpBtn);
-    buttonRow.appendChild(billBtn);
-    
-    container.appendChild(tableBadge);
-    container.appendChild(viewBillBtn);
-    container.appendChild(buttonRow);
-    
+
     document.body.appendChild(container);
-    
-    console.log('Help & Bill buttons initialized for table:', currentTable);
+
+    console.log('Action buttons initialized for table:', currentTable, 'Settings:', buttonSettings);
   }
   
   // Setup gesture listeners

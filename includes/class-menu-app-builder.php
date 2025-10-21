@@ -97,7 +97,13 @@ class SMDP_Menu_App_Builder {
         if (isset($input['layout'])) {
             $sanitized['layout'] = sanitize_text_field($input['layout']);
         }
-        
+
+        // Action button enable/disable settings
+        // Note: Checkboxes only send value when checked, so we need to handle unchecked state
+        $sanitized['enable_help_btn'] = isset($input['enable_help_btn']) ? '1' : '0';
+        $sanitized['enable_bill_btn'] = isset($input['enable_bill_btn']) ? '1' : '0';
+        $sanitized['enable_view_bill_btn'] = isset($input['enable_view_bill_btn']) ? '1' : '0';
+
         // Promo timeout - only update if present
         if (isset($input['promo_timeout'])) {
             $sanitized['promo_timeout'] = intval($input['promo_timeout']);
@@ -1005,11 +1011,40 @@ class SMDP_Menu_App_Builder {
     $settings = get_option(self::OPT_SETTINGS, array());
     if (!is_array($settings)) $settings = array();
     $layout = isset($settings['layout']) ? $settings['layout'] : 'top';
+
+    // Get button enable/disable settings (default to enabled)
+    $enable_help_btn = isset($settings['enable_help_btn']) ? $settings['enable_help_btn'] : '1';
+    $enable_bill_btn = isset($settings['enable_bill_btn']) ? $settings['enable_bill_btn'] : '1';
+    $enable_view_bill_btn = isset($settings['enable_view_bill_btn']) ? $settings['enable_view_bill_btn'] : '1';
     ?>
     <fieldset>
       <label><input type="radio" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[layout]" value="top" <?php checked($layout, 'top'); ?>> Category bar on <strong>top</strong> (default)</label><br>
       <label><input type="radio" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[layout]" value="left" <?php checked($layout, 'left'); ?>> Category rail on <strong>left</strong> (tablet landscape)</label>
       <p class="description">This only changes the placement of category tiles. Cards remain exactly the same as your existing menu output.</p>
+    </fieldset>
+
+    <hr style="margin:25px 0; border:none; border-top:1px solid #ddd;">
+
+    <fieldset>
+      <legend style="font-weight:600; font-size:14px; margin-bottom:10px;">Action Buttons</legend>
+      <p class="description" style="margin-bottom:15px;">Control which action buttons appear in the bottom-right corner of the menu app.</p>
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_help_btn]" value="1" <?php checked($enable_help_btn, '1'); ?>>
+        <strong>Enable "Request Help" button</strong>
+      </label>
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_bill_btn]" value="1" <?php checked($enable_bill_btn, '1'); ?>>
+        <strong>Enable "Request Bill" button</strong>
+      </label>
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_view_bill_btn]" value="1" <?php checked($enable_view_bill_btn, '1'); ?>>
+        <strong>Enable "View Bill" button</strong>
+      </label>
+
+      <p class="description" style="margin-top:10px;">Uncheck to hide buttons. Table number badge will always show if table is set.</p>
     </fieldset>
     <?php
   }
@@ -1782,6 +1817,18 @@ class SMDP_Menu_App_Builder {
       wp_register_script( 'smdp-table-setup', $base_url . '/assets/js/table-setup.js', [], null, true );
     }
     wp_enqueue_script( 'smdp-table-setup' );
+
+    // Pass button enable/disable settings to table-setup script
+    $settings = get_option(self::OPT_SETTINGS, array());
+    $enable_help_btn = isset($settings['enable_help_btn']) ? $settings['enable_help_btn'] : '1';
+    $enable_bill_btn = isset($settings['enable_bill_btn']) ? $settings['enable_bill_btn'] : '1';
+    $enable_view_bill_btn = isset($settings['enable_view_bill_btn']) ? $settings['enable_view_bill_btn'] : '1';
+
+    wp_localize_script( 'smdp-table-setup', 'smdpButtonSettings', [
+      'enableHelp' => $enable_help_btn === '1',
+      'enableBill' => $enable_bill_btn === '1',
+      'enableViewBill' => $enable_view_bill_btn === '1'
+    ]);
 
     // Register and enqueue view-bill
     if ( ! wp_script_is( 'smdp-view-bill', 'registered' ) ) {
