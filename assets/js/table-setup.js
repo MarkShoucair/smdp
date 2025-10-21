@@ -7,6 +7,20 @@
   
   // Initialize on page load
   function init() {
+    // Only initialize if menu app is present and NOT a category filter
+    var menuApp = document.querySelector('.smdp-menu-app-fe');
+    if (!menuApp) {
+      console.log('Menu app not found - table setup skipped');
+      return;
+    }
+
+    // Check if this is a category filter page (should not show table selector)
+    var isCategoryFilter = menuApp.getAttribute('data-category-filter') === '1';
+    if (isCategoryFilter) {
+      console.log('Category filter detected - table setup skipped');
+      return;
+    }
+
     // Check URL parameter first
     var urlTable = getUrlParameter('table');
     if (urlTable) {
@@ -17,7 +31,7 @@
       // Check localStorage
       currentTable = localStorage.getItem('smdp_table_number');
     }
-    
+
     // If no table set, show setup modal
     if (!currentTable) {
       showSetupModal();
@@ -25,7 +39,7 @@
       updateTableDisplay();
       initializeButtons();
     }
-    
+
     // Setup gesture listeners
     setupGestures();
   }
@@ -175,7 +189,14 @@
   // Initialize Help & Bill buttons with table badge - NEW LAYOUT
   function initializeButtons() {
     if (!currentTable) return;
-    
+
+    // Only show buttons if menu app is present on the page (not in admin/editor)
+    var menuApp = document.querySelector('.smdp-menu-app-fe');
+    if (!menuApp) {
+      console.log('Menu app not found on page - buttons hidden');
+      return;
+    }
+
     // Remove existing buttons
     var existing = document.getElementById('smdp-action-buttons');
     if (existing) existing.remove();

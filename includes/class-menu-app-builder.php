@@ -13,6 +13,7 @@ class SMDP_Menu_App_Builder {
     add_action('admin_init', array(__CLASS__, 'register_settings'));
     add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_admin'));
     add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend'));
+    add_action('wp_head', array(__CLASS__, 'inject_custom_styles'));
     add_action('admin_post_smdp_save_pwa_settings', array(__CLASS__, 'handle_pwa_settings_save'));
     add_action('admin_init', array(__CLASS__, 'handle_flush_rewrite_rules'));
     add_shortcode('smdp_menu_app', array(__CLASS__, 'shortcode_render'));
@@ -82,34 +83,65 @@ class SMDP_Menu_App_Builder {
     // Sanitize callback for settings (including promo images)
     $sanitize_settings = function($input) {
         if (!is_array($input)) return array();
+
+        // IMPORTANT: Merge with existing settings to preserve values from other forms
+        $existing = get_option(self::OPT_SETTINGS, array());
+        if (!is_array($existing)) {
+            $existing = array();
+        }
+
+        // Start with existing settings, then overlay new values
+        $sanitized = $existing;
+
+        // Layout - only update if present in input
+        if (isset($input['layout'])) {
+            $sanitized['layout'] = sanitize_text_field($input['layout']);
+        }
         
-        $sanitized = array();
-        
-        // Layout
-        $sanitized['layout'] = isset($input['layout']) ? sanitize_text_field($input['layout']) : 'top';
-        
-        // Promo timeout
-        $sanitized['promo_timeout'] = isset($input['promo_timeout']) ? intval($input['promo_timeout']) : 600;
+        // Promo timeout - only update if present
+        if (isset($input['promo_timeout'])) {
+            $sanitized['promo_timeout'] = intval($input['promo_timeout']);
+        }
 
-        // PWA theme colors
-        $sanitized['theme_color'] = ! empty( $input['theme_color'] ) ? sanitize_hex_color( $input['theme_color'] ) : '#5C7BA6';
-        $sanitized['background_color'] = ! empty( $input['background_color'] ) ? sanitize_hex_color( $input['background_color'] ) : '#ffffff';
+        // PWA theme colors - only update if present
+        if (isset($input['theme_color'])) {
+            $sanitized['theme_color'] = ! empty( $input['theme_color'] ) ? sanitize_hex_color( $input['theme_color'] ) : '#5C7BA6';
+        }
+        if (isset($input['background_color'])) {
+            $sanitized['background_color'] = ! empty( $input['background_color'] ) ? sanitize_hex_color( $input['background_color'] ) : '#ffffff';
+        }
 
-        // PWA icons
-        $sanitized['icon_192'] = ! empty( $input['icon_192'] ) ? esc_url_raw( $input['icon_192'] ) : '';
-        $sanitized['icon_512'] = ! empty( $input['icon_512'] ) ? esc_url_raw( $input['icon_512'] ) : '';
-        $sanitized['apple_touch_icon'] = ! empty( $input['apple_touch_icon'] ) ? esc_url_raw( $input['apple_touch_icon'] ) : '';
+        // PWA icons - only update if present and not empty (preserve existing if empty)
+        if (isset($input['icon_192']) && ! empty( $input['icon_192'] )) {
+            $sanitized['icon_192'] = esc_url_raw( $input['icon_192'] );
+        }
+        if (isset($input['icon_512']) && ! empty( $input['icon_512'] )) {
+            $sanitized['icon_512'] = esc_url_raw( $input['icon_512'] );
+        }
+        if (isset($input['apple_touch_icon']) && ! empty( $input['apple_touch_icon'] )) {
+            $sanitized['apple_touch_icon'] = esc_url_raw( $input['apple_touch_icon'] );
+        }
 
-        // PWA identity
-        $sanitized['app_name'] = ! empty( $input['app_name'] ) ? sanitize_text_field( $input['app_name'] ) : '';
-        $sanitized['app_short_name'] = ! empty( $input['app_short_name'] ) ? sanitize_text_field( $input['app_short_name'] ) : '';
-        $sanitized['app_description'] = ! empty( $input['app_description'] ) ? sanitize_text_field( $input['app_description'] ) : '';
+        // PWA identity - only update if present (can be empty strings)
+        if (isset($input['app_name'])) {
+            $sanitized['app_name'] = sanitize_text_field( $input['app_name'] );
+        }
+        if (isset($input['app_short_name'])) {
+            $sanitized['app_short_name'] = sanitize_text_field( $input['app_short_name'] );
+        }
+        if (isset($input['app_description'])) {
+            $sanitized['app_description'] = sanitize_text_field( $input['app_description'] );
+        }
 
-        // PWA display options
-        $sanitized['display_mode'] = ! empty( $input['display_mode'] ) ? sanitize_text_field( $input['display_mode'] ) : 'standalone';
-        $sanitized['orientation'] = ! empty( $input['orientation'] ) ? sanitize_text_field( $input['orientation'] ) : 'any';
+        // PWA display options - only update if present
+        if (isset($input['display_mode'])) {
+            $sanitized['display_mode'] = sanitize_text_field( $input['display_mode'] );
+        }
+        if (isset($input['orientation'])) {
+            $sanitized['orientation'] = sanitize_text_field( $input['orientation'] );
+        }
 
-        // Promo image (single image only) - decode from JSON if needed
+        // Promo image (single image only) - only update if present
         if (isset($input['promo_images'])) {
             if (is_string($input['promo_images'])) {
                 $decoded = json_decode(stripslashes($input['promo_images']), true);
@@ -149,7 +181,6 @@ class SMDP_Menu_App_Builder {
   }
 
   public static function enqueue_admin($hook) {
-    error_log('[SMDP] enqueue_admin called with hook: ' . $hook);
     if ($hook !== 'square-menu_page_smdp_menu_app_builder') return;
 
     // Enqueue media uploader for promo image
@@ -159,16 +190,11 @@ class SMDP_Menu_App_Builder {
     $base_url = plugins_url('', $plugin_main);
     $ver = '1.8.3';
 
-    error_log('[SMDP] Enqueuing scripts. Base URL: ' . $base_url);
-    error_log('[SMDP] Admin JS URL: ' . $base_url . '/assets/js/menu-app-builder-admin.js');
-
     wp_enqueue_style('wp-color-picker');
     wp_enqueue_script('wp-color-picker');
     wp_enqueue_style('smdp-menu-app-admin', $base_url . '/assets/css/menu-app-admin.css', array(), $ver);
     wp_enqueue_script('jquery-ui-sortable');
     wp_enqueue_script('smdp-menu-app-admin', $base_url . '/assets/js/menu-app-builder-admin.js', array('jquery','jquery-ui-sortable','wp-color-picker'), $ver, true);
-
-    error_log('[SMDP] Scripts enqueued');
 
     $catalog = get_option(self::OPT_CATALOG, array());
     if (is_string($catalog)) { $catalog = json_decode($catalog, true); if (!is_array($catalog)) $catalog = array(); }
@@ -227,6 +253,76 @@ class SMDP_Menu_App_Builder {
     if (!empty($sanitized_css)) {
       echo "\n<style id=\"smdp-user-custom-css\">\n/* User Custom CSS */\n" . $sanitized_css . "\n</style>\n";
     }
+  }
+
+  /**
+   * Inject custom category button styles into wp_head
+   * This outputs dynamic CSS based on the button styles saved in the admin
+   */
+  public static function inject_custom_styles() {
+    // Only output if on a page that might have the menu app
+    if (is_admin()) {
+      return;
+    }
+
+    // Get saved button styles
+    $styles = get_option(self::OPT_STYLES, array());
+
+    // If no custom styles are saved, don't output anything
+    if (empty($styles)) {
+      return;
+    }
+
+    // Default values
+    $defaults = array(
+      'bg_color' => '#5C7BA6',
+      'text_color' => '#ffffff',
+      'border_color' => '#5C7BA6',
+      'active_bg_color' => '#4A6288',
+      'active_text_color' => '#ffffff',
+      'active_border_color' => '#4A6288',
+      'font_size' => 18,
+      'padding_vertical' => 12,
+      'padding_horizontal' => 20,
+      'border_radius' => 8,
+      'border_width' => 1,
+      'font_weight' => '600',
+      'font_family' => '',
+    );
+
+    $styles = array_merge($defaults, $styles);
+
+    // Generate CSS
+    ?>
+<style id="smdp-custom-button-styles">
+/* Custom Category Button Styles from Menu App Builder */
+.smdp-cat-btn {
+  background-color: <?php echo esc_attr($styles['bg_color']); ?> !important;
+  color: <?php echo esc_attr($styles['text_color']); ?> !important;
+  border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?> !important;
+  font-size: <?php echo esc_attr($styles['font_size']); ?>px !important;
+  padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px !important;
+  border-radius: <?php echo esc_attr($styles['border_radius']); ?>px !important;
+  font-weight: <?php echo esc_attr($styles['font_weight']); ?> !important;
+  <?php if (!empty($styles['font_family'])): ?>
+  font-family: <?php echo esc_attr($styles['font_family']); ?> !important;
+  <?php endif; ?>
+}
+
+.smdp-cat-btn.active,
+.smdp-cat-btn:hover {
+  background-color: <?php echo esc_attr($styles['active_bg_color']); ?> !important;
+  color: <?php echo esc_attr($styles['active_text_color']); ?> !important;
+  border-color: <?php echo esc_attr($styles['active_border_color']); ?> !important;
+}
+
+/* Left layout - keep custom styles but maintain layout-specific sizing */
+.smdp-menu-app-fe.layout-left .smdp-cat-btn {
+  font-size: <?php echo max(14, esc_attr($styles['font_size']) - 7); ?>px !important;
+  padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo max(20, esc_attr($styles['padding_horizontal']) - 8); ?>px !important;
+}
+</style>
+<?php
   }
 
   public static function render_admin_page() {
@@ -566,78 +662,6 @@ class SMDP_Menu_App_Builder {
 
       <!-- Items and Categories tabs moved to Menu Management → Menu Editor -->
 
-      <!-- Tab: PWA & Debug -->
-      <div id="tab-pwa" class="smdp-tab">
-        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-        <h2 style="margin-top:0;">PWA & Debug Settings</h2>
-        <p>Control Progressive Web App features, caching behavior, and debug tools for the menu app.</p>
-
-        <?php
-        $debug_mode = get_option( 'smdp_pwa_debug_mode', 0 );
-        $cache_version = get_option( 'smdp_cache_version', 1 );
-        $settings = get_option(self::OPT_SETTINGS, array());
-        if (!is_array($settings)) $settings = array();
-
-        $theme_color = isset($settings['theme_color']) ? $settings['theme_color'] : '#5C7BA6';
-        $background_color = isset($settings['background_color']) ? $settings['background_color'] : '#ffffff';
-        $icon_192 = isset($settings['icon_192']) ? $settings['icon_192'] : '';
-        $icon_512 = isset($settings['icon_512']) ? $settings['icon_512'] : '';
-        $apple_touch_icon = isset($settings['apple_touch_icon']) ? $settings['apple_touch_icon'] : '';
-        $app_name = isset($settings['app_name']) ? $settings['app_name'] : '';
-        $app_short_name = isset($settings['app_short_name']) ? $settings['app_short_name'] : '';
-        $app_description = isset($settings['app_description']) ? $settings['app_description'] : '';
-        $display_mode = isset($settings['display_mode']) ? $settings['display_mode'] : 'standalone';
-        $orientation = isset($settings['orientation']) ? $settings['orientation'] : 'any';
-        ?>
-
-        <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
-          <input type="hidden" name="action" value="smdp_save_pwa_settings">
-          <?php wp_nonce_field( 'smdp_pwa_settings_save', 'smdp_pwa_nonce' ); ?>
-
-          <h3>🐛 Debug Mode</h3>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
-            <div>
-              <label style="display:block; margin-bottom:8px;">
-                <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
-                <strong>Enable Debug Mode</strong>
-              </label>
-              <p class="description">Bypass caching and show debug panel on tablets.</p>
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:8px;"><strong>Cache Version</strong></label>
-              <input type="number" name="smdp_cache_version" id="smdp_cache_version_pwa" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:80px;">
-              <button type="button" class="button" id="smdp-increment-version-pwa">Increment</button>
-              <p class="description">Current: v<?php echo $cache_version; ?>. Increment to force tablet reload.</p>
-              <script>
-                jQuery(document).ready(function($){
-                  $('#smdp-increment-version-pwa').click(function(){
-                    var $input = $('#smdp_cache_version_pwa');
-                    $input.val(parseInt($input.val()) + 1);
-                  });
-                });
-              </script>
-            </div>
-          </div>
-
-          <h3>🎨 PWA Theme Colors</h3>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
-            <div>
-              <label style="display:block; margin-bottom:8px;"><strong>Theme Color</strong></label>
-              <input type="text" name="smdp_pwa_theme_color" value="<?php echo esc_attr($theme_color); ?>" class="smdp-pwa-color-picker" />
-              <p class="description">Browser address bar & splash screen color</p>
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:8px;"><strong>Background Color</strong></label>
-              <input type="text" name="smdp_pwa_background_color" value="<?php echo esc_attr($background_color); ?>" class="smdp-pwa-color-picker" />
-              <p class="description">Splash screen background when launching</p>
-            </div>
-          </div>
-
-          <?php submit_button( 'Save PWA & Debug Settings', 'primary', 'smdp_save_pwa' ); ?>
-        </form>
-        </div>
-      </div>
-
       <!-- Tab: Advanced -->
       <div id="tab-advanced" class="smdp-tab">
         <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
@@ -666,23 +690,23 @@ class SMDP_Menu_App_Builder {
 
     </div>
     <style>
-      .smdp-tab { display:none; }
-      .smdp-tab.active { display:block; }
+      .smdp-tab { display:none !important; }
+      .smdp-tab.active { display:block !important; }
       .nav-tab-wrapper { margin-top: 12px; }
 
       /* Configuration subtabs */
       .smdp-config-subtab { cursor: pointer; transition: all 0.2s; }
       .smdp-config-subtab:hover { color: #2271b1; }
       .smdp-config-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
-      .smdp-config-subtab-content { display: none; }
-      .smdp-config-subtab-content.active { display: block; }
+      .smdp-config-subtab-content { display: none !important; }
+      .smdp-config-subtab-content.active { display: block !important; }
 
       /* Style subtabs */
       .smdp-style-subtab { cursor: pointer; transition: all 0.2s; }
       .smdp-style-subtab:hover { color: #2271b1; }
       .smdp-style-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
-      .smdp-style-subtab-content { display: none; }
-      .smdp-style-subtab-content.active { display: block; }
+      .smdp-style-subtab-content { display: none !important; }
+      .smdp-style-subtab-content.active { display: block !important; }
     </style>
     <script>
       (function(){
@@ -708,40 +732,62 @@ class SMDP_Menu_App_Builder {
       })();
     </script>
     <script>
-    // Enhanced tab switching with debugging
+    // Enhanced tab switching with session state persistence
     jQuery(document).ready(function($){
         console.log('Menu App Builder: Tabs initializing');
-        
+
         var $tabs = $('.nav-tab-wrapper .nav-tab');
         var $panes = $('.smdp-tab');
-        
+
         console.log('Found tabs:', $tabs.length, 'Found panes:', $panes.length);
-        
+
         $tabs.on('click', function(e){
             e.preventDefault();
-            console.log('Tab clicked:', $(this).attr('href'));
-            
+            var target = $(this).attr('href');
+            console.log('Tab clicked:', target);
+
             // Remove all active states
             $tabs.removeClass('nav-tab-active');
             $panes.removeClass('active');
-            
+
             // Add active to clicked tab
             $(this).addClass('nav-tab-active');
-            
+
             // Show corresponding pane
-            var target = $(this).attr('href');
             var $targetPane = $(target);
-            
+
             if ($targetPane.length) {
                 $targetPane.addClass('active');
                 console.log('Activated pane:', target);
+                // Save to session storage
+                sessionStorage.setItem('smdp_active_tab', target);
             } else {
                 console.error('Pane not found:', target);
             }
         });
-        
-        // Ensure first tab is active on load
-        if (!$tabs.filter('.nav-tab-active').length) {
+
+        // Check if we just saved settings (WordPress adds settings-updated parameter)
+        var urlParams = new URLSearchParams(window.location.search);
+        var settingsUpdated = urlParams.get('settings-updated');
+
+        // Restore tab state from session or use first tab
+        var savedTab = sessionStorage.getItem('smdp_active_tab');
+
+        // First, remove all active states to prevent multiple tabs showing
+        $tabs.removeClass('nav-tab-active');
+        $panes.removeClass('active');
+
+        // If settings were just updated, stay on the Styles tab
+        if (settingsUpdated === 'true' && savedTab === '#tab-styles') {
+            $tabs.filter('[href="#tab-styles"]').addClass('nav-tab-active');
+            $('#tab-styles').addClass('active');
+            console.log('Settings saved, staying on Styles tab');
+        } else if (savedTab && $(savedTab).length) {
+            $tabs.filter('[href="' + savedTab + '"]').addClass('nav-tab-active');
+            $(savedTab).addClass('active');
+            console.log('Restored tab:', savedTab);
+        } else {
+            // Default to first tab if no saved state
             $tabs.first().addClass('nav-tab-active');
             $panes.first().addClass('active');
         }
@@ -752,7 +798,8 @@ class SMDP_Menu_App_Builder {
 
         $configSubtabs.on('click', function(e){
             e.preventDefault();
-            console.log('Config subtab clicked:', $(this).attr('href'));
+            var target = $(this).attr('href');
+            console.log('Config subtab clicked:', target);
 
             // Remove all active states
             $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
@@ -762,11 +809,23 @@ class SMDP_Menu_App_Builder {
             $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
 
             // Show corresponding pane
-            var target = $(this).attr('href');
             $(target).addClass('active').show();
+
+            // Save to session storage
+            sessionStorage.setItem('smdp_active_config_subtab', target);
 
             console.log('Activated config subtab:', target);
         });
+
+        // Restore config subtab state
+        var savedConfigSubtab = sessionStorage.getItem('smdp_active_config_subtab');
+        if (savedConfigSubtab && $(savedConfigSubtab).length) {
+            $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $configSubtabPanes.removeClass('active').hide();
+            $configSubtabs.filter('[href="' + savedConfigSubtab + '"]').addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+            $(savedConfigSubtab).addClass('active').show();
+            console.log('Restored config subtab:', savedConfigSubtab);
+        }
 
         // Style subtabs switching
         var $styleSubtabs = $('.smdp-style-subtab');
@@ -774,7 +833,8 @@ class SMDP_Menu_App_Builder {
 
         $styleSubtabs.on('click', function(e){
             e.preventDefault();
-            console.log('Style subtab clicked:', $(this).attr('href'));
+            var target = $(this).attr('href');
+            console.log('Style subtab clicked:', target);
 
             // Remove all active states
             $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
@@ -784,10 +844,46 @@ class SMDP_Menu_App_Builder {
             $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
 
             // Show corresponding pane
-            var target = $(this).attr('href');
             $(target).addClass('active').show();
 
+            // Save to session storage
+            sessionStorage.setItem('smdp_active_style_subtab', target);
+
             console.log('Activated style subtab:', target);
+        });
+
+        // Restore style subtab state
+        var savedStyleSubtab = sessionStorage.getItem('smdp_active_style_subtab');
+        if (savedStyleSubtab && $(savedStyleSubtab).length) {
+            $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $styleSubtabPanes.removeClass('active').hide();
+            $styleSubtabs.filter('[href="' + savedStyleSubtab + '"]').addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+            $(savedStyleSubtab).addClass('active').show();
+            console.log('Restored style subtab:', savedStyleSubtab);
+        }
+
+        // Save current tab/subtab state before any form submission
+        $('form').on('submit', function() {
+            // Save which main tab is currently active
+            var activeTab = $tabs.filter('.nav-tab-active').attr('href');
+            if (activeTab) {
+                sessionStorage.setItem('smdp_active_tab', activeTab);
+                console.log('Saving tab state before submit:', activeTab);
+            }
+
+            // Save which config subtab is currently active (if any)
+            var activeConfigSubtab = $configSubtabs.filter('.active').attr('href');
+            if (activeConfigSubtab) {
+                sessionStorage.setItem('smdp_active_config_subtab', activeConfigSubtab);
+                console.log('Saving config subtab state before submit:', activeConfigSubtab);
+            }
+
+            // Save which style subtab is currently active (if any)
+            var activeStyleSubtab = $styleSubtabs.filter('.active').attr('href');
+            if (activeStyleSubtab) {
+                sessionStorage.setItem('smdp_active_style_subtab', activeStyleSubtab);
+                console.log('Saving style subtab state before submit:', activeStyleSubtab);
+            }
         });
     });
     </script>
@@ -1056,63 +1152,11 @@ class SMDP_Menu_App_Builder {
           updatePreview();
         }
       });
-      
+
       // Log form submission
       $('form').on('submit', function() {
         var hiddenVal = $('#smdp-promo-images').val();
         console.log('Form submitting with hidden field value:', hiddenVal);
-      });
-
-      // PWA Icon Upload Handlers
-      $('.smdp-upload-icon').on('click', function(e) {
-        e.preventDefault();
-        var $button = $(this);
-        var targetId = $button.data('target');
-        var previewId = $button.data('preview');
-
-        // Check if we already have an uploader for this specific icon
-        if (iconUploaders[targetId]) {
-          iconUploaders[targetId].open();
-          return;
-        }
-
-        // Create a new uploader instance for this specific icon
-        iconUploaders[targetId] = wp.media({
-          title: 'Select PWA Icon',
-          button: { text: 'Use this icon' },
-          multiple: false,
-          library: { type: 'image' }
-        });
-
-        iconUploaders[targetId].on('select', function() {
-          var attachment = iconUploaders[targetId].state().get('selection').first().toJSON();
-          var url = attachment.url;
-
-          // Update hidden field
-          $('#' + targetId).val(url);
-
-          // Update preview
-          $('#' + previewId).html('<img src="' + url + '" style="max-width:192px; border:1px solid #ddd; padding:4px;">');
-
-          // Show remove button
-          $button.next('.smdp-clear-icon').show();
-        });
-
-        iconUploaders[targetId].open();
-      });
-
-      // PWA Icon Clear Handlers
-      $('.smdp-clear-icon').on('click', function(e) {
-        e.preventDefault();
-        var $button = $(this);
-        var targetId = $button.data('target');
-        var previewId = $button.data('preview');
-
-        if (confirm('Remove this icon?')) {
-          $('#' + targetId).val('');
-          $('#' + previewId).html('');
-          $button.hide();
-        }
       });
     });
     </script>
@@ -1142,10 +1186,12 @@ class SMDP_Menu_App_Builder {
     );    
     $styles = array_merge($defaults, $styles);
     ?>
-    <div class="smdp-style-controls" style="max-width: 800px;">
-      
-      <h3>Default Button Style</h3>
-      <table class="form-table">
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 15px; align-items: start;">
+      <!-- Left Column: Form Controls -->
+      <div class="smdp-style-controls">
+
+        <h3>Default Button Style</h3>
+        <table class="form-table">
         <tr>
           <th>Background Color</th>
           <td>
@@ -1267,32 +1313,44 @@ class SMDP_Menu_App_Builder {
         </tr>
       </table>
 
-      <div class="smdp-button-preview" style="margin-top: 30px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">
-        <h3>Preview</h3>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button type="button" class="smdp-preview-btn" style="
-            background: <?php echo esc_attr($styles['bg_color']); ?>;
-            color: <?php echo esc_attr($styles['text_color']); ?>;
-            border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
-            font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-            padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-            border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-            font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-            font-family: <?php echo esc_attr($styles['font_family']); ?>;
-            cursor: pointer;
-          ">Default Button</button>
-          
-          <button type="button" class="smdp-preview-btn" style="
-            background: <?php echo esc_attr($styles['active_bg_color']); ?>;
-            color: <?php echo esc_attr($styles['active_text_color']); ?>;
-            border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['active_border_color']); ?>;
-            font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-            padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-            border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-            font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-            font-family: <?php echo esc_attr($styles['font_family']); ?>;
-            cursor: pointer;
-          ">Active Button</button>
+      </div>
+
+      <!-- Right Column: Live Preview (Sticky) -->
+      <div class="smdp-button-preview" style="position: sticky; top: 32px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Live Preview</h3>
+        <p class="description" style="margin-bottom: 15px;">Updates as you make changes</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">Default State:</small>
+            <button type="button" class="smdp-preview-btn" style="
+              background: <?php echo esc_attr($styles['bg_color']); ?>;
+              color: <?php echo esc_attr($styles['text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">Category Button</button>
+          </div>
+
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">Active State:</small>
+            <button type="button" class="smdp-preview-btn smdp-preview-active" style="
+              background: <?php echo esc_attr($styles['active_bg_color']); ?>;
+              color: <?php echo esc_attr($styles['active_text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['active_border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">Active Category</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1315,7 +1373,7 @@ class SMDP_Menu_App_Builder {
         var fontWeight = $('select[name="<?php echo esc_js($name); ?>[font_weight]"]').val();
         var fontFamily = $('select[name="<?php echo esc_js($name); ?>[font_family]"]').val();
 
-        $preview.find('.smdp-preview-btn').eq(0).css({
+        $preview.find('.smdp-preview-btn').not('.smdp-preview-active').css({
           'background': bgColor,
           'color': textColor,
           'border-color': borderColor,
@@ -1327,7 +1385,7 @@ class SMDP_Menu_App_Builder {
           'font-family': fontFamily
         });
 
-        $preview.find('.smdp-preview-btn').eq(1).css({
+        $preview.find('.smdp-preview-btn.smdp-preview-active').css({
           'background': activeBg,
           'color': activeText,
           'border-color': activeBorder,
@@ -1341,7 +1399,10 @@ class SMDP_Menu_App_Builder {
       }
 
       // Update preview on any input change
-      $('.smdp-style-controls input, .smdp-style-controls select').on('change keyup', updatePreview);
+      $('.smdp-style-controls input, .smdp-style-controls select').on('change keyup input', updatePreview);
+
+      // Listen for color picker changes from external script
+      $(document).on('smdp-color-changed', updatePreview);
     });
     </script>
     <?php
@@ -1929,11 +1990,58 @@ class SMDP_Menu_App_Builder {
       $settings = array();
     }
 
+    // Save theme colors
     if ( isset( $_POST['smdp_pwa_theme_color'] ) ) {
       $settings['theme_color'] = sanitize_hex_color( $_POST['smdp_pwa_theme_color'] );
     }
     if ( isset( $_POST['smdp_pwa_background_color'] ) ) {
       $settings['background_color'] = sanitize_hex_color( $_POST['smdp_pwa_background_color'] );
+    }
+
+    // Save PWA app settings if they exist in the POST data
+    if ( isset( $_POST[ self::OPT_SETTINGS ] ) && is_array( $_POST[ self::OPT_SETTINGS ] ) ) {
+      $pwa_data = $_POST[ self::OPT_SETTINGS ];
+
+      // Icons - only update if value is provided (preserve existing if empty)
+      if ( isset( $pwa_data['icon_192'] ) && !empty( $pwa_data['icon_192'] ) ) {
+        $settings['icon_192'] = esc_url_raw( $pwa_data['icon_192'] );
+      } elseif ( isset( $pwa_data['icon_192'] ) && empty( $pwa_data['icon_192'] ) && isset( $settings['icon_192'] ) ) {
+        // Keep existing value if form field is empty
+        // (Don't overwrite with empty string)
+      }
+
+      if ( isset( $pwa_data['icon_512'] ) && !empty( $pwa_data['icon_512'] ) ) {
+        $settings['icon_512'] = esc_url_raw( $pwa_data['icon_512'] );
+      } elseif ( isset( $pwa_data['icon_512'] ) && empty( $pwa_data['icon_512'] ) && isset( $settings['icon_512'] ) ) {
+        // Keep existing
+      }
+
+      if ( isset( $pwa_data['apple_touch_icon'] ) && !empty( $pwa_data['apple_touch_icon'] ) ) {
+        $settings['apple_touch_icon'] = esc_url_raw( $pwa_data['apple_touch_icon'] );
+      } elseif ( isset( $pwa_data['apple_touch_icon'] ) && empty( $pwa_data['apple_touch_icon'] ) && isset( $settings['apple_touch_icon'] ) ) {
+        // Keep existing
+      }
+
+      // App Identity - these can be intentionally empty, so always save
+      if ( isset( $pwa_data['app_name'] ) ) {
+        $settings['app_name'] = sanitize_text_field( $pwa_data['app_name'] );
+      }
+      if ( isset( $pwa_data['app_short_name'] ) ) {
+        $settings['app_short_name'] = sanitize_text_field( $pwa_data['app_short_name'] );
+      }
+      if ( isset( $pwa_data['app_description'] ) ) {
+        $settings['app_description'] = sanitize_textarea_field( $pwa_data['app_description'] );
+      }
+
+      // Display Options - these should always have values from dropdowns
+      if ( isset( $pwa_data['display_mode'] ) ) {
+        $valid_modes = array( 'standalone', 'fullscreen', 'minimal-ui', 'browser' );
+        $settings['display_mode'] = in_array( $pwa_data['display_mode'], $valid_modes ) ? $pwa_data['display_mode'] : 'standalone';
+      }
+      if ( isset( $pwa_data['orientation'] ) ) {
+        $valid_orientations = array( 'any', 'portrait', 'landscape', 'portrait-primary', 'landscape-primary' );
+        $settings['orientation'] = in_array( $pwa_data['orientation'], $valid_orientations ) ? $pwa_data['orientation'] : 'any';
+      }
     }
 
     update_option( self::OPT_SETTINGS, $settings );
