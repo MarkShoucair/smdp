@@ -149,20 +149,26 @@ class SMDP_Menu_App_Builder {
   }
 
   public static function enqueue_admin($hook) {
-    if ($hook !== 'toplevel_page_smdp_menu_app_builder') return;
+    error_log('[SMDP] enqueue_admin called with hook: ' . $hook);
+    if ($hook !== 'square-menu_page_smdp_menu_app_builder') return;
 
     // Enqueue media uploader for promo image
     wp_enqueue_media();
 
     $plugin_main = dirname(dirname(__FILE__)) . '/Main.php';
     $base_url = plugins_url('', $plugin_main);
-    $ver = '1.8';
+    $ver = '1.8.3';
+
+    error_log('[SMDP] Enqueuing scripts. Base URL: ' . $base_url);
+    error_log('[SMDP] Admin JS URL: ' . $base_url . '/assets/js/menu-app-builder-admin.js');
 
     wp_enqueue_style('wp-color-picker');
     wp_enqueue_script('wp-color-picker');
     wp_enqueue_style('smdp-menu-app-admin', $base_url . '/assets/css/menu-app-admin.css', array(), $ver);
     wp_enqueue_script('jquery-ui-sortable');
     wp_enqueue_script('smdp-menu-app-admin', $base_url . '/assets/js/menu-app-builder-admin.js', array('jquery','jquery-ui-sortable','wp-color-picker'), $ver, true);
+
+    error_log('[SMDP] Scripts enqueued');
 
     $catalog = get_option(self::OPT_CATALOG, array());
     if (is_string($catalog)) { $catalog = json_decode($catalog, true); if (!is_array($catalog)) $catalog = array(); }
@@ -223,24 +229,6 @@ class SMDP_Menu_App_Builder {
     }
   }
 
-  /**
-   * DEPRECATED: Old dynamic button CSS generation removed
-   * All default styles are now hardcoded in CSS files
-   * Users can override via Custom CSS textarea
-   */
-  private static function output_button_styles_DEPRECATED() {
-    // This method is no longer used
-  }
-
-  /**
-   * DEPRECATED: Dynamic CSS generation removed
-   * All styles are now hardcoded in CSS files
-   */
-  private static function generate_button_css_DEPRECATED($styles) {
-    // This method is no longer used
-    return '';
-  }
-
   public static function render_admin_page() {
     ?>
     <div class="wrap smdp-menu-app">
@@ -253,44 +241,326 @@ class SMDP_Menu_App_Builder {
       </div>
 
       <h2 class="nav-tab-wrapper">
-        <a href="#tab-layout" class="nav-tab nav-tab-active">App Layout</a>
+        <a href="#tab-layout" class="nav-tab nav-tab-active">Configuration</a>
         <a href="#tab-styles" class="nav-tab">Styles</a>
-        <a href="#tab-pwa" class="nav-tab">PWA & Debug</a>
         <a href="#tab-advanced" class="nav-tab">Advanced</a>
       </h2>
 
       <div id="tab-layout" class="smdp-tab active">
         <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-        <form method="post" action="options.php">
-          <?php settings_fields('smdp_menu_app_layout_group'); ?>
-          <table class="form-table" role="presentation">
-            <tr>
-              <th scope="row">App Layout</th>
-              <td><?php self::field_settings(); ?></td>
-            </tr>
-            <tr>
-              <th scope="row">Promo Screen</th>
-              <td><?php self::field_promo_settings(); ?></td>
-            </tr>
-            <tr>
-              <th scope="row">Custom CSS</th>
-              <td><?php self::field_css(); ?></td>
-            </tr>
-          </table>
-          <?php submit_button('Save Settings'); ?>
-        </form>
-        <p><strong>Display on a page</strong> with: <code>[smdp_menu_app id="default"]</code> &nbsp; Optional: <code>layout="left"</code>.</p>
+        <h2 style="margin-top:0;">App Configuration</h2>
+        <p>Configure the menu app layout, promo screen, and Progressive Web App settings.</p>
+
+        <?php
+        // Get all settings needed for subtabs
+        $debug_mode = get_option( 'smdp_pwa_debug_mode', 0 );
+        $cache_version = get_option( 'smdp_cache_version', 1 );
+        $settings = get_option(self::OPT_SETTINGS, array());
+        if (!is_array($settings)) $settings = array();
+
+        $theme_color = isset($settings['theme_color']) ? $settings['theme_color'] : '#5C7BA6';
+        $background_color = isset($settings['background_color']) ? $settings['background_color'] : '#ffffff';
+        $icon_192 = isset($settings['icon_192']) ? $settings['icon_192'] : '';
+        $icon_512 = isset($settings['icon_512']) ? $settings['icon_512'] : '';
+        $apple_touch_icon = isset($settings['apple_touch_icon']) ? $settings['apple_touch_icon'] : '';
+        $app_name = isset($settings['app_name']) ? $settings['app_name'] : '';
+        $app_short_name = isset($settings['app_short_name']) ? $settings['app_short_name'] : '';
+        $app_description = isset($settings['app_description']) ? $settings['app_description'] : '';
+        $display_mode = isset($settings['display_mode']) ? $settings['display_mode'] : 'standalone';
+        $orientation = isset($settings['orientation']) ? $settings['orientation'] : 'any';
+        ?>
+
+        <!-- Subtabs for Configuration -->
+        <div class="smdp-config-subtabs" style="margin:20px 0; border-bottom:1px solid #ccc;">
+          <a href="#config-main" class="smdp-config-subtab active" style="display:inline-block; padding:10px 20px; text-decoration:none; border-bottom:2px solid #2271b1; margin-bottom:-1px;">Main</a>
+          <a href="#config-promo" class="smdp-config-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Promo Screen</a>
+          <a href="#config-pwa" class="smdp-config-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">PWA</a>
+        </div>
+
+        <!-- Subtab: Main -->
+        <div id="config-main" class="smdp-config-subtab-content active" style="margin-top:20px;">
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_layout_group'); ?>
+            <h3>App Layout</h3>
+            <?php self::field_settings(); ?>
+            <?php submit_button('Save Layout'); ?>
+          </form>
+
+          <hr style="margin:30px 0; border:none; border-top:1px solid #ddd;">
+
+          <h3>📱 Display Menu App</h3>
+          <div style="background:#f9f9f9; padding:15px; border-left:4px solid #2271b1; margin-bottom:20px;">
+            <p style="margin:0 0 10px 0;"><strong>Standalone URL:</strong></p>
+            <p style="margin:0 0 15px 0;">
+              <code style="background:#fff; padding:6px 10px; display:inline-block;"><?php echo home_url('/menu-app/'); ?></code>
+              <a href="<?php echo home_url('/menu-app/'); ?>" target="_blank" class="button button-secondary" style="margin-left:10px;">Preview</a>
+            </p>
+
+            <p style="margin:0 0 10px 0;"><strong>Shortcode:</strong></p>
+            <p style="margin:0;">
+              <code style="background:#fff; padding:6px 10px; display:inline-block;">[smdp_menu_app]</code>
+              <span style="margin-left:10px; color:#666;">Optional: <code style="background:#fff; padding:2px 6px;">layout="left"</code></span>
+            </p>
+          </div>
+
+          <h3>🔗 Category-Specific URLs</h3>
+          <p class="description">Each category has its own standalone URL. Find the "Copy Link" button next to each category in the Menu Editor.</p>
+          <p class="description">Example: <code style="background:#f9f9f9; padding:2px 6px;"><?php echo home_url('/menu-app/category/appetizers/'); ?></code></p>
+        </div>
+
+        <!-- Subtab: Promo Screen -->
+        <div id="config-promo" class="smdp-config-subtab-content" style="display:none; margin-top:20px;">
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_layout_group'); ?>
+            <h3>Promo Screen Settings</h3>
+            <?php self::field_promo_settings(); ?>
+            <?php submit_button('Save Promo Settings'); ?>
+          </form>
+        </div>
+
+        <!-- Subtab: PWA -->
+        <div id="config-pwa" class="smdp-config-subtab-content" style="display:none; margin-top:20px;">
+          <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+            <input type="hidden" name="action" value="smdp_save_pwa_settings">
+            <?php wp_nonce_field( 'smdp_pwa_settings_save', 'smdp_pwa_nonce' ); ?>
+
+            <h3>🐛 Debug Mode</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+              <div>
+                <label style="display:block; margin-bottom:8px;">
+                  <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
+                  <strong>Enable Debug Mode</strong>
+                </label>
+                <p class="description">Bypass caching and show debug panel on tablets.</p>
+              </div>
+              <div>
+                <label style="display:block; margin-bottom:8px;"><strong>Cache Version</strong></label>
+                <input type="number" name="smdp_cache_version" id="smdp_cache_version_pwa" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:80px;">
+                <button type="button" class="button" id="smdp-increment-version-pwa">Increment</button>
+                <p class="description">Current: v<?php echo $cache_version; ?>. Increment to force tablet reload.</p>
+                <script>
+                  jQuery(document).ready(function($){
+                    $('#smdp-increment-version-pwa').click(function(){
+                      var $input = $('#smdp_cache_version_pwa');
+                      $input.val(parseInt($input.val()) + 1);
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+
+            <h3>🎨 PWA Theme Colors</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+              <div>
+                <label style="display:block; margin-bottom:8px;"><strong>Theme Color</strong></label>
+                <input type="text" name="smdp_pwa_theme_color" value="<?php echo esc_attr($theme_color); ?>" class="smdp-pwa-color-picker" />
+                <p class="description">Browser address bar & splash screen color</p>
+              </div>
+              <div>
+                <label style="display:block; margin-bottom:8px;"><strong>Background Color</strong></label>
+                <input type="text" name="smdp_pwa_background_color" value="<?php echo esc_attr($background_color); ?>" class="smdp-pwa-color-picker" />
+                <p class="description">Splash screen background when launching</p>
+              </div>
+            </div>
+
+            <h3>📱 PWA App Icons</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px; margin-bottom:30px;">
+              <!-- Icon 192x192 -->
+              <div>
+                <label><strong>App Icon 192x192</strong></label><br>
+                <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[icon_192]" id="smdp-icon-192" value="<?php echo esc_attr($icon_192); ?>">
+                <button type="button" class="button smdp-upload-icon" data-target="smdp-icon-192" data-preview="smdp-icon-192-preview">Upload</button>
+                <?php if ($icon_192): ?>
+                  <button type="button" class="button smdp-clear-icon" data-target="smdp-icon-192" data-preview="smdp-icon-192-preview">Remove</button>
+                <?php endif; ?>
+                <div id="smdp-icon-192-preview" style="margin-top:8px;">
+                  <?php if ($icon_192): ?>
+                    <img src="<?php echo esc_url($icon_192); ?>" style="max-width:120px; border:1px solid #ddd; padding:4px; display:block;">
+                  <?php endif; ?>
+                </div>
+                <p class="description" style="margin-top:8px;">Android home screen (192x192)</p>
+              </div>
+
+              <!-- Icon 512x512 -->
+              <div>
+                <label><strong>App Icon 512x512</strong></label><br>
+                <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[icon_512]" id="smdp-icon-512" value="<?php echo esc_attr($icon_512); ?>">
+                <button type="button" class="button smdp-upload-icon" data-target="smdp-icon-512" data-preview="smdp-icon-512-preview">Upload</button>
+                <?php if ($icon_512): ?>
+                  <button type="button" class="button smdp-clear-icon" data-target="smdp-icon-512" data-preview="smdp-icon-512-preview">Remove</button>
+                <?php endif; ?>
+                <div id="smdp-icon-512-preview" style="margin-top:8px;">
+                  <?php if ($icon_512): ?>
+                    <img src="<?php echo esc_url($icon_512); ?>" style="max-width:120px; border:1px solid #ddd; padding:4px; display:block;">
+                  <?php endif; ?>
+                </div>
+                <p class="description" style="margin-top:8px;">Splash screen (512x512)</p>
+              </div>
+
+              <!-- Apple Touch Icon -->
+              <div>
+                <label><strong>Apple Touch Icon</strong></label><br>
+                <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[apple_touch_icon]" id="smdp-apple-icon" value="<?php echo esc_attr($apple_touch_icon); ?>">
+                <button type="button" class="button smdp-upload-icon" data-target="smdp-apple-icon" data-preview="smdp-apple-icon-preview">Upload</button>
+                <?php if ($apple_touch_icon): ?>
+                  <button type="button" class="button smdp-clear-icon" data-target="smdp-apple-icon" data-preview="smdp-apple-icon-preview">Remove</button>
+                <?php endif; ?>
+                <div id="smdp-apple-icon-preview" style="margin-top:8px;">
+                  <?php if ($apple_touch_icon): ?>
+                    <img src="<?php echo esc_url($apple_touch_icon); ?>" style="max-width:120px; border:1px solid #ddd; padding:4px; display:block;">
+                  <?php endif; ?>
+                </div>
+                <p class="description" style="margin-top:8px;">iOS home screen (180x180)</p>
+              </div>
+            </div>
+
+            <h3>✏️ PWA App Identity</h3>
+            <div style="margin-bottom:12px;">
+              <label><strong>App Name</strong></label><br>
+              <input type="text" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[app_name]" value="<?php echo esc_attr($app_name); ?>" placeholder="e.g., Joe's Restaurant Menu" style="width:100%; max-width:400px;">
+              <p class="description">Full app name (leave empty to use "[Site Name] Menu")</p>
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <label><strong>App Short Name</strong></label><br>
+              <input type="text" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[app_short_name]" value="<?php echo esc_attr($app_short_name); ?>" placeholder="e.g., Menu" style="width:100%; max-width:200px;" maxlength="12">
+              <p class="description">Short name for home screen label (12 characters max, leave empty to use "Menu")</p>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <label><strong>App Description</strong></label><br>
+              <textarea name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[app_description]" rows="2" style="width:100%; max-width:500px;" placeholder="e.g., Browse our menu and order from your table"><?php echo esc_textarea($app_description); ?></textarea>
+              <p class="description">Description shown in install dialog</p>
+            </div>
+
+            <h3>🖥️ PWA Display Options</h3>
+            <div style="margin-bottom:12px;">
+              <label><strong>Display Mode</strong></label><br>
+              <select name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[display_mode]">
+                <option value="standalone" <?php selected($display_mode, 'standalone'); ?>>Standalone (recommended - looks like native app)</option>
+                <option value="fullscreen" <?php selected($display_mode, 'fullscreen'); ?>>Fullscreen (hides status bar too)</option>
+                <option value="minimal-ui" <?php selected($display_mode, 'minimal-ui'); ?>>Minimal UI (shows minimal browser UI)</option>
+                <option value="browser" <?php selected($display_mode, 'browser'); ?>>Browser (regular browser tab)</option>
+              </select>
+              <p class="description">How the app looks when installed</p>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <label><strong>Orientation Lock</strong></label><br>
+              <select name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[orientation]">
+                <option value="any" <?php selected($orientation, 'any'); ?>>Any (recommended - allows rotation)</option>
+                <option value="portrait" <?php selected($orientation, 'portrait'); ?>>Portrait only</option>
+                <option value="landscape" <?php selected($orientation, 'landscape'); ?>>Landscape only</option>
+                <option value="portrait-primary" <?php selected($orientation, 'portrait-primary'); ?>>Portrait Primary</option>
+                <option value="landscape-primary" <?php selected($orientation, 'landscape-primary'); ?>>Landscape Primary</option>
+              </select>
+              <p class="description">Lock screen orientation</p>
+            </div>
+
+            <?php submit_button( 'Save PWA Settings', 'primary', 'smdp_save_pwa' ); ?>
+          </form>
+
+          <script>
+          jQuery(document).ready(function($){
+            // Icon upload handlers
+            var iconUploaders = {};
+
+            $('.smdp-upload-icon').on('click', function(e){
+              e.preventDefault();
+              var button = $(this);
+              var targetId = button.data('target');
+              var previewId = button.data('preview');
+
+              if (iconUploaders[targetId]) {
+                iconUploaders[targetId].open();
+                return;
+              }
+
+              iconUploaders[targetId] = wp.media({
+                title: 'Select Icon',
+                button: { text: 'Use this icon' },
+                multiple: false,
+                library: { type: 'image' }
+              });
+
+              iconUploaders[targetId].on('select', function(){
+                var attachment = iconUploaders[targetId].state().get('selection').first().toJSON();
+                $('#' + targetId).val(attachment.url);
+                $('#' + previewId).html('<img src="' + attachment.url + '" style="max-width:120px; border:1px solid #ddd; padding:4px; display:block;">');
+                button.next('.smdp-clear-icon').show();
+              });
+
+              iconUploaders[targetId].open();
+            });
+
+            $('.smdp-clear-icon').on('click', function(e){
+              e.preventDefault();
+              var button = $(this);
+              var targetId = button.data('target');
+              var previewId = button.data('preview');
+              $('#' + targetId).val('');
+              $('#' + previewId).html('');
+              button.hide();
+            });
+          });
+          </script>
+        </div>
+
         </div>
       </div>
 
       <div id="tab-styles" class="smdp-tab">
         <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-        <form method="post" action="options.php">
-          <?php settings_fields('smdp_menu_app_styles_group'); ?>
-          <h2>Category Button Styles</h2>
-          <?php self::field_styles(); ?>
-          <?php submit_button('Save Button Styles'); ?>
-        </form>
+        <h2 style="margin-top:0;">Styling & Customization</h2>
+        <p>Customize colors, fonts, and appearance of the menu app.</p>
+
+        <!-- Subtabs for Styles -->
+        <div class="smdp-style-subtabs" style="margin:20px 0; border-bottom:1px solid #ccc;">
+          <a href="#style-category-buttons" class="smdp-style-subtab active" style="display:inline-block; padding:10px 20px; text-decoration:none; border-bottom:2px solid #2271b1; margin-bottom:-1px;">Category Buttons</a>
+          <a href="#style-help-buttons" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Help Buttons</a>
+          <a href="#style-background" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Background Colors</a>
+          <a href="#style-item-cards" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Cards</a>
+          <a href="#style-custom-css" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Custom CSS</a>
+        </div>
+
+        <!-- Subtab: Category Buttons -->
+        <div id="style-category-buttons" class="smdp-style-subtab-content active" style="margin-top:20px;">
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_styles_group'); ?>
+            <h3>Category Button Styles</h3>
+            <?php self::field_styles(); ?>
+            <?php submit_button('Save Category Button Styles'); ?>
+          </form>
+        </div>
+
+        <!-- Subtab: Help Buttons -->
+        <div id="style-help-buttons" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
+          <h3>Help & Bill Button Styles</h3>
+          <p class="description">Customize the Help and Bill request buttons (coming soon in Phase 2)</p>
+        </div>
+
+        <!-- Subtab: Background Colors -->
+        <div id="style-background" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
+          <h3>Background Colors</h3>
+          <p class="description">Customize background colors for different sections (coming soon in Phase 2)</p>
+        </div>
+
+        <!-- Subtab: Item Cards -->
+        <div id="style-item-cards" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
+          <h3>Item Card Styles</h3>
+          <p class="description">Customize menu item card appearance (coming soon in Phase 2)</p>
+        </div>
+
+        <!-- Subtab: Custom CSS -->
+        <div id="style-custom-css" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_layout_group'); ?>
+            <h3>Custom CSS</h3>
+            <p class="description">Add your own CSS to override any default styling. This CSS loads after all other styles.</p>
+            <?php self::field_css(); ?>
+            <?php submit_button('Save Custom CSS'); ?>
+          </form>
+        </div>
         </div>
       </div>
 
@@ -324,62 +594,44 @@ class SMDP_Menu_App_Builder {
           <input type="hidden" name="action" value="smdp_save_pwa_settings">
           <?php wp_nonce_field( 'smdp_pwa_settings_save', 'smdp_pwa_nonce' ); ?>
 
-          <h3>Debug Mode</h3>
-          <table class="form-table">
-            <tr>
-              <th scope="row">Enable Debug Mode</th>
-              <td>
-                <label>
-                  <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
-                  Enable PWA Debug Mode (bypass caching, show debug panel)
-                </label>
-                <p class="description">When enabled, tablets will always load the latest version of files and display a debug panel with cache-clearing tools.</p>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">Cache Version</th>
-              <td>
-                <input type="number" name="smdp_cache_version" id="smdp_cache_version_pwa" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:100px;">
-                <button type="button" class="button" id="smdp-increment-version-pwa">Increment Version</button>
-                <p class="description">
-                  Current version: <strong>v<?php echo $cache_version; ?></strong><br>
-                  Increment this number to force all tablets to reload assets, even without debug mode enabled.
-                </p>
-                <script>
-                  jQuery(document).ready(function($){
-                    $('#smdp-increment-version-pwa').click(function(){
-                      var $input = $('#smdp_cache_version_pwa');
-                      $input.val(parseInt($input.val()) + 1);
-                    });
+          <h3>🐛 Debug Mode</h3>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+            <div>
+              <label style="display:block; margin-bottom:8px;">
+                <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
+                <strong>Enable Debug Mode</strong>
+              </label>
+              <p class="description">Bypass caching and show debug panel on tablets.</p>
+            </div>
+            <div>
+              <label style="display:block; margin-bottom:8px;"><strong>Cache Version</strong></label>
+              <input type="number" name="smdp_cache_version" id="smdp_cache_version_pwa" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:80px;">
+              <button type="button" class="button" id="smdp-increment-version-pwa">Increment</button>
+              <p class="description">Current: v<?php echo $cache_version; ?>. Increment to force tablet reload.</p>
+              <script>
+                jQuery(document).ready(function($){
+                  $('#smdp-increment-version-pwa').click(function(){
+                    var $input = $('#smdp_cache_version_pwa');
+                    $input.val(parseInt($input.val()) + 1);
                   });
-                </script>
-              </td>
-            </tr>
-          </table>
+                });
+              </script>
+            </div>
+          </div>
 
-          <h3>PWA Manifest Settings</h3>
-          <p>These settings control how the menu app appears when installed as a Progressive Web App on tablets and phones.</p>
-
-          <table class="form-table">
-            <tr>
-              <th scope="row">
-                <label for="smdp_pwa_theme_color">Theme Color</label>
-              </th>
-              <td>
-                <input type="text" name="smdp_pwa_theme_color" value="<?php echo esc_attr($theme_color); ?>" class="smdp-pwa-color-picker" />
-                <p class="description">Color for the browser's address bar and splash screen when installed as PWA</p>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">
-                <label for="smdp_pwa_background_color">Background Color</label>
-              </th>
-              <td>
-                <input type="text" name="smdp_pwa_background_color" value="<?php echo esc_attr($background_color); ?>" class="smdp-pwa-color-picker" />
-                <p class="description">Background color for the splash screen when launching PWA</p>
-              </td>
-            </tr>
-          </table>
+          <h3>🎨 PWA Theme Colors</h3>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+            <div>
+              <label style="display:block; margin-bottom:8px;"><strong>Theme Color</strong></label>
+              <input type="text" name="smdp_pwa_theme_color" value="<?php echo esc_attr($theme_color); ?>" class="smdp-pwa-color-picker" />
+              <p class="description">Browser address bar & splash screen color</p>
+            </div>
+            <div>
+              <label style="display:block; margin-bottom:8px;"><strong>Background Color</strong></label>
+              <input type="text" name="smdp_pwa_background_color" value="<?php echo esc_attr($background_color); ?>" class="smdp-pwa-color-picker" />
+              <p class="description">Splash screen background when launching</p>
+            </div>
+          </div>
 
           <?php submit_button( 'Save PWA & Debug Settings', 'primary', 'smdp_save_pwa' ); ?>
         </form>
@@ -417,6 +669,20 @@ class SMDP_Menu_App_Builder {
       .smdp-tab { display:none; }
       .smdp-tab.active { display:block; }
       .nav-tab-wrapper { margin-top: 12px; }
+
+      /* Configuration subtabs */
+      .smdp-config-subtab { cursor: pointer; transition: all 0.2s; }
+      .smdp-config-subtab:hover { color: #2271b1; }
+      .smdp-config-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
+      .smdp-config-subtab-content { display: none; }
+      .smdp-config-subtab-content.active { display: block; }
+
+      /* Style subtabs */
+      .smdp-style-subtab { cursor: pointer; transition: all 0.2s; }
+      .smdp-style-subtab:hover { color: #2271b1; }
+      .smdp-style-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
+      .smdp-style-subtab-content { display: none; }
+      .smdp-style-subtab-content.active { display: block; }
     </style>
     <script>
       (function(){
@@ -479,6 +745,50 @@ class SMDP_Menu_App_Builder {
             $tabs.first().addClass('nav-tab-active');
             $panes.first().addClass('active');
         }
+
+        // Configuration subtabs switching
+        var $configSubtabs = $('.smdp-config-subtab');
+        var $configSubtabPanes = $('.smdp-config-subtab-content');
+
+        $configSubtabs.on('click', function(e){
+            e.preventDefault();
+            console.log('Config subtab clicked:', $(this).attr('href'));
+
+            // Remove all active states
+            $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $configSubtabPanes.removeClass('active').hide();
+
+            // Add active to clicked subtab
+            $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+
+            // Show corresponding pane
+            var target = $(this).attr('href');
+            $(target).addClass('active').show();
+
+            console.log('Activated config subtab:', target);
+        });
+
+        // Style subtabs switching
+        var $styleSubtabs = $('.smdp-style-subtab');
+        var $styleSubtabPanes = $('.smdp-style-subtab-content');
+
+        $styleSubtabs.on('click', function(e){
+            e.preventDefault();
+            console.log('Style subtab clicked:', $(this).attr('href'));
+
+            // Remove all active states
+            $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $styleSubtabPanes.removeClass('active').hide();
+
+            // Add active to clicked subtab
+            $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+
+            // Show corresponding pane
+            var target = $(this).attr('href');
+            $(target).addClass('active').show();
+
+            console.log('Activated style subtab:', target);
+        });
     });
     </script>
     <?php
@@ -611,15 +921,15 @@ class SMDP_Menu_App_Builder {
   public static function field_promo_settings() {
     $settings = get_option(self::OPT_SETTINGS, array());
     if (!is_array($settings)) $settings = array();
-    
+
     // Get promo images and ensure it's an array
     $promo_images = isset($settings['promo_images']) ? $settings['promo_images'] : array();
-    
+
     // Backwards compatibility
     if (empty($promo_images) && !empty($settings['promo_image'])) {
       $promo_images = array($settings['promo_image']);
     }
-    
+
     // Force to array if it's somehow a string
     if (!is_array($promo_images)) {
       if (is_string($promo_images)) {
@@ -629,136 +939,19 @@ class SMDP_Menu_App_Builder {
         $promo_images = array();
       }
     }
-    
+
     $promo_timeout = isset($settings['promo_timeout']) ? intval($settings['promo_timeout']) : 600;
-    $theme_color = isset($settings['theme_color']) ? $settings['theme_color'] : '#5C7BA6';
-    $background_color = isset($settings['background_color']) ? $settings['background_color'] : '#ffffff';
-
-    // PWA icons
-    $icon_192 = isset($settings['icon_192']) ? $settings['icon_192'] : '';
-    $icon_512 = isset($settings['icon_512']) ? $settings['icon_512'] : '';
-    $apple_touch_icon = isset($settings['apple_touch_icon']) ? $settings['apple_touch_icon'] : '';
-
-    // PWA identity
-    $app_name = isset($settings['app_name']) ? $settings['app_name'] : '';
-    $app_short_name = isset($settings['app_short_name']) ? $settings['app_short_name'] : '';
-    $app_description = isset($settings['app_description']) ? $settings['app_description'] : '';
-
-    // PWA display options
-    $display_mode = isset($settings['display_mode']) ? $settings['display_mode'] : 'standalone';
-    $orientation = isset($settings['orientation']) ? $settings['orientation'] : 'any';
     ?>
     <fieldset>
-      <h3 style="margin-top:0;">⏱️ Idle Timeout</h3>
+      <p class="description">Configure the promotional screensaver that appears after a period of inactivity on the menu app.</p>
+
       <div style="margin-bottom:20px;">
         <label><strong>Idle Timeout (seconds)</strong></label><br>
         <input type="number" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[promo_timeout]" value="<?php echo esc_attr($promo_timeout); ?>" min="30" style="width:100px;">
         <p class="description">Show promo screen after this many seconds of inactivity (default: 600 = 10 minutes)</p>
       </div>
 
-      <h3>🎨 PWA Colors</h3>
-      <div style="margin-bottom:12px;">
-        <label><strong>Theme Color</strong></label><br>
-        <input type="text" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[theme_color]" value="<?php echo esc_attr($theme_color); ?>" class="smdp-pwa-color-picker" />
-        <p class="description">Color for the browser's address bar and splash screen when installed as PWA</p>
-      </div>
-
       <div style="margin-bottom:20px;">
-        <label><strong>Background Color</strong></label><br>
-        <input type="text" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[background_color]" value="<?php echo esc_attr($background_color); ?>" class="smdp-pwa-color-picker" />
-        <p class="description">Background color for the splash screen when launching PWA</p>
-      </div>
-
-      <h3>📱 PWA App Icons</h3>
-      <div style="margin-bottom:12px;">
-        <label><strong>App Icon 192x192</strong></label><br>
-        <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[icon_192]" id="smdp-icon-192" value="<?php echo esc_attr($icon_192); ?>">
-        <button type="button" class="button smdp-upload-icon" data-target="smdp-icon-192" data-preview="smdp-icon-192-preview">Upload Icon (192x192)</button>
-        <?php if ($icon_192): ?>
-          <button type="button" class="button smdp-clear-icon" data-target="smdp-icon-192" data-preview="smdp-icon-192-preview">Remove</button>
-        <?php endif; ?>
-        <div id="smdp-icon-192-preview" style="margin-top:8px;">
-          <?php if ($icon_192): ?>
-            <img src="<?php echo esc_url($icon_192); ?>" style="max-width:192px; border:1px solid #ddd; padding:4px;">
-          <?php endif; ?>
-        </div>
-        <p class="description">Used for Android home screen (192x192 pixels)</p>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label><strong>App Icon 512x512</strong></label><br>
-        <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[icon_512]" id="smdp-icon-512" value="<?php echo esc_attr($icon_512); ?>">
-        <button type="button" class="button smdp-upload-icon" data-target="smdp-icon-512" data-preview="smdp-icon-512-preview">Upload Icon (512x512)</button>
-        <?php if ($icon_512): ?>
-          <button type="button" class="button smdp-clear-icon" data-target="smdp-icon-512" data-preview="smdp-icon-512-preview">Remove</button>
-        <?php endif; ?>
-        <div id="smdp-icon-512-preview" style="margin-top:8px;">
-          <?php if ($icon_512): ?>
-            <img src="<?php echo esc_url($icon_512); ?>" style="max-width:192px; border:1px solid #ddd; padding:4px;">
-          <?php endif; ?>
-        </div>
-        <p class="description">Used for splash screen and high-res displays (512x512 pixels)</p>
-      </div>
-
-      <div style="margin-bottom:20px;">
-        <label><strong>Apple Touch Icon</strong></label><br>
-        <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[apple_touch_icon]" id="smdp-apple-icon" value="<?php echo esc_attr($apple_touch_icon); ?>">
-        <button type="button" class="button smdp-upload-icon" data-target="smdp-apple-icon" data-preview="smdp-apple-icon-preview">Upload Icon (180x180)</button>
-        <?php if ($apple_touch_icon): ?>
-          <button type="button" class="button smdp-clear-icon" data-target="smdp-apple-icon" data-preview="smdp-apple-icon-preview">Remove</button>
-        <?php endif; ?>
-        <div id="smdp-apple-icon-preview" style="margin-top:8px;">
-          <?php if ($apple_touch_icon): ?>
-            <img src="<?php echo esc_url($apple_touch_icon); ?>" style="max-width:180px; border:1px solid #ddd; padding:4px;">
-          <?php endif; ?>
-        </div>
-        <p class="description">Used for iOS home screen (180x180 pixels, will be rounded automatically by iOS)</p>
-      </div>
-
-      <h3>✏️ PWA App Identity</h3>
-      <div style="margin-bottom:12px;">
-        <label><strong>App Name</strong></label><br>
-        <input type="text" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[app_name]" value="<?php echo esc_attr($app_name); ?>" placeholder="e.g., Joe's Restaurant Menu" style="width:100%; max-width:400px;">
-        <p class="description">Full app name (leave empty to use "[Site Name] Menu")</p>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label><strong>App Short Name</strong></label><br>
-        <input type="text" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[app_short_name]" value="<?php echo esc_attr($app_short_name); ?>" placeholder="e.g., Menu" style="width:100%; max-width:200px;" maxlength="12">
-        <p class="description">Short name for home screen label (12 characters max, leave empty to use "Menu")</p>
-      </div>
-
-      <div style="margin-bottom:20px;">
-        <label><strong>App Description</strong></label><br>
-        <textarea name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[app_description]" rows="2" style="width:100%; max-width:500px;" placeholder="e.g., Browse our menu and order from your table"><?php echo esc_textarea($app_description); ?></textarea>
-        <p class="description">Description shown in install dialog</p>
-      </div>
-
-      <h3>🖥️ PWA Display Options</h3>
-      <div style="margin-bottom:12px;">
-        <label><strong>Display Mode</strong></label><br>
-        <select name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[display_mode]">
-          <option value="standalone" <?php selected($display_mode, 'standalone'); ?>>Standalone (recommended - looks like native app)</option>
-          <option value="fullscreen" <?php selected($display_mode, 'fullscreen'); ?>>Fullscreen (hides status bar too)</option>
-          <option value="minimal-ui" <?php selected($display_mode, 'minimal-ui'); ?>>Minimal UI (shows minimal browser UI)</option>
-          <option value="browser" <?php selected($display_mode, 'browser'); ?>>Browser (regular browser tab)</option>
-        </select>
-        <p class="description">How the app looks when installed</p>
-      </div>
-
-      <div style="margin-bottom:20px;">
-        <label><strong>Orientation Lock</strong></label><br>
-        <select name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[orientation]">
-          <option value="any" <?php selected($orientation, 'any'); ?>>Any (recommended - allows rotation)</option>
-          <option value="portrait" <?php selected($orientation, 'portrait'); ?>>Portrait only</option>
-          <option value="landscape" <?php selected($orientation, 'landscape'); ?>>Landscape only</option>
-          <option value="portrait-primary" <?php selected($orientation, 'portrait-primary'); ?>>Portrait Primary</option>
-          <option value="landscape-primary" <?php selected($orientation, 'landscape-primary'); ?>>Landscape Primary</option>
-        </select>
-        <p class="description">Lock screen orientation</p>
-      </div>
-
-      <div>
         <label><strong>Promo Image</strong></label><br>
         <input type="hidden" id="smdp-promo-images" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[promo_images]" value="<?php echo esc_attr(json_encode($promo_images)); ?>">
         <button type="button" class="button" id="smdp-upload-promo">Upload Image</button>
@@ -770,17 +963,13 @@ class SMDP_Menu_App_Builder {
             </div>
           <?php endif; ?>
         </div>
-        <p class="description">Upload a single promo image. Leave empty to disable promo screen.</p>
+        <p class="description">Upload a single promo image (recommended: landscape orientation, 1920x1080px). Leave empty to disable promo screen.</p>
       </div>
     </fieldset>
     
     <script>
     jQuery(document).ready(function($){
-      // Initialize color pickers for PWA theme colors
-      $('.smdp-pwa-color-picker').wpColorPicker();
-
       var mediaUploader;
-      var iconUploaders = {}; // Store separate uploaders for each icon
 
       // Parse promo images safely
       var promoImagesData = <?php echo wp_json_encode($promo_images); ?>;
@@ -1110,12 +1299,6 @@ class SMDP_Menu_App_Builder {
 
     <script>
     jQuery(document).ready(function($){
-      $('.smdp-color-picker').wpColorPicker({
-        change: function(event, ui) {
-          updatePreview();
-        }
-      });
-
       function updatePreview() {
         var $preview = $('.smdp-button-preview');
         var bgColor = $('input[name="<?php echo esc_js($name); ?>[bg_color]"]').val();
@@ -1492,26 +1675,6 @@ class SMDP_Menu_App_Builder {
       $counts[$cid]++;
     }
 
-    // DEBUG: Log category counts and mapping details
-    error_log('[SMDP Menu App] Total mapping entries: ' . count($mapping));
-    error_log('[SMDP Menu App] Skipped invalid items: ' . $skipped_invalid);
-    error_log('[SMDP Menu App] Valid items count: ' . count($valid_items));
-    error_log('[SMDP Menu App] Category item counts: ' . print_r($counts, true));
-    error_log('[SMDP Menu App] All categories: ' . print_r(array_keys($categories), true));
-
-    // Check specifically for custom categories
-    $custom_cat_mappings = array();
-    foreach ($mapping as $item_id => $m) {
-      $cid = isset($m['category']) ? $m['category'] : '';
-      if (strpos($cid, 'cat_') === 0) {
-        if (!isset($custom_cat_mappings[$cid])) $custom_cat_mappings[$cid] = array();
-        $custom_cat_mappings[$cid][] = $item_id . ' (valid: ' . (isset($valid_items[$item_id]) ? 'yes' : 'no') . ')';
-      }
-    }
-    if (!empty($custom_cat_mappings)) {
-      error_log('[SMDP Menu App] Custom category mappings found: ' . print_r($custom_cat_mappings, true));
-    }
-
     $cats = array_values($categories);
 
     // Filter by category slug if provided
@@ -1537,22 +1700,12 @@ class SMDP_Menu_App_Builder {
     $cats_to_show = array();
     foreach ($cats as $c) {
       $hidden = !empty($c['hidden']);
-      if ($hidden) {
-        error_log('[SMDP Menu App] Skipping hidden category: ' . ($c['name'] ?? 'unknown'));
-        continue;
-      }
+      if ($hidden) continue;
       $cid = isset($c['id']) ? $c['id'] : '';
-      if (!$cid) {
-        error_log('[SMDP Menu App] Skipping category with no ID: ' . print_r($c, true));
-        continue;
-      }
-      if (empty($counts[$cid])) {
-        error_log('[SMDP Menu App] Skipping category with 0 items: ' . ($c['name'] ?? 'unknown') . ' (ID: ' . $cid . ')');
-        continue;
-      }
+      if (!$cid) continue;
+      if (empty($counts[$cid])) continue;
       $cats_to_show[] = $c;
     }
-    error_log('[SMDP Menu App] Categories to show: ' . print_r(array_map(function($c) { return $c['name'] . ' (' . $c['id'] . ')'; }, $cats_to_show), true));
 
     // Enqueue hardcoded CSS files (structural CSS is a dependency of menu-app CSS)
     wp_enqueue_style('smdp-structural');

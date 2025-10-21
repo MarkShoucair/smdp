@@ -1,5 +1,47 @@
+console.log('[SMDP] menu-app-builder-admin.js file loaded');
 (function($){
   $(function(){
+    console.log('[SMDP Menu App Builder] Admin JS DOM ready');
+
+    // Function to initialize color pickers
+    function initColorPickers() {
+      if ($.fn.wpColorPicker) {
+        console.log('[SMDP] Initializing color pickers...');
+        $('.smdp-color-picker:visible, .smdp-pwa-color-picker:visible').each(function(){
+          if (!$(this).hasClass('wp-color-picker')) {
+            var $input = $(this);
+            // Initialize with change handler for preview updates
+            $input.wpColorPicker({
+              change: function(event, ui) {
+                // Trigger updatePreview if it exists (for category button styles)
+                if (typeof updatePreview === 'function') {
+                  updatePreview();
+                }
+              }
+            });
+            console.log('[SMDP] Initialized color picker:', $(this).attr('name'));
+          }
+        });
+      } else {
+        console.warn('[SMDP] wpColorPicker not available');
+      }
+    }
+
+    // Initialize color pickers on page load
+    initColorPickers();
+
+    // Re-initialize when configuration subtabs change
+    $(document).on('click', '.smdp-config-subtab', function(){
+      console.log('[SMDP] Config subtab clicked, reinitializing color pickers...');
+      setTimeout(initColorPickers, 100);
+    });
+
+    // Re-initialize when style subtabs change
+    $(document).on('click', '.smdp-style-subtab', function(){
+      console.log('[SMDP] Style subtab clicked, reinitializing color pickers...');
+      setTimeout(initColorPickers, 100);
+    });
+
     var $list = $('#smdp-cat-order');
     if ($list.length && $.fn.sortable) {
       $list.sortable({ containment:'parent' });
