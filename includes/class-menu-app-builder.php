@@ -99,12 +99,15 @@ class SMDP_Menu_App_Builder {
         }
 
         // Action button enable/disable settings
-        // Note: Checkboxes only send value when checked, so we need to handle unchecked state
-        $sanitized['enable_help_btn'] = isset($input['enable_help_btn']) ? '1' : '0';
-        $sanitized['enable_bill_btn'] = isset($input['enable_bill_btn']) ? '1' : '0';
-        $sanitized['enable_view_bill_btn'] = isset($input['enable_view_bill_btn']) ? '1' : '0';
-        $sanitized['enable_table_badge'] = isset($input['enable_table_badge']) ? '1' : '0';
-        $sanitized['enable_table_selector'] = isset($input['enable_table_selector']) ? '1' : '0';
+        // Only update if layout field is present (means this is from App Layout form, not Promo/PWA form)
+        if (isset($input['layout'])) {
+            // Note: Checkboxes only send value when checked, so we need to handle unchecked state
+            $sanitized['enable_help_btn'] = isset($input['enable_help_btn']) ? '1' : '0';
+            $sanitized['enable_bill_btn'] = isset($input['enable_bill_btn']) ? '1' : '0';
+            $sanitized['enable_view_bill_btn'] = isset($input['enable_view_bill_btn']) ? '1' : '0';
+            $sanitized['enable_table_badge'] = isset($input['enable_table_badge']) ? '1' : '0';
+            $sanitized['enable_table_selector'] = isset($input['enable_table_selector']) ? '1' : '0';
+        }
 
         // Promo timeout - only update if present
         if (isset($input['promo_timeout'])) {
@@ -163,9 +166,8 @@ class SMDP_Menu_App_Builder {
             } else {
                 $sanitized['promo_images'] = array();
             }
-        } else {
-            $sanitized['promo_images'] = array();
         }
+        // NOTE: If promo_images is not in input, preserve existing value (don't clear it)
         
         return $sanitized;
     };
@@ -1920,7 +1922,7 @@ class SMDP_Menu_App_Builder {
 
     ob_start();
     ?>
-      <div class="smdp-menu-app-fe layout-<?php echo esc_attr($layout); ?>" data-promo-enabled="<?php echo !empty($promo_images) ? '1' : '0'; ?>">
+      <div class="smdp-menu-app-fe layout-<?php echo esc_attr($layout); ?>" data-promo-enabled="<?php echo !empty($promo_images) ? '1' : '0'; ?>" data-category-filter="<?php echo !empty($atts['category']) ? '1' : '0'; ?>">
   <div class="smdp-app-header">
     <div class="smdp-cat-bar" role="tablist" aria-label="Menu Categories">
 

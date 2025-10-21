@@ -204,8 +204,15 @@
       return;
     }
 
+    // Check if this is a category filter page (should not show buttons)
+    var isCategoryFilter = menuApp.getAttribute('data-category-filter') === '1';
+    if (isCategoryFilter) {
+      console.log('Category filter detected - buttons hidden');
+      return;
+    }
+
     // Get button enable/disable settings (default to enabled if not set)
-    var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true, enableTableBadge: true };
+    var buttonSettings = window.smdpButtonSettings || { enableHelp: true, enableBill: true, enableViewBill: true, enableTableBadge: true, enableTableSelector: true };
 
     // Check if anything is enabled at all - if not, skip everything
     if (!buttonSettings.enableHelp && !buttonSettings.enableBill && !buttonSettings.enableViewBill && !buttonSettings.enableTableBadge) {
