@@ -415,13 +415,26 @@ if (typeof jQuery === 'undefined') {
           log('✅ Content unchanged - updating badges only');
 
           // Remove all existing sold-out badges in this container
-          $container.find('.smdp-sold-out-badge').remove();
+          $container.find('.sold-out-banner').remove();
+          $container.find('.smdp-menu-item').removeClass('sold-out-item');
 
           // Add badges to items that are sold out
           soldOutItems.forEach(function(itemId) {
             var $item = $container.find('[data-item-id="' + itemId + '"]');
-            if ($item.length && !$item.find('.smdp-sold-out-badge').length) {
-              $item.append('<div class="smdp-sold-out-badge">Sold Out</div>');
+            if ($item.length) {
+              // Add sold-out class to item
+              $item.addClass('sold-out-item');
+
+              // Add banner (insert after h3 title to match shortcode structure)
+              if (!$item.find('.sold-out-banner').length) {
+                var $title = $item.find('h3').first();
+                if ($title.length) {
+                  $title.after('<div class="sold-out-banner">SOLD OUT</div>');
+                } else {
+                  // Fallback: prepend to item if no h3 found
+                  $item.prepend('<div class="sold-out-banner">SOLD OUT</div>');
+                }
+              }
             }
           });
 

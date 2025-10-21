@@ -507,29 +507,50 @@ class SMDP_Ajax_Handler {
         $sold_out_items = array();
         $content_data = array(); // For hash generation
 
-        foreach ( $mapping as $item_id => $map_data ) {
+        // Check if this is new-style mapping (with instance_id) or old-style
+        $is_new_style = false;
+        foreach ($mapping as $key => $data) {
+            if (isset($data['instance_id'])) {
+                $is_new_style = true;
+                break;
+            }
+        }
+
+        // Build items lookup for efficiency
+        $items_by_id = array();
+        foreach ( $all_items as $obj ) {
+            if ( isset( $obj['type'] ) && $obj['type'] === 'ITEM' ) {
+                $items_by_id[$obj['id']] = $obj;
+            }
+        }
+
+        foreach ( $mapping as $key => $map_data ) {
             // Check if item is in this category
             if ( isset( $map_data['category'] ) && $map_data['category'] === $category_id ) {
-                // Find the actual item data
-                $item_data = null;
-                foreach ( $all_items as $obj ) {
-                    if ( isset( $obj['type'] ) && $obj['type'] === 'ITEM' && $obj['id'] === $item_id ) {
-                        $item_data = $obj['item_data'] ?? array();
-                        break;
-                    }
-                }
 
-                if ( $item_data ) {
+                // Get the actual item_id (depends on mapping style)
+                $item_id = $is_new_style ? $map_data['item_id'] : $key;
+                $instance_id = $is_new_style ? $key : $item_id;
+
+                // Find the actual item data
+                $item_obj = $items_by_id[$item_id] ?? null;
+
+                if ( $item_obj ) {
+                    $item_data = $item_obj['item_data'] ?? array();
+
                     // Check if sold out using same logic as shortcode
-                    $is_sold = $this->determine_sold_out_status( $item_id, $item_data, $mapping );
+                    // For new-style mapping, we need to check override by instance_id
+                    $override_key = $is_new_style ? $instance_id : $item_id;
+                    $is_sold = $this->determine_sold_out_status( $override_key, $item_data, $mapping );
                     if ( $is_sold ) {
-                        $sold_out_items[] = $item_id;
+                        // Return instance_id for new-style, item_id for old-style
+                        $sold_out_items[] = $instance_id;
                     }
 
                     // Build content signature for change detection
                     // Include: item name, description, price, variations, order
                     $content_data[] = array(
-                        'id' => $item_id,
+                        'id' => $instance_id, // Use instance_id for consistency
                         'name' => $item_data['name'] ?? '',
                         'description' => $item_data['description'] ?? '',
                         'variations' => wp_json_encode( $item_data['variations'] ?? array() ),

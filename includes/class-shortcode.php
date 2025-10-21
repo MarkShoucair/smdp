@@ -186,24 +186,28 @@ class SMDP_Shortcode {
         $output = '<div class="smdp-menu-grid">';
 
         foreach ( $items_to_show as $obj ) {
-            $item_id = $obj['id'];
+            $item_id = $obj['id']; // Square item ID
             $item    = $obj['item_data'];
+
+            // For new-style mapping, use instance_id for lookups (allows same item in multiple categories)
+            // For old-style mapping, instance_id doesn't exist, so use item_id
+            $lookup_id = isset($obj['instance_id']) ? $obj['instance_id'] : $item_id;
 
             // Get item details
             $price = $this->get_item_price( $item );
-            $is_sold = $this->is_item_sold_out( $item_id, $item, $mapping );
+            $is_sold = $this->is_item_sold_out( $lookup_id, $item, $mapping );
 
             // Check if hide_image is stored in the object (new-style) or mapping (old-style)
             if (isset($obj['hide_image'])) {
                 $hide_image = ! empty( $obj['hide_image'] );
             } else {
-                $hide_image = ! empty( $mapping[$item_id]['hide_image'] );
+                $hide_image = ! empty( $mapping[$lookup_id]['hide_image'] );
             }
 
             $img_url = $this->get_item_image_url( $item, $all_items );
 
-            // Build item tile
-            $output .= $this->build_item_tile( $item_id, $item, $price, $is_sold, $hide_image, $img_url, $all_items, $disabled_mods );
+            // Build item tile - use lookup_id for data-item-id attribute
+            $output .= $this->build_item_tile( $lookup_id, $item, $price, $is_sold, $hide_image, $img_url, $all_items, $disabled_mods );
         }
 
         $output .= '</div>';
