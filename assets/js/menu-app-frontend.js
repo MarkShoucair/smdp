@@ -270,7 +270,7 @@
     var buttons = root.querySelectorAll('.smdp-cat-btn');
     var sections = root.querySelectorAll('.smdp-app-section');
     
-    function show(slug) {
+    function show(slug, skipRefresh) {
       var found = false;
       sections.forEach(function(sec) {
         var on = (sec.getAttribute('data-slug') === slug);
@@ -287,21 +287,29 @@
       sections.forEach(function(sec) {
         if (sec.getAttribute('data-slug') === slug) { targetSection = sec; }
       });
-      if (!targetSection && sections[0]) { 
-        targetSection = sections[0]; 
-        targetSection.style.display = 'block'; 
+      if (!targetSection && sections[0]) {
+        targetSection = sections[0];
+        targetSection.style.display = 'block';
       }
       scrollToSectionTop(root, targetSection);
+
+      // Trigger refresh for this category's menu container (unless it's the initial load)
+      if (!skipRefresh && targetSection && window.smdpRefreshMenu && typeof jQuery !== 'undefined') {
+        var container = targetSection.querySelector('.smdp-menu-container');
+        if (container) {
+          window.smdpRefreshMenu(jQuery(container));
+        }
+      }
     }
 
     var initial = buttons[0].getAttribute('data-slug');
     buttons.forEach(function(btn) {
       btn.addEventListener('click', function(e) {
         e.preventDefault();
-        show(btn.getAttribute('data-slug'));
+        show(btn.getAttribute('data-slug')); // Will refresh on click
       });
     });
-    show(initial);
+    show(initial, true); // Skip refresh on initial load - refresh.js handles it
     
     try {
       if (root.getAttribute('data-promo-enabled') === '1' && 

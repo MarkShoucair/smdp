@@ -270,6 +270,24 @@ if (typeof jQuery === 'undefined') {
       return;
     }
 
+    // Check if we're inside a menu app
+    var $menuApp = $('.smdp-menu-app-fe');
+    if ($menuApp.length) {
+      // Inside menu app - only refresh the visible section
+      var $visibleSection = $menuApp.find('.smdp-app-section[style*="display:block"], .smdp-app-section[style*="display: block"]');
+      if ($visibleSection.length === 0) {
+        // Fallback: find the section without display:none
+        $visibleSection = $menuApp.find('.smdp-app-section').filter(function() {
+          return $(this).css('display') !== 'none';
+        });
+      }
+
+      if ($visibleSection.length) {
+        $containers = $visibleSection.find('.smdp-menu-container');
+        log('Menu app detected - only refreshing visible category');
+      }
+    }
+
     log('Found ' + $containers.length + ' menu container(s)');
 
     // Convert to array for sequential processing
@@ -331,6 +349,59 @@ if (typeof jQuery === 'undefined') {
     refreshNext(0);
   }
 
+  // Refresh a single menu container
+  function refreshSingleMenu($container, silent) {
+    var menuId = $container.data('menu-id');
+
+    if (!menuId) {
+      log('⚠️ Cannot refresh - container has no menu-id attribute');
+      return;
+    }
+
+    log('🔄 Refreshing menu container: ' + menuId);
+
+    // Add subtle opacity transition if not silent
+    if (!silent) {
+      $container.css('opacity', '0.6');
+    }
+
+    $.ajax({
+      url: smdpRefresh.ajaxurl,
+      type: 'POST',
+      timeout: 15000,
+      data: {
+        action: 'smdp_refresh_menu',
+        nonce: smdpRefresh.nonce,
+        menu_id: menuId
+      },
+      success: function(response) {
+        if (response.success) {
+          log('✅ Menu refreshed successfully: ' + menuId);
+          $container.html(response.data);
+
+          // Restore opacity with smooth transition
+          if (!silent) {
+            $container.css('transition', 'opacity 0.2s ease');
+            setTimeout(function() {
+              $container.css('opacity', '1');
+            }, 10);
+          }
+        } else {
+          log('❌ Menu refresh failed: ' + menuId, response);
+          if (!silent) {
+            $container.css('opacity', '1');
+          }
+        }
+      },
+      error: function(xhr, status, error) {
+        log('❌ AJAX error refreshing menu: ' + menuId, {status: status, error: error, statusCode: xhr.status});
+        if (!silent) {
+          $container.css('opacity', '1');
+        }
+      }
+    });
+  }
+
   // Initialize on page load
   $(document).ready(function() {
     log('🚀 Refresh script initializing...');
@@ -344,16 +415,37 @@ if (typeof jQuery === 'undefined') {
       return;
     }
 
-    // Perform initial refresh after a short delay
+    // Refresh visible menu container(s) on page load
     setTimeout(function() {
-      log('📋 Performing initial menu refresh...');
-      refreshAllMenus();
+      log('📋 Performing initial menu refresh for visible containers...');
+
+      // Check if we're in a menu app
+      var $menuApp = $('.smdp-menu-app-fe');
+      if ($menuApp.length) {
+        // Menu app - refresh only the visible section
+        var $visibleSection = $menuApp.find('.smdp-app-section').filter(function() {
+          return $(this).css('display') !== 'none';
+        });
+        if ($visibleSection.length) {
+          var $container = $visibleSection.find('.smdp-menu-container');
+          if ($container.length) {
+            refreshSingleMenu($container, true); // Silent on initial load
+          }
+        }
+      } else {
+        // Standalone shortcode(s) - refresh all visible containers
+        $('.smdp-menu-container').each(function() {
+          refreshSingleMenu($(this), true); // Silent on initial load
+        });
+      }
     }, 2000);
 
-    log('✅ Initialization complete - will refresh on promo dismiss only');
+    log('✅ Initialization complete - will refresh on category switch and promo dismiss');
   });
 
-  // Expose refresh function globally for promo system to call
+  // Expose refresh functions globally
+  window.smdpRefreshMenu = refreshSingleMenu; // For category switching
+
   window.smdpRefreshOnPromoDismiss = function() {
     log('🎯 Promo dismissed - fetching fresh cache version from server...');
 
@@ -365,8 +457,23 @@ if (typeof jQuery === 'undefined') {
         return;
       }
 
-      // No version change - refresh all menus
-      refreshAllMenus();
+      // No version change - refresh visible menu
+      var $menuApp = $('.smdp-menu-app-fe');
+      if ($menuApp.length) {
+        var $visibleSection = $menuApp.find('.smdp-app-section').filter(function() {
+          return $(this).css('display') !== 'none';
+        });
+        if ($visibleSection.length) {
+          var $container = $visibleSection.find('.smdp-menu-container');
+          if ($container.length) {
+            refreshSingleMenu($container);
+          }
+        }
+      } else {
+        $('.smdp-menu-container').each(function() {
+          refreshSingleMenu($(this));
+        });
+      }
     });
   };
 
