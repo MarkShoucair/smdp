@@ -991,10 +991,19 @@ jQuery(document).ready(function($) {
                if(response.data.hidden) {
                    $catGroup.addClass("hidden-category");
                    $btn.text("Show Category");
-                   // Don't move to bottom - keep in current position
+                   // Move to bottom after all visible categories
+                   $("#menu-editor-categories").append($catGroup);
                } else {
                    $catGroup.removeClass("hidden-category");
                    $btn.text("Hide Category");
+                   // Move back to sorted position among visible categories
+                   // Find first hidden category and insert before it, or append if none
+                   var $firstHidden = $(".smdp-category-group.hidden-category").first();
+                   if ($firstHidden.length) {
+                       $firstHidden.before($catGroup);
+                   } else {
+                       $("#menu-editor-categories").append($catGroup);
+                   }
                }
            } else {
                alert("Error updating category visibility: " + response.data);
