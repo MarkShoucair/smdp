@@ -1149,6 +1149,19 @@ class SMDP_Menu_App_Builder {
 
           <?php submit_button('Save Action Button Settings'); ?>
         </form>
+
+        <hr style="margin:40px 0; border:none; border-top:2px solid #ddd;">
+
+        <?php
+        // Include Help & Bill configuration content
+        if (class_exists('Smdp_Help_Request')) {
+          echo '<h3>Help & Bill Backend Configuration</h3>';
+          echo '<p class="description">Configure which Square catalog items trigger help and bill requests, and set up table tracking.</p>';
+          $help_request = Smdp_Help_Request::instance();
+          // Render the help/bill content without the wrapping page elements
+          $help_request->render_help_bill_content_only();
+        }
+        ?>
         </div>
       </div>
 
