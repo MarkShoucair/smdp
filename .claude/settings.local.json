@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(awk:*)",
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

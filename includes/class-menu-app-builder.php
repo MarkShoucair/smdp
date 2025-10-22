@@ -2216,13 +2216,52 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtab: Item Detail -->
         <div id="style-item-detail" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
-          <form method="post" action="options.php">
-            <?php settings_fields('smdp_menu_app_item_detail_styles_group'); ?>
-            <h3>Item Detail Modal Styles</h3>
-            <p class="description">Customize the appearance of the item detail popup/modal</p>
-            <?php self::field_item_detail_styles(); ?>
-            <?php submit_button('Save Item Detail Styles', 'primary', 'submit', false); ?>
-          </form>
+
+          <!-- Item Detail Modal Enable/Disable Settings -->
+          <div style="background:#fff; border:1px solid #ccd0d4; box-shadow:0 1px 1px rgba(0,0,0,0.04); padding:20px; margin-bottom:20px;">
+            <h3 style="margin-top:0;">Item Detail Modal Settings</h3>
+            <form method="post" action="options.php">
+              <?php settings_fields('smdp_menu_app_layout_group'); ?>
+              <?php
+              $settings = get_option(self::OPT_SETTINGS, array());
+              if (!is_array($settings)) $settings = array();
+              ?>
+
+              <fieldset>
+                <legend style="font-weight:600; font-size:14px; margin-bottom:10px;">Enable/Disable Item Detail Modal</legend>
+                <p class="description" style="margin-bottom:15px;">Control where the item detail modal (tap to view details) is enabled.</p>
+
+                <label style="display:block; margin-bottom:8px;">
+                  <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_shortcode]" value="1" <?php checked(isset($settings['enable_modal_shortcode']) ? $settings['enable_modal_shortcode'] : '1', '1'); ?>>
+                  <strong>Enable for Category Shortcodes</strong> <code>[square_menu category="..."]</code>
+                </label>
+
+                <label style="display:block; margin-bottom:8px;">
+                  <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_menuapp]" value="1" <?php checked(isset($settings['enable_modal_menuapp']) ? $settings['enable_modal_menuapp'] : '1', '1'); ?>>
+                  <strong>Enable for Menu App</strong> (full menu app view)
+                </label>
+
+                <label style="display:block; margin-bottom:8px;">
+                  <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_filter]" value="1" <?php checked(isset($settings['enable_modal_filter']) ? $settings['enable_modal_filter'] : '1', '1'); ?>>
+                  <strong>Enable for Menu App Category Filters</strong> (category filter pages)
+                </label>
+
+                <p class="description" style="margin-top:10px;">When disabled, tapping on menu items will not open the detail modal in that context.</p>
+              </fieldset>
+
+              <?php submit_button('Save Modal Settings', 'primary', 'submit', false); ?>
+            </form>
+          </div>
+
+          <!-- Item Detail Modal Styles -->
+          <div style="background:#fff; border:1px solid #ccd0d4; box-shadow:0 1px 1px rgba(0,0,0,0.04); padding:20px; margin-bottom:20px;">
+            <form method="post" action="options.php">
+              <?php settings_fields('smdp_menu_app_item_detail_styles_group'); ?>
+              <h3 style="margin-top:0;">Item Detail Modal Styles</h3>
+              <p class="description">Customize the appearance of the item detail popup/modal</p>
+              <?php self::field_item_detail_styles(); ?>
+              <?php submit_button('Save Item Detail Styles', 'primary', 'submit', false); ?>
+            </form>
           <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 10px;" onsubmit="return confirm('Are you sure you want to reset Item Detail styles to defaults? This cannot be undone.');">
             <input type="hidden" name="action" value="smdp_reset_styles">
             <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_DETAIL_STYLES); ?>">
@@ -2262,13 +2301,22 @@ class SMDP_Menu_App_Builder {
         sessionStorage.setItem('smdp_active_style_subtab', target);
       });
 
-      // Restore active style subtab from session storage
-      var savedStyleSubtab = sessionStorage.getItem('smdp_active_style_subtab');
-      if (savedStyleSubtab) {
+      // Check for fragment identifier in URL (e.g., #style-item-detail)
+      var urlHash = window.location.hash;
+      var targetSubtab = null;
+
+      if (urlHash && $(urlHash).hasClass('smdp-style-subtab-content')) {
+        targetSubtab = urlHash;
+      } else {
+        // Fallback to session storage
+        targetSubtab = sessionStorage.getItem('smdp_active_style_subtab');
+      }
+
+      if (targetSubtab) {
         $('.smdp-style-subtab').removeClass('active');
         $('.smdp-style-subtab-content').removeClass('active');
-        $('.smdp-style-subtab[href="' + savedStyleSubtab + '"]').addClass('active');
-        $(savedStyleSubtab).addClass('active');
+        $('.smdp-style-subtab[href="' + targetSubtab + '"]').addClass('active');
+        $(targetSubtab).addClass('active');
       }
 
       // Save current subtab state before any form submission
@@ -2451,27 +2499,10 @@ class SMDP_Menu_App_Builder {
 
     <hr style="margin:25px 0; border:none; border-top:1px solid #ddd;">
 
-    <fieldset>
-      <legend style="font-weight:600; font-size:14px; margin-bottom:10px;">Item Detail Modal</legend>
-      <p class="description" style="margin-bottom:15px;">Control where the item detail modal (tap to view details) is enabled.</p>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_shortcode]" value="1" <?php checked(isset($settings['enable_modal_shortcode']) ? $settings['enable_modal_shortcode'] : '1', '1'); ?>>
-        <strong>Enable for Category Shortcodes</strong> <code>[square_menu category="..."]</code>
-      </label>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_menuapp]" value="1" <?php checked(isset($settings['enable_modal_menuapp']) ? $settings['enable_modal_menuapp'] : '1', '1'); ?>>
-        <strong>Enable for Menu App</strong> (full menu app view)
-      </label>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_modal_filter]" value="1" <?php checked(isset($settings['enable_modal_filter']) ? $settings['enable_modal_filter'] : '1', '1'); ?>>
-        <strong>Enable for Menu App Category Filters</strong> (category filter pages)
-      </label>
-
-      <p class="description" style="margin-top:10px;">When disabled, tapping on menu items will not open the detail modal in that context.</p>
-    </fieldset>
+    <p class="description" style="padding:15px; background:#f0f6fc; border-left:4px solid #2271b1; margin:20px 0;">
+      <strong>Note:</strong> Item Detail Modal enable/disable settings have been moved to
+      <strong><a href="<?php echo admin_url('admin.php?page=smdp_styles_customization#style-item-detail'); ?>">Styles & Customization → Item Detail</a></strong>
+    </p>
     <?php
   }
 
