@@ -9,6 +9,7 @@ class SMDP_Menu_App_Builder {
   const OPT_STYLES   = 'smdp_app_button_styles'; // Category button styles
   const OPT_HELP_BTN_STYLES = 'smdp_app_help_button_styles'; // Help button styles
   const OPT_BG_COLORS = 'smdp_app_background_colors'; // Background colors
+  const OPT_ITEM_CARD_STYLES = 'smdp_app_item_card_styles'; // Item card styles
 
   public static function init() {
     add_action('admin_menu', array(__CLASS__, 'admin_menu'));
@@ -253,6 +254,34 @@ class SMDP_Menu_App_Builder {
 
     register_setting('smdp_menu_app_bg_colors_group', self::OPT_BG_COLORS, array(
         'sanitize_callback' => $sanitize_bg_colors,
+        'default' => array()
+    ));
+
+    // Item card styles settings (Styles tab > Item Cards subtab) - SEPARATE GROUP
+    $sanitize_item_card_styles = function($input) {
+        if (!is_array($input)) return array();
+
+        $sanitized = array();
+        $sanitized['bg_color'] = !empty($input['bg_color']) ? sanitize_hex_color($input['bg_color']) : '#ffffff';
+        $sanitized['text_color'] = !empty($input['text_color']) ? sanitize_hex_color($input['text_color']) : '#000000';
+        $sanitized['border_color'] = !empty($input['border_color']) ? sanitize_hex_color($input['border_color']) : '#eeeeee';
+        $sanitized['border_width'] = isset($input['border_width']) ? absint($input['border_width']) : 1;
+        $sanitized['border_radius'] = isset($input['border_radius']) ? absint($input['border_radius']) : 0;
+        $sanitized['padding'] = isset($input['padding']) ? absint($input['padding']) : 8;
+        $sanitized['title_color'] = !empty($input['title_color']) ? sanitize_hex_color($input['title_color']) : '#000000';
+        $sanitized['title_size'] = isset($input['title_size']) ? absint($input['title_size']) : 19;
+        $sanitized['title_weight'] = !empty($input['title_weight']) ? sanitize_text_field($input['title_weight']) : 'bold';
+        $sanitized['price_color'] = !empty($input['price_color']) ? sanitize_hex_color($input['price_color']) : '#000000';
+        $sanitized['price_size'] = isset($input['price_size']) ? absint($input['price_size']) : 16;
+        $sanitized['price_weight'] = !empty($input['price_weight']) ? sanitize_text_field($input['price_weight']) : 'bold';
+        $sanitized['desc_color'] = !empty($input['desc_color']) ? sanitize_hex_color($input['desc_color']) : '#666666';
+        $sanitized['desc_size'] = isset($input['desc_size']) ? absint($input['desc_size']) : 14;
+
+        return $sanitized;
+    };
+
+    register_setting('smdp_menu_app_item_card_styles_group', self::OPT_ITEM_CARD_STYLES, array(
+        'sanitize_callback' => $sanitize_item_card_styles,
         'default' => array()
     ));
 
@@ -572,6 +601,72 @@ class SMDP_Menu_App_Builder {
 /* Item card background */
 .smdp-item-card {
   background-color: <?php echo esc_attr($bg_colors['item_card_bg']); ?> !important;
+}
+</style>
+<?php
+    }
+
+    // Get saved Item Card styles
+    $item_card_styles = get_option(self::OPT_ITEM_CARD_STYLES, array());
+
+    if (!empty($item_card_styles)) {
+      // Default values
+      $defaults = array(
+        'bg_color' => '#ffffff',
+        'text_color' => '#000000',
+        'border_color' => '#eeeeee',
+        'border_width' => 1,
+        'border_radius' => 0,
+        'padding' => 8,
+        'title_color' => '#000000',
+        'title_size' => 19,
+        'title_weight' => 'bold',
+        'price_color' => '#000000',
+        'price_size' => 16,
+        'price_weight' => 'bold',
+        'desc_color' => '#666666',
+        'desc_size' => 14,
+      );
+
+      $item_card_styles = array_merge($defaults, $item_card_styles);
+
+      // Generate CSS for item cards
+      ?>
+<style id="smdp-custom-item-card-styles">
+/* Custom Item Card Styles from Menu App Builder */
+
+/* Item card container */
+.smdp-menu-item,
+.smdp-item-tile {
+  background-color: <?php echo esc_attr($item_card_styles['bg_color']); ?> !important;
+  border: <?php echo esc_attr($item_card_styles['border_width']); ?>px solid <?php echo esc_attr($item_card_styles['border_color']); ?> !important;
+  border-radius: <?php echo esc_attr($item_card_styles['border_radius']); ?>px !important;
+  padding: <?php echo esc_attr($item_card_styles['padding']); ?>px !important;
+}
+
+/* Item title */
+.smdp-menu-item h3,
+.smdp-item-tile h3 {
+  color: <?php echo esc_attr($item_card_styles['title_color']); ?> !important;
+  font-size: <?php echo esc_attr($item_card_styles['title_size']); ?>px !important;
+  font-weight: <?php echo esc_attr($item_card_styles['title_weight']); ?> !important;
+}
+
+/* Item description */
+.smdp-menu-item p:not(:has(strong)),
+.smdp-item-tile p:not(:has(strong)) {
+  color: <?php echo esc_attr($item_card_styles['desc_color']); ?> !important;
+  font-size: <?php echo esc_attr($item_card_styles['desc_size']); ?>px !important;
+}
+
+/* Item price */
+.smdp-menu-item p strong,
+.smdp-item-tile p strong,
+.smdp-menu-item p:has(strong),
+.smdp-item-tile p:has(strong) {
+  color: <?php echo esc_attr($item_card_styles['price_color']); ?> !important;
+  font-size: <?php echo esc_attr($item_card_styles['price_size']); ?>px !important;
+  font-weight: <?php echo esc_attr($item_card_styles['price_weight']); ?> !important;
 }
 </style>
 <?php
@@ -906,8 +1001,13 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtab: Item Cards -->
         <div id="style-item-cards" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
-          <h3>Item Card Styles</h3>
-          <p class="description">Customize menu item card appearance (coming soon in Phase 2)</p>
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_item_card_styles_group'); ?>
+            <h3>Item Card Styles</h3>
+            <p class="description">Customize the appearance of menu item cards</p>
+            <?php self::field_item_card_styles(); ?>
+            <?php submit_button('Save Item Card Styles'); ?>
+          </form>
         </div>
 
         <!-- Subtab: Custom CSS -->
@@ -1951,9 +2051,21 @@ class SMDP_Menu_App_Builder {
               font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
               <?php if (!empty($styles['font_family'])): ?>font-family: <?php echo esc_attr($styles['font_family']); ?>;<?php endif; ?>
               cursor: pointer;
-              transition: all 0.2s;
-              width: 100%;
-              display: block;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+              white-space: nowrap;
+              line-height: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              <?php if ($button_type === 'table_badge'): ?>
+              width: 120px;
+              min-width: 120px;
+              max-width: 120px;
+              <?php else: ?>
+              width: auto;
+              min-width: 160px;
+              <?php endif; ?>
             "><?php echo esc_html($button_text); ?></button>
             <?php if ($include_disabled): ?>
             <button type="button" id="smdp-<?php echo esc_attr(str_replace('_', '-', $button_type)); ?>-preview-disabled" style="
@@ -1966,9 +2078,15 @@ class SMDP_Menu_App_Builder {
               font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
               <?php if (!empty($styles['font_family'])): ?>font-family: <?php echo esc_attr($styles['font_family']); ?>;<?php endif; ?>
               cursor: not-allowed;
-              opacity: 0.7;
-              width: 100%;
-              display: block;
+              opacity: 0.8;
+              box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+              white-space: nowrap;
+              line-height: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: auto;
+              min-width: 160px;
               margin-top: 10px;
             ">Already Requested</button>
             <small style="display: block; margin-top: 8px; color: #666; font-size: 11px;">Disabled state preview</small>
@@ -2184,6 +2302,237 @@ class SMDP_Menu_App_Builder {
 
       // Listen for color picker changes from external script
       $(document).on('smdp-color-changed', updateBgPreview);
+    });
+    </script>
+    <?php
+  }
+
+  public static function field_item_card_styles() {
+    $styles = get_option(self::OPT_ITEM_CARD_STYLES, array());
+    $name = self::OPT_ITEM_CARD_STYLES;
+
+    // Default values based on current hardcoded styles
+    $defaults = array(
+      'bg_color' => '#ffffff',
+      'text_color' => '#000000',
+      'border_color' => '#eeeeee',
+      'border_width' => 1,
+      'border_radius' => 0,
+      'padding' => 8,
+      'title_color' => '#000000',
+      'title_size' => 19,
+      'title_weight' => 'bold',
+      'price_color' => '#000000',
+      'price_size' => 16,
+      'price_weight' => 'bold',
+      'desc_color' => '#666666',
+      'desc_size' => 14,
+    );
+    $styles = array_merge($defaults, $styles);
+    ?>
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;">
+      <!-- Left Column: Form Controls -->
+      <div>
+        <h3 style="margin-top: 0;">Card Container</h3>
+        <table class="form-table">
+          <tr>
+            <th>Background Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[bg_color]" value="<?php echo esc_attr($styles['bg_color']); ?>" class="smdp-color-picker smdp-item-card-field" data-style="bg_color" />
+              <p class="description">Background color for the card</p>
+            </td>
+          </tr>
+          <tr>
+            <th>Border Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[border_color]" value="<?php echo esc_attr($styles['border_color']); ?>" class="smdp-color-picker smdp-item-card-field" data-style="border_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Border Width (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[border_width]" value="<?php echo esc_attr($styles['border_width']); ?>" min="0" max="10" style="width: 80px;" class="smdp-item-card-field" data-style="border_width" />
+            </td>
+          </tr>
+          <tr>
+            <th>Border Radius (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[border_radius]" value="<?php echo esc_attr($styles['border_radius']); ?>" min="0" max="50" style="width: 80px;" class="smdp-item-card-field" data-style="border_radius" />
+              <p class="description">Rounded corners (0 = square, higher = more rounded)</p>
+            </td>
+          </tr>
+          <tr>
+            <th>Padding (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[padding]" value="<?php echo esc_attr($styles['padding']); ?>" min="0" max="50" style="width: 80px;" class="smdp-item-card-field" data-style="padding" />
+              <p class="description">Space inside the card</p>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Item Title</h3>
+        <table class="form-table">
+          <tr>
+            <th>Title Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[title_color]" value="<?php echo esc_attr($styles['title_color']); ?>" class="smdp-color-picker smdp-item-card-field" data-style="title_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Title Font Size (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[title_size]" value="<?php echo esc_attr($styles['title_size']); ?>" min="10" max="40" style="width: 80px;" class="smdp-item-card-field" data-style="title_size" />
+            </td>
+          </tr>
+          <tr>
+            <th>Title Font Weight</th>
+            <td>
+              <select name="<?php echo esc_attr($name); ?>[title_weight]" class="smdp-item-card-field" data-style="title_weight">
+                <option value="normal" <?php selected($styles['title_weight'], 'normal'); ?>>Normal</option>
+                <option value="bold" <?php selected($styles['title_weight'], 'bold'); ?>>Bold</option>
+                <option value="600" <?php selected($styles['title_weight'], '600'); ?>>Semi-Bold (600)</option>
+                <option value="500" <?php selected($styles['title_weight'], '500'); ?>>Medium (500)</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Price</h3>
+        <table class="form-table">
+          <tr>
+            <th>Price Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[price_color]" value="<?php echo esc_attr($styles['price_color']); ?>" class="smdp-color-picker smdp-item-card-field" data-style="price_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Price Font Size (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[price_size]" value="<?php echo esc_attr($styles['price_size']); ?>" min="10" max="40" style="width: 80px;" class="smdp-item-card-field" data-style="price_size" />
+            </td>
+          </tr>
+          <tr>
+            <th>Price Font Weight</th>
+            <td>
+              <select name="<?php echo esc_attr($name); ?>[price_weight]" class="smdp-item-card-field" data-style="price_weight">
+                <option value="normal" <?php selected($styles['price_weight'], 'normal'); ?>>Normal</option>
+                <option value="bold" <?php selected($styles['price_weight'], 'bold'); ?>>Bold</option>
+                <option value="600" <?php selected($styles['price_weight'], '600'); ?>>Semi-Bold (600)</option>
+                <option value="500" <?php selected($styles['price_weight'], '500'); ?>>Medium (500)</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Description</h3>
+        <table class="form-table">
+          <tr>
+            <th>Description Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[desc_color]" value="<?php echo esc_attr($styles['desc_color']); ?>" class="smdp-color-picker smdp-item-card-field" data-style="desc_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Description Font Size (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[desc_size]" value="<?php echo esc_attr($styles['desc_size']); ?>" min="10" max="24" style="width: 80px;" class="smdp-item-card-field" data-style="desc_size" />
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Right Column: Live Preview -->
+      <div style="position: sticky; top: 20px;">
+        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h4 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: #666;">Live Preview</h4>
+
+          <div id="smdp-item-card-preview" style="
+            background: <?php echo esc_attr($styles['bg_color']); ?>;
+            border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
+            border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+            padding: <?php echo esc_attr($styles['padding']); ?>px;
+            position: relative;
+          ">
+            <h3 id="smdp-item-card-preview-title" style="
+              color: <?php echo esc_attr($styles['title_color']); ?>;
+              font-size: <?php echo esc_attr($styles['title_size']); ?>px;
+              font-weight: <?php echo esc_attr($styles['title_weight']); ?>;
+              margin: 0 0 5px;
+            ">Burger & Fries</h3>
+
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23e0e0e0' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-family='Arial' font-size='14'%3EMenu Image%3C/text%3E%3C/svg%3E" alt="Sample" class="smdp-menu-image" style="width: 100%; height: auto; margin: 5px 0;" />
+
+            <p id="smdp-item-card-preview-desc" style="
+              color: <?php echo esc_attr($styles['desc_color']); ?>;
+              font-size: <?php echo esc_attr($styles['desc_size']); ?>px;
+              margin: 5px 0;
+            ">Juicy beef patty with crispy golden fries and our special sauce</p>
+
+            <p id="smdp-item-card-preview-price" style="
+              color: <?php echo esc_attr($styles['price_color']); ?>;
+              font-size: <?php echo esc_attr($styles['price_size']); ?>px;
+              font-weight: <?php echo esc_attr($styles['price_weight']); ?>;
+              margin: 5px 0 0;
+            "><strong>$12.99</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    jQuery(document).ready(function($){
+      // Function to update item card preview
+      function updateItemCardPreview() {
+        var prefix = 'input[name="<?php echo esc_js($name); ?>';
+
+        var bgColor = $(prefix + '[bg_color]"]').val();
+        var borderColor = $(prefix + '[border_color]"]').val();
+        var borderWidth = $(prefix + '[border_width]"]').val();
+        var borderRadius = $(prefix + '[border_radius]"]').val();
+        var padding = $(prefix + '[padding]"]').val();
+        var titleColor = $(prefix + '[title_color]"]').val();
+        var titleSize = $(prefix + '[title_size]"]').val();
+        var titleWeight = $('select[name="<?php echo esc_js($name); ?>[title_weight]"]').val();
+        var priceColor = $(prefix + '[price_color]"]').val();
+        var priceSize = $(prefix + '[price_size]"]').val();
+        var priceWeight = $('select[name="<?php echo esc_js($name); ?>[price_weight]"]').val();
+        var descColor = $(prefix + '[desc_color]"]').val();
+        var descSize = $(prefix + '[desc_size]"]').val();
+
+        // Update card container
+        $('#smdp-item-card-preview').css({
+          'background-color': bgColor,
+          'border': borderWidth + 'px solid ' + borderColor,
+          'border-radius': borderRadius + 'px',
+          'padding': padding + 'px'
+        });
+
+        // Update title
+        $('#smdp-item-card-preview-title').css({
+          'color': titleColor,
+          'font-size': titleSize + 'px',
+          'font-weight': titleWeight
+        });
+
+        // Update price
+        $('#smdp-item-card-preview-price').css({
+          'color': priceColor,
+          'font-size': priceSize + 'px',
+          'font-weight': priceWeight
+        });
+
+        // Update description
+        $('#smdp-item-card-preview-desc').css({
+          'color': descColor,
+          'font-size': descSize + 'px'
+        });
+      }
+
+      // Update on field changes
+      $('.smdp-item-card-field').on('change keyup input', updateItemCardPreview);
+
+      // Listen for color picker changes
+      $(document).on('smdp-color-changed', updateItemCardPreview);
     });
     </script>
     <?php
