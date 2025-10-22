@@ -619,8 +619,10 @@ class SMDP_Help_Request {
     echo '<div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">';
 
     // Action Buttons Enable/Disable Section (at the top)
-    echo '<form method="post" action="options.php">';
-    settings_fields('smdp_menu_app_layout_group');
+    ?>
+    <form method="post" action="options.php">
+    <?php settings_fields('smdp_menu_app_layout_group'); ?>
+    <?php
 
     // Get button enable/disable settings (default to enabled)
     $app_settings = get_option('smdp_menu_app_settings', array());
