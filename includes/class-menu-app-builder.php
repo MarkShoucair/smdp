@@ -1955,7 +1955,126 @@ class SMDP_Menu_App_Builder {
       <div style="background: #fff; padding: 20px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px;">
         <?php $render_button_fields('table_badge', $all_styles['table_badge'], false); ?>
       </div>
+
+      <!-- Live Preview Section -->
+      <div style="background: #f9f9f9; padding: 20px; margin-top: 30px; border: 1px solid #ccc; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Live Preview</h3>
+        <p class="description" style="margin-bottom: 20px;">See how your buttons will look as you make changes</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+          <div>
+            <small style="display: block; margin-bottom: 8px; font-weight: 600;">Request Help</small>
+            <button type="button" id="smdp-help-preview" style="
+              background: <?php echo esc_attr($all_styles['help']['bg_color']); ?>;
+              color: <?php echo esc_attr($all_styles['help']['text_color']); ?>;
+              border: <?php echo esc_attr($all_styles['help']['border_width']); ?>px solid <?php echo esc_attr($all_styles['help']['border_color']); ?>;
+              font-size: <?php echo esc_attr($all_styles['help']['font_size']); ?>px;
+              padding: <?php echo esc_attr($all_styles['help']['padding_vertical']); ?>px <?php echo esc_attr($all_styles['help']['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($all_styles['help']['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($all_styles['help']['font_weight']); ?>;
+              <?php if (!empty($all_styles['help']['font_family'])): ?>font-family: <?php echo esc_attr($all_styles['help']['font_family']); ?>;<?php endif; ?>
+              cursor: pointer; transition: all 0.2s;
+            ">Request Help</button>
+          </div>
+
+          <div>
+            <small style="display: block; margin-bottom: 8px; font-weight: 600;">Request Bill</small>
+            <button type="button" id="smdp-bill-preview" style="
+              background: <?php echo esc_attr($all_styles['bill']['bg_color']); ?>;
+              color: <?php echo esc_attr($all_styles['bill']['text_color']); ?>;
+              border: <?php echo esc_attr($all_styles['bill']['border_width']); ?>px solid <?php echo esc_attr($all_styles['bill']['border_color']); ?>;
+              font-size: <?php echo esc_attr($all_styles['bill']['font_size']); ?>px;
+              padding: <?php echo esc_attr($all_styles['bill']['padding_vertical']); ?>px <?php echo esc_attr($all_styles['bill']['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($all_styles['bill']['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($all_styles['bill']['font_weight']); ?>;
+              <?php if (!empty($all_styles['bill']['font_family'])): ?>font-family: <?php echo esc_attr($all_styles['bill']['font_family']); ?>;<?php endif; ?>
+              cursor: pointer; transition: all 0.2s;
+            ">Request Bill</button>
+          </div>
+
+          <div>
+            <small style="display: block; margin-bottom: 8px; font-weight: 600;">View Bill</small>
+            <button type="button" id="smdp-view-bill-preview" style="
+              background: <?php echo esc_attr($all_styles['view_bill']['bg_color']); ?>;
+              color: <?php echo esc_attr($all_styles['view_bill']['text_color']); ?>;
+              border: <?php echo esc_attr($all_styles['view_bill']['border_width']); ?>px solid <?php echo esc_attr($all_styles['view_bill']['border_color']); ?>;
+              font-size: <?php echo esc_attr($all_styles['view_bill']['font_size']); ?>px;
+              padding: <?php echo esc_attr($all_styles['view_bill']['padding_vertical']); ?>px <?php echo esc_attr($all_styles['view_bill']['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($all_styles['view_bill']['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($all_styles['view_bill']['font_weight']); ?>;
+              <?php if (!empty($all_styles['view_bill']['font_family'])): ?>font-family: <?php echo esc_attr($all_styles['view_bill']['font_family']); ?>;<?php endif; ?>
+              cursor: pointer; transition: all 0.2s;
+            ">View Bill</button>
+          </div>
+
+          <div>
+            <small style="display: block; margin-bottom: 8px; font-weight: 600;">Table Badge</small>
+            <button type="button" id="smdp-table-badge-preview" style="
+              background: <?php echo esc_attr($all_styles['table_badge']['bg_color']); ?>;
+              color: <?php echo esc_attr($all_styles['table_badge']['text_color']); ?>;
+              border: <?php echo esc_attr($all_styles['table_badge']['border_width']); ?>px solid <?php echo esc_attr($all_styles['table_badge']['border_color']); ?>;
+              font-size: <?php echo esc_attr($all_styles['table_badge']['font_size']); ?>px;
+              padding: <?php echo esc_attr($all_styles['table_badge']['padding_vertical']); ?>px <?php echo esc_attr($all_styles['table_badge']['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($all_styles['table_badge']['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($all_styles['table_badge']['font_weight']); ?>;
+              <?php if (!empty($all_styles['table_badge']['font_family'])): ?>font-family: <?php echo esc_attr($all_styles['table_badge']['font_family']); ?>;<?php endif; ?>
+              cursor: pointer; transition: all 0.2s;
+            ">Table 5</button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <script>
+    jQuery(document).ready(function($){
+      // Function to update button preview
+      function updateButtonPreview(buttonType) {
+        var $preview = $('#smdp-' + buttonType.replace('_', '-') + '-preview');
+        var prefix = 'input[name="<?php echo esc_js(self::OPT_HELP_BTN_STYLES); ?>[' + buttonType + ']';
+
+        var bgColor = $(prefix + '[bg_color]"]').val();
+        var textColor = $(prefix + '[text_color]"]').val();
+        var borderColor = $(prefix + '[border_color]"]').val();
+        var borderWidth = $(prefix + '[border_width]"]').val();
+        var borderRadius = $(prefix + '[border_radius]"]').val();
+        var fontSize = $(prefix + '[font_size]"]').val();
+        var paddingV = $(prefix + '[padding_vertical]"]').val();
+        var paddingH = $(prefix + '[padding_horizontal]"]').val();
+        var fontWeight = $(prefix + '[font_weight]"] option:selected').val();
+        var fontFamily = $(prefix + '[font_family]"] option:selected').val();
+
+        $preview.css({
+          'background-color': bgColor,
+          'color': textColor,
+          'border': borderWidth + 'px solid ' + borderColor,
+          'border-radius': borderRadius + 'px',
+          'font-size': fontSize + 'px',
+          'padding': paddingV + 'px ' + paddingH + 'px',
+          'font-weight': fontWeight,
+          'font-family': fontFamily
+        });
+      }
+
+      // Update on field changes
+      $('.smdp-help-field, .smdp-bill-field, .smdp-view_bill-field, .smdp-table_badge-field').on('change keyup input', function(){
+        var buttonType = '';
+        if ($(this).hasClass('smdp-help-field')) buttonType = 'help';
+        else if ($(this).hasClass('smdp-bill-field')) buttonType = 'bill';
+        else if ($(this).hasClass('smdp-view_bill-field')) buttonType = 'view_bill';
+        else if ($(this).hasClass('smdp-table_badge-field')) buttonType = 'table_badge';
+
+        if (buttonType) updateButtonPreview(buttonType);
+      });
+
+      // Listen for color picker changes
+      $(document).on('smdp-color-changed', function(){
+        updateButtonPreview('help');
+        updateButtonPreview('bill');
+        updateButtonPreview('view_bill');
+        updateButtonPreview('table_badge');
+      });
+    });
+    </script>
     <?php
   }
   public static function field_background_colors() {
