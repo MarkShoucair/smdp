@@ -320,7 +320,7 @@ class SMDP_Help_Request {
   public function add_admin_page(): void {
     $parent='smdp_main'; $slug='smdp-help-tables'; global $submenu;
     if(isset($submenu[$parent])){foreach($submenu[$parent] as $it){if($it[2]===$slug) return;}}
-    add_submenu_page($parent,'Action Buttons','Action Buttons','manage_options',$slug,[ $this,'render_admin' ]);
+    add_submenu_page($parent,'Help & Bill','Help & Bill','manage_options',$slug,[ $this,'render_admin' ]);
 
     // Add rate limit clearing handler
     add_action('admin_init', [$this, 'handle_clear_rate_limits']);
@@ -608,7 +608,7 @@ class SMDP_Help_Request {
     // Get cached locations (don't fetch on every page load)
     $locations_list = get_option($this->opt_locations_cache, []);
 
-    echo '<div class="wrap"><h1>Action Buttons</h1>';
+    echo '<div class="wrap"><h1>Help & Bill</h1>';
 
     // Show success message if redirected after save
     if (isset($_GET['updated']) && $_GET['updated'] === 'true') {
@@ -617,62 +617,6 @@ class SMDP_Help_Request {
 
     // All settings on one page with two-column layout for Configuration and Table Setup
     echo '<div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">';
-
-    // Action Buttons Enable/Disable Section (at the top)
-    ?>
-    <form method="post" action="options.php">
-    <?php settings_fields('smdp_menu_app_layout_group'); ?>
-    <input type="hidden" name="smdp_app_settings[_form_type]" value="action_buttons">
-    <?php
-
-    // Get button enable/disable settings (default to enabled)
-    $app_settings = get_option('smdp_app_settings', array());
-    if (!is_array($app_settings)) $app_settings = array();
-    $enable_help_btn = isset($app_settings['enable_help_btn']) ? $app_settings['enable_help_btn'] : '1';
-    $enable_bill_btn = isset($app_settings['enable_bill_btn']) ? $app_settings['enable_bill_btn'] : '1';
-    $enable_view_bill_btn = isset($app_settings['enable_view_bill_btn']) ? $app_settings['enable_view_bill_btn'] : '1';
-    $enable_table_badge = isset($app_settings['enable_table_badge']) ? $app_settings['enable_table_badge'] : '1';
-    $enable_table_selector = isset($app_settings['enable_table_selector']) ? $app_settings['enable_table_selector'] : '1';
-
-    echo '<h2 style="margin-top:0;">Action Buttons</h2>';
-    echo '<p class="description" style="margin-bottom:15px;">Control which action buttons appear in the bottom-right corner of the menu app.</p>';
-
-    echo '<fieldset style="margin-bottom:20px;">';
-
-    echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_app_settings[enable_help_btn]" value="1" ' . checked($enable_help_btn, '1', false) . '>';
-    echo '<strong>Enable "Request Help" button</strong>';
-    echo '</label>';
-
-    echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_app_settings[enable_bill_btn]" value="1" ' . checked($enable_bill_btn, '1', false) . '>';
-    echo '<strong>Enable "Request Bill" button</strong>';
-    echo '</label>';
-
-    echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_app_settings[enable_view_bill_btn]" value="1" ' . checked($enable_view_bill_btn, '1', false) . '>';
-    echo '<strong>Enable "View Bill" button</strong>';
-    echo '</label>';
-
-    echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_app_settings[enable_table_badge]" value="1" ' . checked($enable_table_badge, '1', false) . '>';
-    echo '<strong>Enable Table Number Badge</strong>';
-    echo '</label>';
-
-    echo '<hr style="margin:15px 0; border:none; border-top:1px solid #e0e0e0;">';
-
-    echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_app_settings[enable_table_selector]" value="1" ' . checked($enable_table_selector, '1', false) . '>';
-    echo '<strong>Enable Table Number Selector</strong>';
-    echo '</label>';
-
-    echo '<p class="description" style="margin-top:10px;">Uncheck "Table Number Selector" to skip the table selection popup entirely. The other options control which buttons appear after a table is set.</p>';
-    echo '</fieldset>';
-
-    submit_button('Save Action Button Settings', 'primary', 'submit', false);
-    echo '</form>';
-
-    echo '<hr style="margin:30px 0; border:none; border-top:2px solid #ddd;">';
 
     // Two-column grid for Configuration and Table Setup
     echo '<div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px;">';

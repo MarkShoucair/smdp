@@ -842,23 +842,29 @@ class SMDP_Menu_App_Builder {
       <h1>Menu App</h1>
       <p>Create an app-like, tablet-friendly menu layout. <strong>Categories and items come from your Menu Editor</strong>. Edit there to see changes live.</p>
 
-      <div style="margin:10px 0 18px;">
-        <button type="button" class="button" id="smdp-bootstrap-btn">Rebuild Catalog Cache (from Menu Editor)</button>
-        <span id="smdp-bootstrap-status" style="margin-left:8px;"></span>
-      </div>
-
       <h2 class="nav-tab-wrapper">
-        <a href="#tab-main" class="nav-tab nav-tab-active">Main</a>
+        <a href="#tab-config" class="nav-tab nav-tab-active">Configuration</a>
         <a href="#tab-promo" class="nav-tab">Promo Screen</a>
         <a href="#tab-pwa" class="nav-tab">PWA</a>
+        <a href="#tab-action-buttons" class="nav-tab">Action Buttons</a>
         <a href="#tab-advanced" class="nav-tab">Advanced</a>
       </h2>
 
-      <!-- Tab: Main -->
-      <div id="tab-main" class="smdp-tab active">
+      <!-- Tab: Configuration -->
+      <div id="tab-config" class="smdp-tab active">
         <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-        <h2 style="margin-top:0;">App Layout</h2>
+        <h2 style="margin-top:0;">Menu App Configuration</h2>
 
+        <div style="margin-bottom:30px;">
+          <h3>Rebuild Catalog Cache</h3>
+          <p class="description">If your menu changes aren't appearing in the Menu App, rebuild the cache to sync with the Menu Editor.</p>
+          <button type="button" class="button" id="smdp-bootstrap-btn">Rebuild Catalog Cache (from Menu Editor)</button>
+          <span id="smdp-bootstrap-status" style="margin-left:8px;"></span>
+        </div>
+
+        <hr style="margin:30px 0; border:none; border-top:1px solid #ddd;">
+
+        <h3>App Layout</h3>
         <form method="post" action="options.php">
           <?php settings_fields('smdp_menu_app_layout_group'); ?>
           <?php self::field_settings(); ?>
@@ -927,31 +933,6 @@ class SMDP_Menu_App_Builder {
         <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
           <input type="hidden" name="action" value="smdp_save_pwa_settings">
           <?php wp_nonce_field( 'smdp_pwa_settings_save', 'smdp_pwa_nonce' ); ?>
-
-          <h3>🐛 Debug Mode</h3>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
-            <div>
-              <label style="display:block; margin-bottom:8px;">
-                <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
-                <strong>Enable Debug Mode</strong>
-              </label>
-              <p class="description">Bypass caching and show debug panel on tablets.</p>
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:8px;"><strong>Cache Version</strong></label>
-              <input type="number" name="smdp_cache_version" id="smdp_cache_version_pwa" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:80px;">
-              <button type="button" class="button" id="smdp-increment-version-pwa">Increment</button>
-              <p class="description">Current: v<?php echo $cache_version; ?>. Increment to force tablet reload.</p>
-              <script>
-                jQuery(document).ready(function($){
-                  $('#smdp-increment-version-pwa').click(function(){
-                    var $input = $('#smdp_cache_version_pwa');
-                    $input.val(parseInt($input.val()) + 1);
-                  });
-                });
-              </script>
-            </div>
-          </div>
 
           <h3>🎨 PWA Theme Colors</h3>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
@@ -1114,11 +1095,107 @@ class SMDP_Menu_App_Builder {
       <!-- Items and Categories tabs moved to Menu Management → Menu Editor -->
       <!-- Styles tab moved to separate "Styles & Customization" page -->
 
+      <!-- Tab: Action Buttons -->
+      <div id="tab-action-buttons" class="smdp-tab">
+        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
+        <h2 style="margin-top:0;">Action Buttons</h2>
+        <p class="description">Control which action buttons appear in the bottom-right corner of the menu app.</p>
+
+        <?php
+        // Get button enable/disable settings (default to enabled)
+        $app_settings = get_option(self::OPT_SETTINGS, array());
+        if (!is_array($app_settings)) $app_settings = array();
+        $enable_help_btn = isset($app_settings['enable_help_btn']) ? $app_settings['enable_help_btn'] : '1';
+        $enable_bill_btn = isset($app_settings['enable_bill_btn']) ? $app_settings['enable_bill_btn'] : '1';
+        $enable_view_bill_btn = isset($app_settings['enable_view_bill_btn']) ? $app_settings['enable_view_bill_btn'] : '1';
+        $enable_table_badge = isset($app_settings['enable_table_badge']) ? $app_settings['enable_table_badge'] : '1';
+        $enable_table_selector = isset($app_settings['enable_table_selector']) ? $app_settings['enable_table_selector'] : '1';
+        ?>
+
+        <form method="post" action="options.php">
+          <?php settings_fields('smdp_menu_app_layout_group'); ?>
+          <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[_form_type]" value="action_buttons">
+
+          <fieldset style="margin-bottom:20px;">
+            <label style="display:block; margin-bottom:8px;">
+              <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_help_btn]" value="1" <?php checked($enable_help_btn, '1'); ?>>
+              <strong>Enable "Request Help" button</strong>
+            </label>
+
+            <label style="display:block; margin-bottom:8px;">
+              <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_bill_btn]" value="1" <?php checked($enable_bill_btn, '1'); ?>>
+              <strong>Enable "Request Bill" button</strong>
+            </label>
+
+            <label style="display:block; margin-bottom:8px;">
+              <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_view_bill_btn]" value="1" <?php checked($enable_view_bill_btn, '1'); ?>>
+              <strong>Enable "View Bill" button</strong>
+            </label>
+
+            <label style="display:block; margin-bottom:8px;">
+              <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_table_badge]" value="1" <?php checked($enable_table_badge, '1'); ?>>
+              <strong>Enable Table Number Badge</strong>
+            </label>
+
+            <hr style="margin:15px 0; border:none; border-top:1px solid #e0e0e0;">
+
+            <label style="display:block; margin-bottom:8px;">
+              <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_table_selector]" value="1" <?php checked($enable_table_selector, '1'); ?>>
+              <strong>Enable Table Number Selector</strong>
+            </label>
+
+            <p class="description" style="margin-top:10px;">Uncheck "Table Number Selector" to skip the table selection popup entirely. The other options control which buttons appear after a table is set.</p>
+          </fieldset>
+
+          <?php submit_button('Save Action Button Settings'); ?>
+        </form>
+        </div>
+      </div>
+
       <!-- Tab: Advanced -->
       <div id="tab-advanced" class="smdp-tab">
         <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
         <h2 style="margin-top:0;">Advanced Settings</h2>
-        <p>Advanced configuration and troubleshooting tools for the menu app.</p>
+        <p>Developer tools and troubleshooting options for the menu app.</p>
+
+          <?php
+          $debug_mode = get_option( 'smdp_pwa_debug_mode', 0 );
+          $cache_version = get_option( 'smdp_cache_version', 1 );
+          ?>
+
+          <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
+            <input type="hidden" name="action" value="smdp_save_pwa_settings">
+            <?php wp_nonce_field( 'smdp_pwa_settings_save', 'smdp_pwa_nonce' ); ?>
+
+            <h3>🐛 Debug Mode & Cache Control</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+              <div>
+                <label style="display:block; margin-bottom:8px;">
+                  <input type="checkbox" name="smdp_pwa_debug_mode" value="1" <?php checked( $debug_mode, 1 ); ?>>
+                  <strong>Enable Debug Mode</strong>
+                </label>
+                <p class="description">Bypass caching and show debug panel on tablets for development.</p>
+              </div>
+              <div>
+                <label style="display:block; margin-bottom:8px;"><strong>Cache Version</strong></label>
+                <input type="number" name="smdp_cache_version" id="smdp_cache_version_adv" value="<?php echo esc_attr($cache_version); ?>" min="1" style="width:80px;">
+                <button type="button" class="button" id="smdp-increment-version-adv">Increment</button>
+                <p class="description">Current: v<?php echo $cache_version; ?>. Increment to force tablet reload.</p>
+                <script>
+                  jQuery(document).ready(function($){
+                    $('#smdp-increment-version-adv').click(function(){
+                      var $input = $('#smdp_cache_version_adv');
+                      $input.val(parseInt($input.val()) + 1);
+                    });
+                  });
+                </script>
+              </div>
+            </div>
+
+            <?php submit_button( 'Save Debug Settings', 'primary', 'smdp_save_pwa' ); ?>
+          </form>
+
+          <hr style="margin:30px 0; border:none; border-top:1px solid #ddd;">
 
           <h3>Menu App URL</h3>
           <?php
