@@ -601,6 +601,19 @@ class SMDP_Menu_App_Builder {
   color: <?php echo esc_attr($all_help_styles['bill']['disabled_text_color']); ?> !important;
 }
 
+/* Disabled state animation */
+.smdp-help-btn.smdp-btn-disabled,
+.smdp-help-btn:disabled,
+.smdp-bill-btn.smdp-bill-disabled,
+.smdp-bill-btn:disabled {
+  animation: smdp-disabled-pulse 2s ease-in-out infinite !important;
+}
+
+@keyframes smdp-disabled-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* View Bill Button */
 .smdp-view-bill-btn {
   background-color: <?php echo esc_attr($all_help_styles['view_bill']['bg_color']); ?> !important;

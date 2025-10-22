@@ -79,17 +79,10 @@ jQuery(document).ready(function($) {
           touch-action: none;
         }
         
-        /* Button disabled state with pulsing animation */
+        /* Button disabled state */
         .smdp-help-btn.smdp-btn-disabled,
         .smdp-bill-btn.smdp-btn-disabled {
-          opacity: 0.6;
           cursor: not-allowed;
-          animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 0.4; }
         }
         
         /* Success checkmark animation */
