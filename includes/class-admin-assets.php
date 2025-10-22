@@ -110,6 +110,38 @@ class SMDP_Admin_Assets {
             true
         );
 
+        // Pass custom Item Detail styles to JavaScript
+        $item_detail_styles = get_option( 'smdp_app_item_detail_styles', array() );
+
+        // Defaults (matches hardcoded values in item-detail.js)
+        $defaults = array(
+            'modal_bg' => '#ffffff',
+            'modal_border_color' => '#3498db',
+            'modal_border_width' => 6,
+            'modal_border_radius' => 12,
+            'modal_box_shadow' => '0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)',
+            'title_color' => '#000000',
+            'title_size' => 24,
+            'title_weight' => 'bold',
+            'price_color' => '#27ae60',
+            'price_size' => 19,
+            'price_weight' => 'bold',
+            'desc_color' => '#666666',
+            'desc_size' => 16,
+            'close_btn_bg' => '#3498db',
+            'close_btn_text' => '#ffffff',
+            'close_btn_hover_bg' => '#2980b9',
+        );
+
+        $styles = array_merge( $defaults, $item_detail_styles );
+
+        // Localize script with custom styles
+        wp_localize_script(
+            'smdp-item-detail',
+            'smdpItemDetailStyles',
+            $styles
+        );
+
         // CSS (in head)
         wp_enqueue_style(
             'smdp-item-detail',

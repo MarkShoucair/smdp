@@ -1,4 +1,24 @@
 jQuery(document).ready(function($){
+  // Get custom styles from localized script (set in class-admin-assets.php)
+  var styles = window.smdpItemDetailStyles || {
+    modal_bg: '#ffffff',
+    modal_border_color: '#3498db',
+    modal_border_width: 6,
+    modal_border_radius: 12,
+    modal_box_shadow: '0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)',
+    title_color: '#000000',
+    title_size: 24,
+    title_weight: 'bold',
+    price_color: '#27ae60',
+    price_size: 19,
+    price_weight: 'bold',
+    desc_color: '#666666',
+    desc_size: 16,
+    close_btn_bg: '#3498db',
+    close_btn_text: '#ffffff',
+    close_btn_hover_bg: '#2980b9'
+  };
+
   // Inject modal HTML & inline styles once
   if ($('#smdp-item-modal').length === 0) {
     $('body').append(`
@@ -21,14 +41,14 @@ jQuery(document).ready(function($){
           -webkit-overflow-scrolling: touch;
           pointer-events: auto !important; /* Catch all clicks */
         }
-        
+
         /* Prevent body scroll when modal is open */
         body.smdp-modal-open {
           overflow: hidden !important;
           touch-action: none;
           -webkit-overflow-scrolling: none;
         }
-        
+
         /* Modifier bubbles styling */
         #smdp-item-modal .smdp-mod-category {
           background: #f5f5f5;
@@ -52,28 +72,23 @@ jQuery(document).ready(function($){
         #smdp-item-modal .smdp-mod-category li {
           margin-bottom: 0.5rem;
         }
-        
-        /* Modal content box with thick blue border and gradient glow */
+
+        /* Modal content box with customizable border and glow - USES CUSTOM STYLES */
         #smdp-item-modal .smdp-item-modal-inner {
           position: relative;
           width: 85vw;
           max-width: 600px;
           max-height: 80vh;
           margin: 10vh auto;
-          background: #fff;
+          background: ${styles.modal_bg};
           padding: 1.5rem;
-          border-radius: 12px;
-          border: 4px solid #3498db;
+          border-radius: ${styles.modal_border_radius}px;
+          border: ${styles.modal_border_width}px solid ${styles.modal_border_color};
           overflow-y: auto;
-          box-shadow: 
-            0 0 10px 5px rgba(0,0,0,0.5),
-            0 0 20px 10px rgba(0,0,0,0.3),
-            0 0 30px 15px rgba(0,0,0,0.2),
-            0 0 40px 20px rgba(0,0,0,0.1),
-            0 10px 40px rgba(0,0,0,0.4);
+          box-shadow: ${styles.modal_box_shadow};
           pointer-events: auto;
         }
-        
+
         /* Responsive sizing for different screens */
         @media (max-width: 768px) {
           #smdp-item-modal .smdp-item-modal-inner {
@@ -81,20 +96,15 @@ jQuery(document).ready(function($){
             max-width: none;
             margin: 5vh auto;
             max-height: 90vh;
-            box-shadow: 
-              0 0 8px 4px rgba(0,0,0,0.5),
-              0 0 16px 8px rgba(0,0,0,0.3),
-              0 0 24px 12px rgba(0,0,0,0.2),
-              0 10px 40px rgba(0,0,0,0.4);
           }
         }
-        
+
         @media (min-width: 1200px) {
           #smdp-item-modal .smdp-item-modal-inner {
             max-width: 700px;
           }
         }
-        
+
         /* Better image sizing in modal */
         #smdp-item-modal #smdp-item-img {
           max-width: 100%;
@@ -105,13 +115,13 @@ jQuery(document).ready(function($){
           margin: 0 auto 1rem;
           border-radius: 8px;
         }
-        
-        /* Better close button */
+
+        /* Close button with custom styles */
         #smdp-item-modal #smdp-item-close {
           margin-top: 1.5rem;
           padding: 0.75rem 2rem;
-          background: #3498db;
-          color: #fff;
+          background: ${styles.close_btn_bg};
+          color: ${styles.close_btn_text};
           border: none;
           border-radius: 8px;
           cursor: pointer;
@@ -120,17 +130,17 @@ jQuery(document).ready(function($){
           width: 100%;
           transition: background 0.2s ease;
         }
-        
+
         #smdp-item-modal #smdp-item-close:hover {
-          background: #2980b9;
+          background: ${styles.close_btn_hover_bg};
         }
       </style>
       <div id="smdp-item-modal">
         <div class="smdp-item-modal-inner">
           <img id="smdp-item-img" src="" alt="">
-          <h2 id="smdp-item-name" style="margin:0 0 .5rem; font-size:1.5rem;"></h2>
-          <p id="smdp-item-price" style="font-weight:bold; margin:0 0 .5rem; font-size:1.2rem; color:#27ae60;"></p>
-          <p id="smdp-item-desc" style="margin:0 0 1rem; color:#666; line-height:1.5;"></p>
+          <h2 id="smdp-item-name" style="margin:0 0 .5rem; font-size:${styles.title_size}px; font-weight:${styles.title_weight}; color:${styles.title_color};"></h2>
+          <p id="smdp-item-price" style="font-weight:${styles.price_weight}; margin:0 0 .5rem; font-size:${styles.price_size}px; color:${styles.price_color};"></p>
+          <p id="smdp-item-desc" style="margin:0 0 1rem; color:${styles.desc_color}; line-height:1.5; font-size:${styles.desc_size}px;"></p>
           <div class="smdp-modifiers"></div>
           <button id="smdp-item-close">Close</button>
         </div>

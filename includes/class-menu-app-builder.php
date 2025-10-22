@@ -21,6 +21,7 @@ class SMDP_Menu_App_Builder {
     add_action('admin_post_smdp_save_pwa_settings', array(__CLASS__, 'handle_pwa_settings_save'));
     add_action('admin_post_smdp_reset_styles', array(__CLASS__, 'handle_reset_styles'));
     add_action('admin_init', array(__CLASS__, 'handle_flush_rewrite_rules'));
+    add_action('wp_ajax_smdp_save_all_styles', array(__CLASS__, 'ajax_save_all_styles'));
     add_shortcode('smdp_menu_app', array(__CLASS__, 'shortcode_render'));
 
     add_action('rest_api_init', function() {
@@ -1116,6 +1117,32 @@ class SMDP_Menu_App_Builder {
               </td>
             </tr>
             <tr>
+              <th>Button Shape</th>
+              <td>
+                <label style="display:inline-block; margin-right:20px;">
+                  <input type="radio" name="button_shape" value="pill" checked>
+                  <span style="font-size:16px;">💊 Pill</span>
+                  <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Fully rounded ends (500px radius)</span>
+                </label>
+                <label style="display:inline-block; margin-right:20px;">
+                  <input type="radio" name="button_shape" value="rounded">
+                  <span style="font-size:16px;">⬜ Rounded</span>
+                  <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Moderately rounded corners (12px radius)</span>
+                </label>
+                <label style="display:inline-block; margin-right:20px;">
+                  <input type="radio" name="button_shape" value="slightly-rounded">
+                  <span style="font-size:16px;">▢ Slightly Rounded</span>
+                  <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Subtle rounded corners (4px radius)</span>
+                </label>
+                <label style="display:inline-block;">
+                  <input type="radio" name="button_shape" value="square">
+                  <span style="font-size:16px;">◻️ Square</span>
+                  <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Sharp corners (0px radius)</span>
+                </label>
+                <p class="description">Applies to category buttons, action buttons, item cards, and item detail modal</p>
+              </td>
+            </tr>
+            <tr>
               <th>Apply to Help Buttons</th>
               <td>
                 <label>
@@ -1189,9 +1216,22 @@ class SMDP_Menu_App_Builder {
               <div style="margin-bottom:25px;">
                 <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Action Buttons</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                  <button type="button" id="preview-help-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">🆘 Request Help</button>
-                  <button type="button" id="preview-bill-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">💰 Request Bill</button>
-                  <button type="button" id="preview-view-bill-btn" style="padding:12px 16px; border-radius:8px; border:none; background:#9b59b6; color:#fff; font-size:14px; font-weight:600; cursor:pointer;">View Bill</button>
+                  <button type="button" id="preview-help-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle;">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>Request Help</span>
+                  </button>
+                  <button type="button" id="preview-bill-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle;">
+                      <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                      <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                    <span>Request Bill</span>
+                  </button>
+                  <button type="button" id="preview-view-bill-btn" style="padding:12px 16px; border-radius:8px; border:none; background:#9b59b6; color:#fff; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.3);">View Bill</button>
                 </div>
               </div>
 
@@ -1216,12 +1256,10 @@ class SMDP_Menu_App_Builder {
               <div>
                 <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Item Detail Modal</p>
                 <div id="preview-modal" style="background:#ffffff; border:6px solid #3498db; border-radius:12px; padding:25px; max-width:400px; box-shadow:0 0 30px rgba(52,152,219,0.6);">
-                  <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:15px;">
-                    <div id="preview-modal-title" style="font-size:24px; font-weight:bold; color:#000;">Margherita Pizza</div>
-                    <button type="button" id="preview-close-btn" style="background:#3498db; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer; font-weight:600;">Close</button>
-                  </div>
+                  <div id="preview-modal-title" style="font-size:24px; font-weight:bold; color:#000; margin-bottom:8px;">Margherita Pizza</div>
                   <div id="preview-modal-price" style="font-size:19px; font-weight:bold; color:#27ae60; margin-bottom:15px;">$12.99</div>
-                  <div id="preview-modal-desc" style="font-size:16px; color:#666; line-height:1.6;">Fresh mozzarella cheese, fresh basil leaves, and homemade tomato sauce on a hand-tossed crust. Baked to perfection in our wood-fired oven.</div>
+                  <div id="preview-modal-desc" style="font-size:16px; color:#666; line-height:1.6; margin-bottom:20px;">Fresh mozzarella cheese, fresh basil leaves, and homemade tomato sauce on a hand-tossed crust. Baked to perfection in our wood-fired oven.</div>
+                  <button type="button" id="preview-close-btn" style="margin-top:24px; padding:12px 32px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:16px; width:100%; display:block;">Close</button>
                 </div>
               </div>
 
@@ -1261,6 +1299,11 @@ class SMDP_Menu_App_Builder {
 
             // Theme mode change
             $('input[name="theme_mode"]').on('change', function() {
+              updateStylePreview();
+            });
+
+            // Button shape change
+            $('input[name="button_shape"]').on('change', function() {
               updateStylePreview();
             });
 
@@ -1394,6 +1437,16 @@ class SMDP_Menu_App_Builder {
               var secondary = $('#brand_color_secondary').val() || '#27ae60';
               var accent = $('#brand_color_accent').val() || '#e74c3c';
               var isDark = $('input[name="theme_mode"]:checked').val() === 'dark';
+              var buttonShape = $('input[name="button_shape"]:checked').val() || 'pill';
+
+              // Button shape radius values
+              var radiusMap = {
+                'pill': { category: 500, action: 500, card: 12, modal: 12 },
+                'rounded': { category: 12, action: 12, card: 8, modal: 12 },
+                'slightly-rounded': { category: 4, action: 4, card: 4, modal: 4 },
+                'square': { category: 0, action: 0, card: 0, modal: 0 }
+              };
+              var radius = radiusMap[buttonShape];
 
               var primaryDark = adjustBrightness(primary, -15);
               var secondaryDark = adjustBrightness(secondary, -15);
@@ -1418,32 +1471,38 @@ class SMDP_Menu_App_Builder {
               $('#preview-cat-btn, #preview-cat-btn + button + button').css({
                 'background': isDark ? '#2d2d2d' : '#ffffff',
                 'color': textPrimary,
-                'border-color': catBtnBorder
+                'border-color': catBtnBorder,
+                'border-radius': radius.category + 'px'
               });
               $('#preview-cat-btn-active').css({
                 'background': primary,
                 'color': primaryText,
-                'border-color': primary
+                'border-color': primary,
+                'border-radius': radius.category + 'px'
               });
 
               // Action buttons (using all 3 colors intelligently)
               $('#preview-help-btn').css({
                 'background': accent,
-                'color': accentText
+                'color': accentText,
+                'border-radius': radius.action + 'px'
               });
               $('#preview-bill-btn').css({
                 'background': secondary,
-                'color': secondaryText
+                'color': secondaryText,
+                'border-radius': radius.action + 'px'
               });
               $('#preview-view-bill-btn').css({
                 'background': secondaryDark,
-                'color': getContrastColor(secondaryDark)
+                'color': getContrastColor(secondaryDark),
+                'border-radius': radius.action + 'px'
               });
 
               // Item cards
               $('#preview-item-card-1, #preview-item-card-2').css({
                 'background': bgCard,
-                'border-color': borderColor
+                'border-color': borderColor,
+                'border-radius': radius.card + 'px'
               });
               $('#preview-card-title, #preview-modal-title').css('color', textPrimary);
               $('#preview-card-price').css('color', secondary);
@@ -1453,12 +1512,14 @@ class SMDP_Menu_App_Builder {
               $('#preview-modal').css({
                 'background': bgCard,
                 'border-color': primary,
-                'box-shadow': '0 0 30px ' + primary + '99, 0 0 60px ' + primary + '66'
+                'box-shadow': '0 0 30px ' + primary + '99, 0 0 60px ' + primary + '66',
+                'border-radius': radius.modal + 'px'
               });
               $('#preview-modal-price').css('color', secondary);
               $('#preview-close-btn').css({
                 'background': primary,
-                'color': primaryText
+                'color': primaryText,
+                'border-radius': radius.action + 'px'
               });
             }
 
@@ -1469,6 +1530,16 @@ class SMDP_Menu_App_Builder {
               var accent = $('#brand_color_accent').val() || '#e74c3c';
               var isDark = $('input[name="theme_mode"]:checked').val() === 'dark';
               var includeHelpButtons = $('#include_help_buttons').is(':checked');
+              var buttonShape = $('input[name="button_shape"]:checked').val() || 'pill';
+
+              // Button shape radius values
+              var radiusMap = {
+                'pill': { category: 500, action: 8, card: 0, modal: 12 },
+                'rounded': { category: 12, action: 8, card: 0, modal: 12 },
+                'slightly-rounded': { category: 4, action: 4, card: 0, modal: 4 },
+                'square': { category: 0, action: 0, card: 0, modal: 0 }
+              };
+              var radius = radiusMap[buttonShape];
 
               if (!confirm('This will completely regenerate ALL styles for buttons, cards, modals, backgrounds, and text colors based on your selections. Continue?')) {
                 return;
@@ -1499,6 +1570,7 @@ class SMDP_Menu_App_Builder {
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_bg_color]"]').val(primary).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_text_color]"]').val(primaryText).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_border_color]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[border_radius]"]').val(radius.category).trigger('change');
 
               // === HELP BUTTONS === (only if toggle is checked)
               if (includeHelpButtons) {
@@ -1507,21 +1579,25 @@ class SMDP_Menu_App_Builder {
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][text_color]"]').val(accentText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_bg_color]"]').val(accentDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_bg_color]"]').val(accentDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][border_radius]"]').val(radius.action).trigger('change');
 
                 // Bill button - uses secondary color (green for money/payment)
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][bg_color]"]').val(secondary).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][text_color]"]').val(secondaryText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_bg_color]"]').val(secondaryDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_bg_color]"]').val(secondaryDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][border_radius]"]').val(radius.action).trigger('change');
 
                 // View Bill button - uses darker secondary
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][bg_color]"]').val(secondaryDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][text_color]"]').val(getContrastColor(secondaryDark)).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][hover_bg_color]"]').val(adjustBrightness(secondaryDark, -10)).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][border_radius]"]').val(radius.action).trigger('change');
 
                 // Table Badge - uses primary brand color
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][bg_color]"]').val(primary).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][text_color]"]').val(primaryText).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][border_radius]"]').val(radius.action).trigger('change');
               }
 
               // === BACKGROUND COLORS ===
@@ -1535,6 +1611,7 @@ class SMDP_Menu_App_Builder {
               $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[title_color]"]').val(textPrimary).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[price_color]"]').val(secondary).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[desc_color]"]').val(textSecondary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[border_radius]"]').val(radius.card).trigger('change');
 
               // === ITEM DETAIL MODAL ===
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_bg]"]').val(bgCard).trigger('change');
@@ -1545,15 +1622,101 @@ class SMDP_Menu_App_Builder {
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_bg]"]').val(primary).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_text]"]').val(primaryText).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_hover_bg]"]').val(primaryDark).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_border_radius]"]').val(radius.modal).trigger('change');
 
-              alert('✅ Complete theme generated!\n\n' +
-                    'All colors have been applied to the form fields below.\n\n' +
-                    'Click "Save" on each section to persist the changes:\n' +
-                    '• Category Buttons\n' +
-                    '• Help Buttons\n' +
-                    '• Background Colors\n' +
-                    '• Item Cards\n' +
-                    '• Item Detail');
+              // Auto-save all settings via AJAX
+              var formData = new FormData();
+              formData.append('action', 'smdp_save_all_styles');
+              formData.append('security', '<?php echo wp_create_nonce("smdp_save_all_styles_nonce"); ?>');
+
+              // Collect all form data from the different sections
+              var allData = {};
+
+              // Category Buttons
+              allData['<?php echo self::OPT_STYLES; ?>'] = {};
+              $('input[name^="<?php echo self::OPT_STYLES; ?>"], select[name^="<?php echo self::OPT_STYLES; ?>"]').each(function() {
+                var name = $(this).attr('name');
+                var match = name.match(/\[([^\]]+)\]$/);
+                if (match) {
+                  allData['<?php echo self::OPT_STYLES; ?>'][match[1]] = $(this).val();
+                }
+              });
+
+              // Help Buttons
+              allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'] = {};
+              $('input[name^="<?php echo self::OPT_HELP_BTN_STYLES; ?>"], select[name^="<?php echo self::OPT_HELP_BTN_STYLES; ?>"]').each(function() {
+                var name = $(this).attr('name');
+                var match = name.match(/\[([^\]]+)\]\[([^\]]+)\]$/);
+                if (match) {
+                  if (!allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]]) {
+                    allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]] = {};
+                  }
+                  allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]][match[2]] = $(this).val();
+                }
+              });
+
+              // Background Colors
+              allData['<?php echo self::OPT_BG_COLORS; ?>'] = {};
+              $('input[name^="<?php echo self::OPT_BG_COLORS; ?>"]').each(function() {
+                var name = $(this).attr('name');
+                var match = name.match(/\[([^\]]+)\]$/);
+                if (match) {
+                  allData['<?php echo self::OPT_BG_COLORS; ?>'][match[1]] = $(this).val();
+                }
+              });
+
+              // Item Cards
+              allData['<?php echo self::OPT_ITEM_CARD_STYLES; ?>'] = {};
+              $('input[name^="<?php echo self::OPT_ITEM_CARD_STYLES; ?>"], select[name^="<?php echo self::OPT_ITEM_CARD_STYLES; ?>"]').each(function() {
+                var name = $(this).attr('name');
+                var match = name.match(/\[([^\]]+)\]$/);
+                if (match) {
+                  allData['<?php echo self::OPT_ITEM_CARD_STYLES; ?>'][match[1]] = $(this).val();
+                }
+              });
+
+              // Item Detail
+              allData['<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>'] = {};
+              $('input[name^="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>"], select[name^="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>"]').each(function() {
+                var name = $(this).attr('name');
+                var match = name.match(/\[([^\]]+)\]$/);
+                if (match) {
+                  allData['<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>'][match[1]] = $(this).val();
+                }
+              });
+
+              formData.append('style_data', JSON.stringify(allData));
+
+              // Show loading
+              $('#generate-styles').prop('disabled', true).text('⏳ Generating & Saving...');
+
+              // Save via AJAX
+              fetch('<?php echo admin_url("admin-ajax.php"); ?>', {
+                method: 'POST',
+                body: formData
+              })
+              .then(response => response.json())
+              .then(data => {
+                $('#generate-styles').prop('disabled', false).text('🎨 Generate & Apply Complete Theme');
+                if (data.success) {
+                  alert('✅ Complete theme generated and saved!\n\n' +
+                        'All styles have been applied and saved automatically.\n' +
+                        'You can fine-tune individual elements in their respective tabs if needed.');
+                } else {
+                  alert('⚠️ Theme generated but save failed: ' + (data.data || 'Unknown error') + '\n\n' +
+                        'Please click "Save" on each section manually:\n' +
+                        '• Category Buttons\n' +
+                        '• Help Buttons\n' +
+                        '• Background Colors\n' +
+                        '• Item Cards\n' +
+                        '• Item Detail');
+                }
+              })
+              .catch(error => {
+                $('#generate-styles').prop('disabled', false).text('🎨 Generate & Apply Complete Theme');
+                alert('⚠️ Theme generated but save failed: ' + error.message + '\n\n' +
+                      'Please click "Save" on each section manually.');
+              });
             });
 
             // Initial preview update
@@ -4210,5 +4373,95 @@ class SMDP_Menu_App_Builder {
     // Redirect back to menu app builder page
     wp_safe_redirect( admin_url( 'admin.php?page=smdp_menu_app_builder#tab-advanced' ) );
     exit;
+  }
+
+  /**
+   * AJAX handler to save all style sections at once from the Style Generator
+   */
+  public static function ajax_save_all_styles() {
+    // Verify nonce
+    if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'smdp_save_all_styles_nonce' ) ) {
+      wp_send_json_error( 'Security check failed' );
+    }
+
+    // Check user capabilities
+    if ( ! current_user_can( 'manage_options' ) ) {
+      wp_send_json_error( 'Insufficient permissions' );
+    }
+
+    // Get style data
+    if ( ! isset( $_POST['style_data'] ) ) {
+      wp_send_json_error( 'No style data provided' );
+    }
+
+    $style_data = json_decode( stripslashes( $_POST['style_data'] ), true );
+    if ( ! is_array( $style_data ) ) {
+      wp_send_json_error( 'Invalid style data format' );
+    }
+
+    // Save each option using the existing sanitization callbacks
+    $saved_count = 0;
+    $errors = array();
+
+    // Save Category Buttons
+    if ( isset( $style_data[ self::OPT_STYLES ] ) ) {
+      $sanitized = self::sanitize_styles( $style_data[ self::OPT_STYLES ] );
+      if ( update_option( self::OPT_STYLES, $sanitized ) !== false ) {
+        $saved_count++;
+      } else {
+        $errors[] = 'Category Buttons';
+      }
+    }
+
+    // Save Help Buttons
+    if ( isset( $style_data[ self::OPT_HELP_BTN_STYLES ] ) ) {
+      $sanitized = self::sanitize_help_button_styles( $style_data[ self::OPT_HELP_BTN_STYLES ] );
+      if ( update_option( self::OPT_HELP_BTN_STYLES, $sanitized ) !== false ) {
+        $saved_count++;
+      } else {
+        $errors[] = 'Help Buttons';
+      }
+    }
+
+    // Save Background Colors
+    if ( isset( $style_data[ self::OPT_BG_COLORS ] ) ) {
+      $sanitized = self::sanitize_bg_colors( $style_data[ self::OPT_BG_COLORS ] );
+      if ( update_option( self::OPT_BG_COLORS, $sanitized ) !== false ) {
+        $saved_count++;
+      } else {
+        $errors[] = 'Background Colors';
+      }
+    }
+
+    // Save Item Cards
+    if ( isset( $style_data[ self::OPT_ITEM_CARD_STYLES ] ) ) {
+      $sanitized = self::sanitize_item_card_styles( $style_data[ self::OPT_ITEM_CARD_STYLES ] );
+      if ( update_option( self::OPT_ITEM_CARD_STYLES, $sanitized ) !== false ) {
+        $saved_count++;
+      } else {
+        $errors[] = 'Item Cards';
+      }
+    }
+
+    // Save Item Detail
+    if ( isset( $style_data[ self::OPT_ITEM_DETAIL_STYLES ] ) ) {
+      $sanitized = self::sanitize_item_detail_styles( $style_data[ self::OPT_ITEM_DETAIL_STYLES ] );
+      if ( update_option( self::OPT_ITEM_DETAIL_STYLES, $sanitized ) !== false ) {
+        $saved_count++;
+      } else {
+        $errors[] = 'Item Detail';
+      }
+    }
+
+    if ( $saved_count > 0 && empty( $errors ) ) {
+      wp_send_json_success( array(
+        'message' => "Successfully saved $saved_count style sections",
+        'count' => $saved_count
+      ) );
+    } else if ( ! empty( $errors ) ) {
+      wp_send_json_error( 'Failed to save: ' . implode( ', ', $errors ) );
+    } else {
+      wp_send_json_error( 'No style sections were saved' );
+    }
   }
 }
