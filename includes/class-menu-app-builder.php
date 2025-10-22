@@ -2069,7 +2069,8 @@ class SMDP_Menu_App_Builder {
                 if (data.success) {
                   alert('✅ Complete theme generated and saved!\n\n' +
                         'All styles have been applied and saved automatically.\n' +
-                        'You can fine-tune individual elements in their respective tabs if needed.');
+                        'The page will now reload to show the updated values.');
+                  window.location.reload();
                 } else {
                   console.error('Save failed with data:', data);
                   alert('⚠️ Theme generated but save failed: ' + (data.data || 'Unknown error') + '\n\n' +
