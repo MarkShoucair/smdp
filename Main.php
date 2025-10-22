@@ -24,6 +24,118 @@ if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 require_once __DIR__ . '/includes/constants.php';
 
 // =========================================================================
+// SECURITY: HIDE SENSITIVE OPTIONS FROM options.php
+// =========================================================================
+add_filter( 'option_page_capability_options', function() {
+    // Prevent access to options.php entirely for non-super-admins in multisite
+    if ( is_multisite() && ! is_super_admin() ) {
+        return 'do_not_allow';
+    }
+    return 'manage_options';
+});
+
+// Hide sensitive encrypted data from appearing in options.php
+add_filter( 'pre_update_option', function( $value, $option, $old_value ) {
+    // List of sensitive options that should never be displayed/edited via options.php
+    $sensitive_options = array(
+        'square_menu_access_token',          // Manual access token (encrypted)
+        'smdp_access_token',                 // Legacy access token name (encrypted)
+        'smdp_oauth_access_token',           // OAuth access token (encrypted)
+        'smdp_oauth_refresh_token',          // OAuth refresh token (encrypted)
+        'smdp_oauth_app_secret',             // OAuth app secret (encrypted)
+        'smdp_square_webhook_signature_key', // Webhook signature key (encrypted)
+    );
+
+    // If this is a sensitive option being updated via options.php, block it
+    if ( in_array( $option, $sensitive_options ) ) {
+        // Check if this is coming from options.php (not our custom forms)
+        $referer = wp_get_referer();
+        if ( $referer && strpos( $referer, 'options.php' ) !== false ) {
+            // Log security event
+            error_log( '[SMDP SECURITY] Blocked attempt to modify sensitive option "' . $option . '" via options.php' );
+
+            // Prevent the update by returning the old value
+            return $old_value;
+        }
+    }
+
+    return $value;
+}, 10, 3 );
+
+// Hide sensitive options from the options list entirely
+add_filter( 'allowed_options', function( $allowed_options ) {
+    // Remove sensitive options from ALL option groups to prevent display/editing
+    $sensitive_options = array(
+        'square_menu_access_token',
+        'smdp_access_token',
+        'smdp_oauth_access_token',
+        'smdp_oauth_refresh_token',
+        'smdp_oauth_app_secret',
+        'smdp_square_webhook_signature_key',
+    );
+
+    foreach ( $allowed_options as $group => &$options ) {
+        if ( is_array( $options ) ) {
+            $options = array_diff( $options, $sensitive_options );
+        }
+    }
+
+    return $allowed_options;
+});
+
+// Sanitize sensitive options to prevent accidental display (show masked value)
+add_filter( 'option_square_menu_access_token', function( $value ) {
+    // If we're in admin context but NOT in our own forms, return masked value
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+        $backtrace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10 );
+        foreach ( $backtrace as $trace ) {
+            // If called from options.php or settings pages (except our own), mask it
+            if ( isset( $trace['file'] ) && strpos( $trace['file'], 'options.php' ) !== false ) {
+                return '********** (encrypted - hidden for security)';
+            }
+        }
+    }
+    return $value;
+});
+
+// Apply same masking to other sensitive options
+add_filter( 'option_smdp_oauth_access_token', function( $value ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+        $backtrace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10 );
+        foreach ( $backtrace as $trace ) {
+            if ( isset( $trace['file'] ) && strpos( $trace['file'], 'options.php' ) !== false ) {
+                return '********** (encrypted - hidden for security)';
+            }
+        }
+    }
+    return $value;
+});
+
+add_filter( 'option_smdp_oauth_app_secret', function( $value ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+        $backtrace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10 );
+        foreach ( $backtrace as $trace ) {
+            if ( isset( $trace['file'] ) && strpos( $trace['file'], 'options.php' ) !== false ) {
+                return '********** (encrypted - hidden for security)';
+            }
+        }
+    }
+    return $value;
+});
+
+add_filter( 'option_smdp_square_webhook_signature_key', function( $value ) {
+    if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+        $backtrace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 10 );
+        foreach ( $backtrace as $trace ) {
+            if ( isset( $trace['file'] ) && strpos( $trace['file'], 'options.php' ) !== false ) {
+                return '********** (encrypted - hidden for security)';
+            }
+        }
+    }
+    return $value;
+});
+
+// =========================================================================
 // LOAD PLUGIN ACTIVATION CLASS (must be before register_activation_hook)
 // =========================================================================
 require_once __DIR__ . '/includes/class-plugin-activation.php';
