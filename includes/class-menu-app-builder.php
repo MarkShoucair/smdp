@@ -1084,87 +1084,281 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtab: Style Generator -->
         <div id="style-generator" class="smdp-style-subtab-content active" style="margin-top:20px;">
-          <h3>Brand Color Style Generator</h3>
-          <p>Enter up to 3 brand colors and automatically generate consistent styles for all buttons and elements.</p>
+          <h3>🎨 Smart Style Generator</h3>
+          <p>Choose your brand colors and theme mode - we'll automatically generate a complete, cohesive design for all elements.</p>
 
           <div style="background:#fff; border:1px solid #ddd; border-left:4px solid #2271b1; padding:15px; margin:20px 0;">
-            <h4 style="margin-top:0;">How it works:</h4>
-            <ul style="margin:10px 0;">
-              <li><strong>Primary Color:</strong> Used for main buttons, active states, and primary elements</li>
-              <li><strong>Secondary Color (optional):</strong> Used for accents, borders, and hover effects</li>
-              <li><strong>Accent Color (optional):</strong> Used for highlights and special elements</li>
+            <h4 style="margin-top:0;">✨ What this does:</h4>
+            <ul style="margin:10px 0; line-height:1.8;">
+              <li>Applies your colors to <strong>all buttons, cards, modals, and backgrounds</strong></li>
+              <li>Automatically adjusts <strong>text colors</strong> for perfect readability</li>
+              <li>Generates <strong>hover, active, and disabled states</strong></li>
+              <li>Creates <strong>lighter/darker shades</strong> where needed</li>
+              <li>Optimizes for <strong>Light or Dark theme</strong></li>
             </ul>
-            <p style="margin-bottom:0;"><strong>Note:</strong> The generator will automatically create lighter/darker shades for hover and active states.</p>
           </div>
 
+          <!-- Theme Mode Selection -->
+          <table class="form-table" style="margin-bottom:30px;">
+            <tr>
+              <th style="width:200px;">Theme Mode</th>
+              <td>
+                <label style="display:inline-block; margin-right:20px;">
+                  <input type="radio" name="theme_mode" value="light" checked>
+                  <span style="font-size:16px;">☀️ Light Mode</span>
+                  <span style="color:#666; display:block; margin-left:24px; font-size:13px;">White backgrounds, dark text</span>
+                </label>
+                <label style="display:inline-block;">
+                  <input type="radio" name="theme_mode" value="dark">
+                  <span style="font-size:16px;">🌙 Dark Mode</span>
+                  <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Dark backgrounds, light text</span>
+                </label>
+              </td>
+            </tr>
+            <tr>
+              <th>Apply to Help Buttons</th>
+              <td>
+                <label>
+                  <input type="checkbox" id="include_help_buttons" checked>
+                  <span>Include Help/Bill buttons in theme generation</span>
+                </label>
+                <p class="description">Uncheck this if you want to keep custom colors for Request Help, Request Bill, View Bill, and Table Badge buttons</p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Color Presets -->
+          <div style="background:#f9f9f9; padding:15px; border:1px solid #ddd; margin:20px 0;">
+            <h4 style="margin-top:0;">Quick Presets (Click to apply)</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="button preset-btn" data-primary="#0986bf" data-secondary="#27ae60" data-accent="#e74c3c">🔵 Blue, Green & Red (Default)</button>
+              <button type="button" class="button preset-btn" data-primary="#9b59b6" data-secondary="#3498db" data-accent="#e74c3c">🟣 Purple, Blue & Red</button>
+              <button type="button" class="button preset-btn" data-primary="#e67e22" data-secondary="#f39c12" data-accent="#27ae60">🟠 Orange, Yellow & Green</button>
+              <button type="button" class="button preset-btn" data-primary="#1abc9c" data-secondary="#16a085" data-accent="#e91e63">🟦 Teal, Dark Teal & Pink</button>
+              <button type="button" class="button preset-btn" data-primary="#3498db" data-secondary="#9b59b6" data-accent="#e74c3c">🔷 Blue, Purple & Red</button>
+              <button type="button" class="button preset-btn" data-primary="#34495e" data-secondary="#7f8c8d" data-accent="#95a5a6">⚫ Monochrome Grays</button>
+            </div>
+          </div>
+
+          <!-- Color Inputs -->
           <table class="form-table">
             <tr>
-              <th>Primary Brand Color</th>
+              <th style="width:200px;">Primary Brand Color</th>
               <td>
-                <input type="text" id="brand_color_1" value="#0986bf" class="smdp-color-picker" />
-                <p class="description">Your main brand color (required)</p>
+                <input type="text" id="brand_color_primary" value="#0986bf" class="smdp-color-picker" />
+                <p class="description">Main brand color - Used for: Active category buttons, table badge, borders, highlights</p>
               </td>
             </tr>
             <tr>
               <th>Secondary Brand Color</th>
               <td>
-                <input type="text" id="brand_color_2" value="#01669c" class="smdp-color-picker" />
-                <p class="description">Secondary brand color (optional)</p>
+                <input type="text" id="brand_color_secondary" value="#27ae60" class="smdp-color-picker" />
+                <button type="button" id="generate-analogous" class="button button-small" style="margin-left:10px;">🎨 Generate from Primary (Analogous)</button>
+                <button type="button" id="generate-complementary" class="button button-small" style="margin-left:5px;">🎨 Generate Complementary</button>
+                <p class="description">Secondary brand color - Used for: Bill button, price text, view bill button</p>
               </td>
             </tr>
             <tr>
-              <th>Accent Brand Color</th>
+              <th>Accent Color</th>
               <td>
-                <input type="text" id="brand_color_3" value="#e74c3c" class="smdp-color-picker" />
-                <p class="description">Accent color for special buttons (optional)</p>
+                <input type="text" id="brand_color_accent" value="#e74c3c" class="smdp-color-picker" />
+                <button type="button" id="generate-accent-complementary" class="button button-small" style="margin-left:10px;">🎨 Generate Complementary</button>
+                <p class="description">Accent color for alerts - Used for: Help button, urgent actions, warnings</p>
               </td>
             </tr>
           </table>
 
-          <div style="margin:30px 0; padding:20px; background:#f9f9f9; border:1px solid #ddd;">
-            <h4>Preview</h4>
-            <div style="display:flex; gap:15px; flex-wrap:wrap; margin:20px 0;">
-              <button type="button" id="preview-cat-btn" style="padding:16px 40px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:25px; cursor:pointer;">Category Button</button>
-              <button type="button" id="preview-cat-btn-active" style="padding:16px 40px; border-radius:500px; border:1px solid #0986bf; background:#0986bf; color:#fff; font-size:25px; cursor:pointer;">Active Category</button>
-              <button type="button" id="preview-help-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">Request Help</button>
-              <button type="button" id="preview-bill-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">Request Bill</button>
-            </div>
-            <div style="margin-top:20px; padding:15px; background:#fff; border:1px solid #eee; border-radius:0;">
-              <div style="font-weight:bold; font-size:19px; color:#000; margin-bottom:5px;">Item Card Preview</div>
-              <div style="font-weight:bold; font-size:16px; color:#000; margin-bottom:5px;">$12.99</div>
-              <div style="font-size:14px; color:#666;">Sample description text</div>
+          <!-- Live Preview -->
+          <div id="style-preview" style="margin:30px 0; padding:25px; background:#f0f0f0; border:1px solid #ddd; border-radius:8px;">
+            <h4 style="margin-top:0;">Live Preview</h4>
+
+            <!-- Preview container with background -->
+            <div id="preview-container" style="background:#ffffff; padding:25px; border-radius:8px;">
+
+              <!-- Category Buttons Preview -->
+              <div style="margin-bottom:25px;">
+                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Category Buttons</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button type="button" id="preview-cat-btn" style="padding:16px 40px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:20px; cursor:pointer;">Appetizers</button>
+                  <button type="button" id="preview-cat-btn-active" style="padding:16px 40px; border-radius:500px; border:1px solid #0986bf; background:#0986bf; color:#fff; font-size:20px; cursor:pointer; font-weight:normal;">Entrees</button>
+                  <button type="button" style="padding:16px 40px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:20px; cursor:pointer;">Desserts</button>
+                </div>
+              </div>
+
+              <!-- Action Buttons Preview -->
+              <div style="margin-bottom:25px;">
+                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Action Buttons</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button type="button" id="preview-help-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">🆘 Request Help</button>
+                  <button type="button" id="preview-bill-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">💰 Request Bill</button>
+                  <button type="button" id="preview-view-bill-btn" style="padding:12px 16px; border-radius:8px; border:none; background:#9b59b6; color:#fff; font-size:14px; font-weight:600; cursor:pointer;">View Bill</button>
+                </div>
+              </div>
+
+              <!-- Item Cards Preview -->
+              <div style="margin-bottom:25px;">
+                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Menu Item Cards</p>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
+                  <div id="preview-item-card-1" style="padding:15px; background:#fff; border:1px solid #eee; border-radius:0; cursor:pointer;">
+                    <div id="preview-card-title" style="font-weight:bold; font-size:19px; color:#000; margin-bottom:5px;">Margherita Pizza</div>
+                    <div id="preview-card-price" style="font-weight:bold; font-size:16px; color:#000; margin-bottom:8px;">$12.99</div>
+                    <div id="preview-card-desc" style="font-size:14px; color:#666; line-height:1.4;">Fresh mozzarella, basil, and tomato sauce</div>
+                  </div>
+                  <div id="preview-item-card-2" style="padding:15px; background:#fff; border:1px solid #eee; border-radius:0; cursor:pointer;">
+                    <div style="font-weight:bold; font-size:19px; color:#000; margin-bottom:5px;">Caesar Salad</div>
+                    <div style="font-weight:bold; font-size:16px; color:#000; margin-bottom:8px;">$8.99</div>
+                    <div style="font-size:14px; color:#666; line-height:1.4;">Romaine, parmesan, croutons</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Item Detail Modal Preview -->
+              <div>
+                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Item Detail Modal</p>
+                <div id="preview-modal" style="background:#ffffff; border:6px solid #3498db; border-radius:12px; padding:25px; max-width:400px; box-shadow:0 0 30px rgba(52,152,219,0.6);">
+                  <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:15px;">
+                    <div id="preview-modal-title" style="font-size:24px; font-weight:bold; color:#000;">Margherita Pizza</div>
+                    <button type="button" id="preview-close-btn" style="background:#3498db; color:#fff; border:none; border-radius:4px; padding:8px 16px; cursor:pointer; font-weight:600;">Close</button>
+                  </div>
+                  <div id="preview-modal-price" style="font-size:19px; font-weight:bold; color:#27ae60; margin-bottom:15px;">$12.99</div>
+                  <div id="preview-modal-desc" style="font-size:16px; color:#666; line-height:1.6;">Fresh mozzarella cheese, fresh basil leaves, and homemade tomato sauce on a hand-tossed crust. Baked to perfection in our wood-fired oven.</div>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <button type="button" id="generate-styles" class="button button-primary button-hero" style="margin-top:20px;">
-            Generate & Apply Styles
-          </button>
-          <p class="description" style="margin-top:10px;">This will update all style sections (Category Buttons, Help Buttons, Item Cards, Item Detail) based on your brand colors.</p>
+          <!-- Generate Button -->
+          <div style="background:#fff; border:1px solid #ddd; border-left:4px solid #00a32a; padding:15px; margin:20px 0;">
+            <button type="button" id="generate-styles" class="button button-primary button-hero" style="margin-bottom:10px;">
+              🎨 Generate & Apply Complete Theme
+            </button>
+            <p style="margin:0; color:#666; font-size:13px;">This will update ALL style settings instantly. You can fine-tune individual elements afterward in their respective tabs.</p>
+          </div>
 
           <script>
           jQuery(document).ready(function($) {
-            // Initialize color pickers for brand colors
-            $('#brand_color_1, #brand_color_2, #brand_color_3').wpColorPicker({
+            // Initialize color pickers
+            $('#brand_color_primary, #brand_color_secondary, #brand_color_accent').wpColorPicker({
               change: function() {
+                updateStylePreview();
+              },
+              clear: function() {
                 updateStylePreview();
               }
             });
 
-            // Helper function to lighten/darken colors
-            function adjustColor(color, percent) {
-              var num = parseInt(color.replace("#",""), 16);
-              var amt = Math.round(2.55 * percent);
-              var R = (num >> 16) + amt;
-              var G = (num >> 8 & 0x00FF) + amt;
-              var B = (num & 0x0000FF) + amt;
-              R = Math.max(Math.min(255, R), 0);
-              G = Math.max(Math.min(255, G), 0);
-              B = Math.max(Math.min(255, B), 0);
-              return "#" + (0x1000000 + (R << 16) + (G << 8) + B).toString(16).slice(1);
+            // Preset buttons
+            $('.preset-btn').on('click', function() {
+              var primary = $(this).data('primary');
+              var secondary = $(this).data('secondary');
+              var accent = $(this).data('accent');
+              $('#brand_color_primary').iris('color', primary);
+              $('#brand_color_secondary').iris('color', secondary);
+              $('#brand_color_accent').iris('color', accent);
+              updateStylePreview();
+            });
+
+            // Theme mode change
+            $('input[name="theme_mode"]').on('change', function() {
+              updateStylePreview();
+            });
+
+            // === COLOR THEORY FUNCTIONS ===
+
+            // Convert HEX to HSL
+            function hexToHSL(hex) {
+              var r = parseInt(hex.substr(1,2), 16) / 255;
+              var g = parseInt(hex.substr(3,2), 16) / 255;
+              var b = parseInt(hex.substr(5,2), 16) / 255;
+
+              var max = Math.max(r, g, b);
+              var min = Math.min(r, g, b);
+              var h, s, l = (max + min) / 2;
+
+              if (max === min) {
+                h = s = 0;
+              } else {
+                var d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                  case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                  case g: h = ((b - r) / d + 2) / 6; break;
+                  case b: h = ((r - g) / d + 4) / 6; break;
+                }
+              }
+
+              return { h: h * 360, s: s * 100, l: l * 100 };
             }
 
-            // Get contrast color (white or black)
+            // Convert HSL to HEX
+            function hslToHex(h, s, l) {
+              h = h / 360;
+              s = s / 100;
+              l = l / 100;
+
+              var r, g, b;
+              if (s === 0) {
+                r = g = b = l;
+              } else {
+                var hue2rgb = function(p, q, t) {
+                  if (t < 0) t += 1;
+                  if (t > 1) t -= 1;
+                  if (t < 1/6) return p + (q - p) * 6 * t;
+                  if (t < 1/2) return q;
+                  if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                  return p;
+                };
+                var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                var p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+              }
+
+              var toHex = function(x) {
+                var hex = Math.round(x * 255).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+              };
+
+              return '#' + toHex(r) + toHex(g) + toHex(b);
+            }
+
+            // Generate analogous color (30 degrees on color wheel)
+            function getAnalogousColor(hex) {
+              var hsl = hexToHSL(hex);
+              var newHue = (hsl.h + 30) % 360;
+              return hslToHex(newHue, hsl.s, hsl.l);
+            }
+
+            // Generate complementary color (180 degrees on color wheel)
+            function getComplementaryColor(hex) {
+              var hsl = hexToHSL(hex);
+              var newHue = (hsl.h + 180) % 360;
+              return hslToHex(newHue, hsl.s, hsl.l);
+            }
+
+            // Generate split-complementary color
+            function getSplitComplementaryColor(hex, offset) {
+              var hsl = hexToHSL(hex);
+              var newHue = (hsl.h + 180 + offset) % 360;
+              return hslToHex(newHue, hsl.s, hsl.l);
+            }
+
+            // Adjust brightness (lightness in HSL)
+            function adjustBrightness(hex, percent) {
+              var hsl = hexToHSL(hex);
+              var newL = Math.max(0, Math.min(100, hsl.l + percent));
+              return hslToHex(hsl.h, hsl.s, newL);
+            }
+
+            // Simple brightness adjustment for backwards compatibility
+            function adjustColor(color, percent) {
+              return adjustBrightness(color, percent);
+            }
+
             function getContrastColor(hexcolor) {
+              if (!hexcolor) return '#000000';
               var r = parseInt(hexcolor.substr(1,2), 16);
               var g = parseInt(hexcolor.substr(3,2), 16);
               var b = parseInt(hexcolor.substr(5,2), 16);
@@ -1172,20 +1366,59 @@ class SMDP_Menu_App_Builder {
               return (yiq >= 128) ? '#000000' : '#ffffff';
             }
 
+            // Color generation buttons
+            $('#generate-analogous').on('click', function() {
+              var primary = $('#brand_color_primary').val();
+              var analogous = getAnalogousColor(primary);
+              $('#brand_color_secondary').iris('color', analogous);
+              updateStylePreview();
+            });
+
+            $('#generate-complementary').on('click', function() {
+              var primary = $('#brand_color_primary').val();
+              var complementary = getComplementaryColor(primary);
+              $('#brand_color_secondary').iris('color', complementary);
+              updateStylePreview();
+            });
+
+            $('#generate-accent-complementary').on('click', function() {
+              var primary = $('#brand_color_primary').val();
+              var complementary = getComplementaryColor(primary);
+              $('#brand_color_accent').iris('color', complementary);
+              updateStylePreview();
+            });
+
             // Update preview in real-time
             function updateStylePreview() {
-              var primary = $('#brand_color_1').val() || '#0986bf';
-              var secondary = $('#brand_color_2').val() || '#01669c';
-              var accent = $('#brand_color_3').val() || '#e74c3c';
+              var primary = $('#brand_color_primary').val() || '#0986bf';
+              var secondary = $('#brand_color_secondary').val() || '#27ae60';
+              var accent = $('#brand_color_accent').val() || '#e74c3c';
+              var isDark = $('input[name="theme_mode"]:checked').val() === 'dark';
 
-              var primaryDark = adjustColor(primary, -15);
+              var primaryDark = adjustBrightness(primary, -15);
+              var secondaryDark = adjustBrightness(secondary, -15);
+              var accentDark = adjustBrightness(accent, -15);
               var primaryText = getContrastColor(primary);
+              var secondaryText = getContrastColor(secondary);
+              var accentText = getContrastColor(accent);
 
-              // Category button preview
-              $('#preview-cat-btn').css({
-                'background': '#ffffff',
-                'color': '#000000',
-                'border-color': secondary
+              // Theme-based colors
+              var bgMain = isDark ? '#1a1a1a' : '#ffffff';
+              var bgContent = isDark ? '#2d2d2d' : '#ffffff';
+              var bgCard = isDark ? '#3a3a3a' : '#ffffff';
+              var textPrimary = isDark ? '#ffffff' : '#000000';
+              var textSecondary = isDark ? '#b0b0b0' : '#666666';
+              var borderColor = isDark ? '#4a4a4a' : '#eeeeee';
+              var catBtnBorder = isDark ? primary : adjustColor(primary, -10);
+
+              // Apply to preview container
+              $('#preview-container').css('background', bgContent);
+
+              // Category buttons
+              $('#preview-cat-btn, #preview-cat-btn + button + button').css({
+                'background': isDark ? '#2d2d2d' : '#ffffff',
+                'color': textPrimary,
+                'border-color': catBtnBorder
               });
               $('#preview-cat-btn-active').css({
                 'background': primary,
@@ -1193,69 +1426,134 @@ class SMDP_Menu_App_Builder {
                 'border-color': primary
               });
 
-              // Help button preview
+              // Action buttons (using all 3 colors intelligently)
               $('#preview-help-btn').css({
                 'background': accent,
-                'color': '#ffffff'
+                'color': accentText
+              });
+              $('#preview-bill-btn').css({
+                'background': secondary,
+                'color': secondaryText
+              });
+              $('#preview-view-bill-btn').css({
+                'background': secondaryDark,
+                'color': getContrastColor(secondaryDark)
               });
 
-              // Bill button preview
-              $('#preview-bill-btn').css({
-                'background': adjustColor(primary, 20),
-                'color': getContrastColor(adjustColor(primary, 20))
+              // Item cards
+              $('#preview-item-card-1, #preview-item-card-2').css({
+                'background': bgCard,
+                'border-color': borderColor
+              });
+              $('#preview-card-title, #preview-modal-title').css('color', textPrimary);
+              $('#preview-card-price').css('color', secondary);
+              $('#preview-card-desc, #preview-modal-desc').css('color', textSecondary);
+
+              // Modal
+              $('#preview-modal').css({
+                'background': bgCard,
+                'border-color': primary,
+                'box-shadow': '0 0 30px ' + primary + '99, 0 0 60px ' + primary + '66'
+              });
+              $('#preview-modal-price').css('color', secondary);
+              $('#preview-close-btn').css({
+                'background': primary,
+                'color': primaryText
               });
             }
 
-            // Generate and apply styles
+            // Generate and apply all styles
             $('#generate-styles').on('click', function() {
-              var primary = $('#brand_color_1').val() || '#0986bf';
-              var secondary = $('#brand_color_2').val() || '#01669c';
-              var accent = $('#brand_color_3').val() || '#e74c3c';
+              var primary = $('#brand_color_primary').val() || '#0986bf';
+              var secondary = $('#brand_color_secondary').val() || '#27ae60';
+              var accent = $('#brand_color_accent').val() || '#e74c3c';
+              var isDark = $('input[name="theme_mode"]:checked').val() === 'dark';
+              var includeHelpButtons = $('#include_help_buttons').is(':checked');
 
-              if (!confirm('This will update all your style settings based on your brand colors. Continue?')) {
+              if (!confirm('This will completely regenerate ALL styles for buttons, cards, modals, backgrounds, and text colors based on your selections. Continue?')) {
                 return;
               }
 
-              var primaryDark = adjustColor(primary, -15);
-              var primaryLight = adjustColor(primary, 20);
-              var secondaryDark = adjustColor(secondary, -15);
-              var accentDark = adjustColor(accent, -15);
+              var primaryDark = adjustBrightness(primary, -15);
+              var secondaryDark = adjustBrightness(secondary, -15);
+              var accentDark = adjustBrightness(accent, -15);
               var primaryText = getContrastColor(primary);
+              var secondaryText = getContrastColor(secondary);
               var accentText = getContrastColor(accent);
 
-              // Apply to Category Buttons
-              $('input[name="<?php echo self::OPT_STYLES; ?>[bg_color]"]').val('#ffffff').trigger('change');
-              $('input[name="<?php echo self::OPT_STYLES; ?>[text_color]"]').val('#000000').trigger('change');
-              $('input[name="<?php echo self::OPT_STYLES; ?>[border_color]"]').val(secondary).trigger('change');
+              // Theme-based colors
+              var bgMain = isDark ? '#1a1a1a' : '#ffffff';
+              var bgCategoryBar = isDark ? '#2d2d2d' : '#ffffff';
+              var bgContent = isDark ? '#1a1a1a' : '#ffffff';
+              var bgCard = isDark ? '#3a3a3a' : '#ffffff';
+              var textPrimary = isDark ? '#ffffff' : '#000000';
+              var textSecondary = isDark ? '#b0b0b0' : '#666666';
+              var borderColor = isDark ? '#4a4a4a' : '#eeeeee';
+              var catBtnBg = isDark ? '#2d2d2d' : '#ffffff';
+              var catBtnBorder = isDark ? primary : adjustColor(primary, -10);
+
+              // === CATEGORY BUTTONS ===
+              $('input[name="<?php echo self::OPT_STYLES; ?>[bg_color]"]').val(catBtnBg).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[text_color]"]').val(textPrimary).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[border_color]"]').val(catBtnBorder).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_bg_color]"]').val(primary).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_text_color]"]').val(primaryText).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_border_color]"]').val(primary).trigger('change');
 
-              // Apply to Help Buttons
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][bg_color]"]').val(accent).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][text_color]"]').val(accentText).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_bg_color]"]').val(accentDark).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_bg_color]"]').val(accentDark).trigger('change');
+              // === HELP BUTTONS === (only if toggle is checked)
+              if (includeHelpButtons) {
+                // Help button - uses accent color (red for urgency/attention)
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][bg_color]"]').val(accent).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][text_color]"]').val(accentText).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_bg_color]"]').val(accentDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_bg_color]"]').val(accentDark).trigger('change');
 
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][bg_color]"]').val(primaryLight).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][text_color]"]').val(getContrastColor(primaryLight)).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_bg_color]"]').val(primary).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_bg_color]"]').val(primary).trigger('change');
+                // Bill button - uses secondary color (green for money/payment)
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][bg_color]"]').val(secondary).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][text_color]"]').val(secondaryText).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_bg_color]"]').val(secondaryDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_bg_color]"]').val(secondaryDark).trigger('change');
 
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][bg_color]"]').val(secondary).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][text_color]"]').val(getContrastColor(secondary)).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][hover_bg_color]"]').val(secondaryDark).trigger('change');
+                // View Bill button - uses darker secondary
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][bg_color]"]').val(secondaryDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][text_color]"]').val(getContrastColor(secondaryDark)).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][hover_bg_color]"]').val(adjustBrightness(secondaryDark, -10)).trigger('change');
 
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][bg_color]"]').val(primary).trigger('change');
-              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][text_color]"]').val(primaryText).trigger('change');
+                // Table Badge - uses primary brand color
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][bg_color]"]').val(primary).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][text_color]"]').val(primaryText).trigger('change');
+              }
 
-              // Apply to Item Detail Modal
+              // === BACKGROUND COLORS ===
+              $('input[name="<?php echo self::OPT_BG_COLORS; ?>[main_bg]"]').val(bgMain).trigger('change');
+              $('input[name="<?php echo self::OPT_BG_COLORS; ?>[category_bar_bg]"]').val(bgCategoryBar).trigger('change');
+              $('input[name="<?php echo self::OPT_BG_COLORS; ?>[content_area_bg]"]').val(bgContent).trigger('change');
+
+              // === ITEM CARDS ===
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[bg_color]"]').val(bgCard).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[border_color]"]').val(borderColor).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[title_color]"]').val(textPrimary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[price_color]"]').val(secondary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[desc_color]"]').val(textSecondary).trigger('change');
+
+              // === ITEM DETAIL MODAL ===
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_bg]"]').val(bgCard).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_border_color]"]').val(primary).trigger('change');
-              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[price_color]"]').val(primaryLight).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[title_color]"]').val(textPrimary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[price_color]"]').val(secondary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[desc_color]"]').val(textSecondary).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_bg]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_text]"]').val(primaryText).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_hover_bg]"]').val(primaryDark).trigger('change');
 
-              alert('Styles generated! Please scroll down and click "Save" on each style section to apply the changes.');
+              alert('✅ Complete theme generated!\n\n' +
+                    'All colors have been applied to the form fields below.\n\n' +
+                    'Click "Save" on each section to persist the changes:\n' +
+                    '• Category Buttons\n' +
+                    '• Help Buttons\n' +
+                    '• Background Colors\n' +
+                    '• Item Cards\n' +
+                    '• Item Detail');
             });
 
             // Initial preview update
