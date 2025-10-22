@@ -63,25 +63,25 @@ class SMDP_Menu_App_Builder {
   }
 
   public static function register_settings() {
-    // Sanitize callback for styles
+    // Sanitize callback for styles (defaults match hardcoded CSS in smdp-structural.css lines 231-248)
     $sanitize_styles = function($input) {
         if (!is_array($input)) return array();
 
         $sanitized = array();
         $sanitized['bg_color'] = !empty($input['bg_color']) ? sanitize_hex_color($input['bg_color']) : '#ffffff';
-        $sanitized['text_color'] = !empty($input['text_color']) ? sanitize_hex_color($input['text_color']) : '#333333';
-        $sanitized['border_color'] = !empty($input['border_color']) ? sanitize_hex_color($input['border_color']) : '#e5e5e5';
-        $sanitized['active_bg_color'] = !empty($input['active_bg_color']) ? sanitize_hex_color($input['active_bg_color']) : '#f3f4f6';
-        $sanitized['active_text_color'] = !empty($input['active_text_color']) ? sanitize_hex_color($input['active_text_color']) : '#333333';
-        $sanitized['active_border_color'] = !empty($input['active_border_color']) ? sanitize_hex_color($input['active_border_color']) : '#333333';
-        $sanitized['font_size'] = !empty($input['font_size']) ? intval($input['font_size']) : 16;
-        $sanitized['padding_vertical'] = !empty($input['padding_vertical']) ? intval($input['padding_vertical']) : 10;
-        $sanitized['padding_horizontal'] = !empty($input['padding_horizontal']) ? intval($input['padding_horizontal']) : 14;
-        $sanitized['border_radius'] = !empty($input['border_radius']) ? intval($input['border_radius']) : 999;
+        $sanitized['text_color'] = !empty($input['text_color']) ? sanitize_hex_color($input['text_color']) : '#000000';
+        $sanitized['border_color'] = !empty($input['border_color']) ? sanitize_hex_color($input['border_color']) : '#01669c';
+        $sanitized['active_bg_color'] = !empty($input['active_bg_color']) ? sanitize_hex_color($input['active_bg_color']) : '#0986bf';
+        $sanitized['active_text_color'] = !empty($input['active_text_color']) ? sanitize_hex_color($input['active_text_color']) : '#ffffff';
+        $sanitized['active_border_color'] = !empty($input['active_border_color']) ? sanitize_hex_color($input['active_border_color']) : '#0986bf';
+        $sanitized['font_size'] = !empty($input['font_size']) ? intval($input['font_size']) : 25;
+        $sanitized['padding_vertical'] = !empty($input['padding_vertical']) ? intval($input['padding_vertical']) : 16;
+        $sanitized['padding_horizontal'] = !empty($input['padding_horizontal']) ? intval($input['padding_horizontal']) : 40;
+        $sanitized['border_radius'] = !empty($input['border_radius']) ? intval($input['border_radius']) : 500;
         $sanitized['border_width'] = !empty($input['border_width']) ? intval($input['border_width']) : 1;
         $sanitized['font_weight'] = !empty($input['font_weight']) ? sanitize_text_field($input['font_weight']) : 'normal';
         $sanitized['font_family'] = !empty($input['font_family']) ? sanitize_text_field($input['font_family']) : '';
-        $sanitized['box_shadow'] = !empty($input['box_shadow']) ? sanitize_text_field($input['box_shadow']) : '0 2px 4px rgba(0,0,0,0.1)';
+        $sanitized['box_shadow'] = !empty($input['box_shadow']) ? sanitize_text_field($input['box_shadow']) : 'none';
 
         return $sanitized;
     };
@@ -418,22 +418,22 @@ class SMDP_Menu_App_Builder {
       return;
     }
 
-    // Default values
+    // Default values (matches hardcoded CSS in smdp-structural.css lines 231-248)
     $defaults = array(
-      'bg_color' => '#5C7BA6',
-      'text_color' => '#ffffff',
-      'border_color' => '#5C7BA6',
-      'active_bg_color' => '#4A6288',
+      'bg_color' => '#ffffff',
+      'text_color' => '#000000',
+      'border_color' => '#01669c',
+      'active_bg_color' => '#0986bf',
       'active_text_color' => '#ffffff',
-      'active_border_color' => '#4A6288',
-      'font_size' => 18,
-      'padding_vertical' => 12,
-      'padding_horizontal' => 20,
-      'border_radius' => 8,
+      'active_border_color' => '#0986bf',
+      'font_size' => 25,
+      'padding_vertical' => 16,
+      'padding_horizontal' => 40,
+      'border_radius' => 500,
       'border_width' => 1,
-      'font_weight' => '600',
+      'font_weight' => 'normal',
       'font_family' => '',
-      'box_shadow' => '0 2px 4px rgba(0,0,0,0.1)',
+      'box_shadow' => 'none',
     );
 
     $styles = array_merge($defaults, $styles);
@@ -1073,7 +1073,8 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtabs for Styles -->
         <div class="smdp-style-subtabs" style="margin:20px 0; border-bottom:1px solid #ccc;">
-          <a href="#style-category-buttons" class="smdp-style-subtab active" style="display:inline-block; padding:10px 20px; text-decoration:none; border-bottom:2px solid #2271b1; margin-bottom:-1px;">Category Buttons</a>
+          <a href="#style-generator" class="smdp-style-subtab active" style="display:inline-block; padding:10px 20px; text-decoration:none; border-bottom:2px solid #2271b1; margin-bottom:-1px;">Style Generator</a>
+          <a href="#style-category-buttons" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Category Buttons</a>
           <a href="#style-help-buttons" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Help Buttons</a>
           <a href="#style-background" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Background Colors</a>
           <a href="#style-item-cards" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Cards</a>
@@ -1081,8 +1082,190 @@ class SMDP_Menu_App_Builder {
           <?php /* <a href="#style-custom-css" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Custom CSS</a> */ ?>
         </div>
 
+        <!-- Subtab: Style Generator -->
+        <div id="style-generator" class="smdp-style-subtab-content active" style="margin-top:20px;">
+          <h3>Brand Color Style Generator</h3>
+          <p>Enter up to 3 brand colors and automatically generate consistent styles for all buttons and elements.</p>
+
+          <div style="background:#fff; border:1px solid #ddd; border-left:4px solid #2271b1; padding:15px; margin:20px 0;">
+            <h4 style="margin-top:0;">How it works:</h4>
+            <ul style="margin:10px 0;">
+              <li><strong>Primary Color:</strong> Used for main buttons, active states, and primary elements</li>
+              <li><strong>Secondary Color (optional):</strong> Used for accents, borders, and hover effects</li>
+              <li><strong>Accent Color (optional):</strong> Used for highlights and special elements</li>
+            </ul>
+            <p style="margin-bottom:0;"><strong>Note:</strong> The generator will automatically create lighter/darker shades for hover and active states.</p>
+          </div>
+
+          <table class="form-table">
+            <tr>
+              <th>Primary Brand Color</th>
+              <td>
+                <input type="text" id="brand_color_1" value="#0986bf" class="smdp-color-picker" />
+                <p class="description">Your main brand color (required)</p>
+              </td>
+            </tr>
+            <tr>
+              <th>Secondary Brand Color</th>
+              <td>
+                <input type="text" id="brand_color_2" value="#01669c" class="smdp-color-picker" />
+                <p class="description">Secondary brand color (optional)</p>
+              </td>
+            </tr>
+            <tr>
+              <th>Accent Brand Color</th>
+              <td>
+                <input type="text" id="brand_color_3" value="#e74c3c" class="smdp-color-picker" />
+                <p class="description">Accent color for special buttons (optional)</p>
+              </td>
+            </tr>
+          </table>
+
+          <div style="margin:30px 0; padding:20px; background:#f9f9f9; border:1px solid #ddd;">
+            <h4>Preview</h4>
+            <div style="display:flex; gap:15px; flex-wrap:wrap; margin:20px 0;">
+              <button type="button" id="preview-cat-btn" style="padding:16px 40px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:25px; cursor:pointer;">Category Button</button>
+              <button type="button" id="preview-cat-btn-active" style="padding:16px 40px; border-radius:500px; border:1px solid #0986bf; background:#0986bf; color:#fff; font-size:25px; cursor:pointer;">Active Category</button>
+              <button type="button" id="preview-help-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">Request Help</button>
+              <button type="button" id="preview-bill-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:16px; font-weight:600; cursor:pointer;">Request Bill</button>
+            </div>
+            <div style="margin-top:20px; padding:15px; background:#fff; border:1px solid #eee; border-radius:0;">
+              <div style="font-weight:bold; font-size:19px; color:#000; margin-bottom:5px;">Item Card Preview</div>
+              <div style="font-weight:bold; font-size:16px; color:#000; margin-bottom:5px;">$12.99</div>
+              <div style="font-size:14px; color:#666;">Sample description text</div>
+            </div>
+          </div>
+
+          <button type="button" id="generate-styles" class="button button-primary button-hero" style="margin-top:20px;">
+            Generate & Apply Styles
+          </button>
+          <p class="description" style="margin-top:10px;">This will update all style sections (Category Buttons, Help Buttons, Item Cards, Item Detail) based on your brand colors.</p>
+
+          <script>
+          jQuery(document).ready(function($) {
+            // Initialize color pickers for brand colors
+            $('#brand_color_1, #brand_color_2, #brand_color_3').wpColorPicker({
+              change: function() {
+                updateStylePreview();
+              }
+            });
+
+            // Helper function to lighten/darken colors
+            function adjustColor(color, percent) {
+              var num = parseInt(color.replace("#",""), 16);
+              var amt = Math.round(2.55 * percent);
+              var R = (num >> 16) + amt;
+              var G = (num >> 8 & 0x00FF) + amt;
+              var B = (num & 0x0000FF) + amt;
+              R = Math.max(Math.min(255, R), 0);
+              G = Math.max(Math.min(255, G), 0);
+              B = Math.max(Math.min(255, B), 0);
+              return "#" + (0x1000000 + (R << 16) + (G << 8) + B).toString(16).slice(1);
+            }
+
+            // Get contrast color (white or black)
+            function getContrastColor(hexcolor) {
+              var r = parseInt(hexcolor.substr(1,2), 16);
+              var g = parseInt(hexcolor.substr(3,2), 16);
+              var b = parseInt(hexcolor.substr(5,2), 16);
+              var yiq = ((r*299)+(g*587)+(b*114))/1000;
+              return (yiq >= 128) ? '#000000' : '#ffffff';
+            }
+
+            // Update preview in real-time
+            function updateStylePreview() {
+              var primary = $('#brand_color_1').val() || '#0986bf';
+              var secondary = $('#brand_color_2').val() || '#01669c';
+              var accent = $('#brand_color_3').val() || '#e74c3c';
+
+              var primaryDark = adjustColor(primary, -15);
+              var primaryText = getContrastColor(primary);
+
+              // Category button preview
+              $('#preview-cat-btn').css({
+                'background': '#ffffff',
+                'color': '#000000',
+                'border-color': secondary
+              });
+              $('#preview-cat-btn-active').css({
+                'background': primary,
+                'color': primaryText,
+                'border-color': primary
+              });
+
+              // Help button preview
+              $('#preview-help-btn').css({
+                'background': accent,
+                'color': '#ffffff'
+              });
+
+              // Bill button preview
+              $('#preview-bill-btn').css({
+                'background': adjustColor(primary, 20),
+                'color': getContrastColor(adjustColor(primary, 20))
+              });
+            }
+
+            // Generate and apply styles
+            $('#generate-styles').on('click', function() {
+              var primary = $('#brand_color_1').val() || '#0986bf';
+              var secondary = $('#brand_color_2').val() || '#01669c';
+              var accent = $('#brand_color_3').val() || '#e74c3c';
+
+              if (!confirm('This will update all your style settings based on your brand colors. Continue?')) {
+                return;
+              }
+
+              var primaryDark = adjustColor(primary, -15);
+              var primaryLight = adjustColor(primary, 20);
+              var secondaryDark = adjustColor(secondary, -15);
+              var accentDark = adjustColor(accent, -15);
+              var primaryText = getContrastColor(primary);
+              var accentText = getContrastColor(accent);
+
+              // Apply to Category Buttons
+              $('input[name="<?php echo self::OPT_STYLES; ?>[bg_color]"]').val('#ffffff').trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[text_color]"]').val('#000000').trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[border_color]"]').val(secondary).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[active_bg_color]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[active_text_color]"]').val(primaryText).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[active_border_color]"]').val(primary).trigger('change');
+
+              // Apply to Help Buttons
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][bg_color]"]').val(accent).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][text_color]"]').val(accentText).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_bg_color]"]').val(accentDark).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_bg_color]"]').val(accentDark).trigger('change');
+
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][bg_color]"]').val(primaryLight).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][text_color]"]').val(getContrastColor(primaryLight)).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_bg_color]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_bg_color]"]').val(primary).trigger('change');
+
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][bg_color]"]').val(secondary).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][text_color]"]').val(getContrastColor(secondary)).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][hover_bg_color]"]').val(secondaryDark).trigger('change');
+
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][bg_color]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][text_color]"]').val(primaryText).trigger('change');
+
+              // Apply to Item Detail Modal
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_border_color]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[price_color]"]').val(primaryLight).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_bg]"]').val(primary).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_hover_bg]"]').val(primaryDark).trigger('change');
+
+              alert('Styles generated! Please scroll down and click "Save" on each style section to apply the changes.');
+            });
+
+            // Initial preview update
+            updateStylePreview();
+          });
+          </script>
+        </div>
+
         <!-- Subtab: Category Buttons -->
-        <div id="style-category-buttons" class="smdp-style-subtab-content active" style="margin-top:20px;">
+        <div id="style-category-buttons" class="smdp-style-subtab-content" style="margin-top:20px; display:none;">
           <form method="post" action="options.php">
             <?php settings_fields('smdp_menu_app_styles_group'); ?>
             <h3>Category Button Styles</h3>
@@ -1754,22 +1937,22 @@ class SMDP_Menu_App_Builder {
     $styles = get_option(self::OPT_STYLES, array());
     $name = self::OPT_STYLES;
 
-    // Default values
+    // Default values (matches hardcoded CSS in smdp-structural.css lines 231-248)
     $defaults = array(
-      'bg_color' => '#5C7BA6',
-      'text_color' => '#ffffff',
-      'border_color' => '#5C7BA6',
-      'active_bg_color' => '#4A6288',
+      'bg_color' => '#ffffff',
+      'text_color' => '#000000',
+      'border_color' => '#01669c',
+      'active_bg_color' => '#0986bf',
       'active_text_color' => '#ffffff',
-      'active_border_color' => '#4A6288',
-      'font_size' => 18,
-      'padding_vertical' => 12,
-      'padding_horizontal' => 20,
-      'border_radius' => 8,
+      'active_border_color' => '#0986bf',
+      'font_size' => 25,
+      'padding_vertical' => 16,
+      'padding_horizontal' => 40,
+      'border_radius' => 500,
       'border_width' => 1,
-      'font_weight' => '600',
+      'font_weight' => 'normal',
       'font_family' => '',
-      'box_shadow' => '0 2px 4px rgba(0,0,0,0.1)',
+      'box_shadow' => 'none',
     );
     $styles = array_merge($defaults, $styles);
     ?>
