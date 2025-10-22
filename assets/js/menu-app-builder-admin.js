@@ -2,7 +2,14 @@
   $(function(){
     // Function to initialize custom color pickers
     function initColorPickers() {
-      $('.smdp-color-picker, .smdp-pwa-color-picker').each(function(){
+      var $pickers = $('.smdp-color-picker, .smdp-pwa-color-picker');
+
+      // Debug: log how many pickers we found
+      if ($pickers.length > 0) {
+        console.log('SMDP: Found ' + $pickers.length + ' color pickers to initialize');
+      }
+
+      $pickers.each(function(){
         var $textInput = $(this);
 
         // Skip if already initialized
@@ -10,6 +17,7 @@
           return;
         }
 
+        console.log('SMDP: Initializing color picker');
         $textInput.data('color-picker-initialized', true);
 
         // Create wrapper
@@ -58,9 +66,13 @@
     // Initialize color pickers on page load
     setTimeout(initColorPickers, 100);
 
+    // Also initialize after a longer delay to catch any late-loaded elements
+    setTimeout(initColorPickers, 500);
+
     // Re-initialize when configuration subtabs change
     $(document).on('click', '.smdp-config-subtab', function(){
-      setTimeout(initColorPickers, 200);
+      setTimeout(initColorPickers, 100);
+      setTimeout(initColorPickers, 300);
     });
 
     // Re-initialize when style subtabs change
@@ -77,9 +89,16 @@
       $(target).show();
 
       // Re-initialize color pickers for newly shown content
-      setTimeout(initColorPickers, 200);
+      setTimeout(initColorPickers, 100);
+      setTimeout(initColorPickers, 300);
 
       return false;
+    });
+
+    // Also re-initialize when main tabs change
+    $(document).on('click', '.nav-tab', function(){
+      setTimeout(initColorPickers, 100);
+      setTimeout(initColorPickers, 300);
     });
 
     var $list = $('#smdp-cat-order');
