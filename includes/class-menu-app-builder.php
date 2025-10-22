@@ -19,6 +19,7 @@ class SMDP_Menu_App_Builder {
     add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend'));
     add_action('wp_head', array(__CLASS__, 'inject_custom_styles'));
     add_action('admin_post_smdp_save_pwa_settings', array(__CLASS__, 'handle_pwa_settings_save'));
+    add_action('admin_post_smdp_reset_styles', array(__CLASS__, 'handle_reset_styles'));
     add_action('admin_init', array(__CLASS__, 'handle_flush_rewrite_rules'));
     add_shortcode('smdp_menu_app', array(__CLASS__, 'shortcode_render'));
 
@@ -248,7 +249,6 @@ class SMDP_Menu_App_Builder {
         $sanitized['main_bg'] = !empty($input['main_bg']) ? sanitize_hex_color($input['main_bg']) : '#ffffff';
         $sanitized['category_bar_bg'] = !empty($input['category_bar_bg']) ? sanitize_hex_color($input['category_bar_bg']) : '#ffffff';
         $sanitized['content_area_bg'] = !empty($input['content_area_bg']) ? sanitize_hex_color($input['content_area_bg']) : '#ffffff';
-        $sanitized['item_card_bg'] = !empty($input['item_card_bg']) ? sanitize_hex_color($input['item_card_bg']) : '#ffffff';
 
         return $sanitized;
     };
@@ -626,11 +626,6 @@ class SMDP_Menu_App_Builder {
 /* Content area background */
 .smdp-app-sections {
   background-color: <?php echo esc_attr($bg_colors['content_area_bg']); ?> !important;
-}
-
-/* Item card background */
-.smdp-item-card {
-  background-color: <?php echo esc_attr($bg_colors['item_card_bg']); ?> !important;
 }
 </style>
 <?php
@@ -1076,7 +1071,15 @@ class SMDP_Menu_App_Builder {
             <?php settings_fields('smdp_menu_app_styles_group'); ?>
             <h3>Category Button Styles</h3>
             <?php self::field_styles(); ?>
-            <?php submit_button('Save Category Button Styles'); ?>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <?php submit_button('Save Category Button Styles', 'primary', 'submit', false); ?>
+              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Category Button styles to defaults? This cannot be undone.');">
+                <input type="hidden" name="action" value="smdp_reset_styles">
+                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_STYLES); ?>">
+                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
+              </form>
+            </div>
           </form>
         </div>
 
@@ -1087,7 +1090,15 @@ class SMDP_Menu_App_Builder {
             <h3>Action Button Styles</h3>
             <p class="description">These styles apply to: Request Help, Request Bill, View Bill, and Table Badge buttons</p>
             <?php self::field_help_button_styles(); ?>
-            <?php submit_button('Save Action Button Styles'); ?>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <?php submit_button('Save Action Button Styles', 'primary', 'submit', false); ?>
+              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Action Button styles to defaults? This cannot be undone.');">
+                <input type="hidden" name="action" value="smdp_reset_styles">
+                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_HELP_BTN_STYLES); ?>">
+                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
+              </form>
+            </div>
           </form>
         </div>
 
@@ -1098,7 +1109,15 @@ class SMDP_Menu_App_Builder {
             <h3>Background Colors</h3>
             <p class="description">Customize background colors for different sections of the menu app</p>
             <?php self::field_background_colors(); ?>
-            <?php submit_button('Save Background Colors'); ?>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <?php submit_button('Save Background Colors', 'primary', 'submit', false); ?>
+              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Background Colors to defaults? This cannot be undone.');">
+                <input type="hidden" name="action" value="smdp_reset_styles">
+                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_BG_COLORS); ?>">
+                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
+              </form>
+            </div>
           </form>
         </div>
 
@@ -1109,7 +1128,15 @@ class SMDP_Menu_App_Builder {
             <h3>Item Card Styles</h3>
             <p class="description">Customize the appearance of menu item cards</p>
             <?php self::field_item_card_styles(); ?>
-            <?php submit_button('Save Item Card Styles'); ?>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <?php submit_button('Save Item Card Styles', 'primary', 'submit', false); ?>
+              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Item Card styles to defaults? This cannot be undone.');">
+                <input type="hidden" name="action" value="smdp_reset_styles">
+                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_CARD_STYLES); ?>">
+                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
+              </form>
+            </div>
           </form>
         </div>
 
@@ -1120,7 +1147,15 @@ class SMDP_Menu_App_Builder {
             <h3>Item Detail Modal Styles</h3>
             <p class="description">Customize the appearance of the item detail popup/modal</p>
             <?php self::field_item_detail_styles(); ?>
-            <?php submit_button('Save Item Detail Styles'); ?>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <?php submit_button('Save Item Detail Styles', 'primary', 'submit', false); ?>
+              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Item Detail styles to defaults? This cannot be undone.');">
+                <input type="hidden" name="action" value="smdp_reset_styles">
+                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_DETAIL_STYLES); ?>">
+                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
+              </form>
+            </div>
           </form>
         </div>
 
@@ -2315,7 +2350,6 @@ class SMDP_Menu_App_Builder {
       'main_bg' => '#ffffff',
       'category_bar_bg' => '#ffffff',
       'content_area_bg' => '#ffffff',
-      'item_card_bg' => '#ffffff',
     );
     $colors = array_merge($defaults, $colors);
     ?>
@@ -2343,14 +2377,7 @@ class SMDP_Menu_App_Builder {
           <th>Content Area Background</th>
           <td>
             <input type="text" name="<?php echo esc_attr($name); ?>[content_area_bg]" value="<?php echo esc_attr($colors['content_area_bg']); ?>" class="smdp-color-picker" />
-            <p class="description">Background for the menu items section (<code>.smdp-app-sections</code>)</p>
-          </td>
-        </tr>
-        <tr>
-          <th>Item Card Background</th>
-          <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[item_card_bg]" value="<?php echo esc_attr($colors['item_card_bg']); ?>" class="smdp-color-picker" />
-            <p class="description">Background for individual menu item cards (<code>.smdp-item-card</code>)</p>
+            <p class="description">Background for the menu items section (<code>.smdp-app-sections</code>). Note: Individual item card backgrounds are customized in the Item Cards tab.</p>
           </td>
         </tr>
       </table>
@@ -2372,17 +2399,8 @@ class SMDP_Menu_App_Builder {
             </div>
 
             <small style="color: #666; display: block; margin-bottom: 4px; font-weight: bold;">Content Area</small>
-            <div style="background: <?php echo esc_attr($colors['content_area_bg']); ?>; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" class="smdp-bg-content-preview">
-              <small style="color: #666; display: block; margin-bottom: 4px; font-size: 10px;">Item Cards:</small>
-              <div style="background: <?php echo esc_attr($colors['item_card_bg']); ?>; padding: 6px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 4px;" class="smdp-bg-card-preview">
-                <small style="font-size: 9px; color: #666;">Item 1</small>
-              </div>
-              <div style="background: <?php echo esc_attr($colors['item_card_bg']); ?>; padding: 6px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 4px;" class="smdp-bg-card-preview">
-                <small style="font-size: 9px; color: #666;">Item 2</small>
-              </div>
-              <div style="background: <?php echo esc_attr($colors['item_card_bg']); ?>; padding: 6px; border: 1px solid #ddd; border-radius: 3px;" class="smdp-bg-card-preview">
-                <small style="font-size: 9px; color: #666;">Item 3</small>
-              </div>
+            <div style="background: <?php echo esc_attr($colors['content_area_bg']); ?>; padding: 12px; border: 1px solid #ddd; border-radius: 4px; min-height: 50px;" class="smdp-bg-content-preview">
+              <small style="font-size: 10px; color: #666;">Menu Items Display Here</small>
             </div>
 
           </div>
@@ -2402,13 +2420,11 @@ class SMDP_Menu_App_Builder {
         var mainBg = $('input[name="<?php echo esc_js($name); ?>[main_bg]"]').val();
         var catBarBg = $('input[name="<?php echo esc_js($name); ?>[category_bar_bg]"]').val();
         var contentBg = $('input[name="<?php echo esc_js($name); ?>[content_area_bg]"]').val();
-        var cardBg = $('input[name="<?php echo esc_js($name); ?>[item_card_bg]"]').val();
 
         // Update preview
         $('.smdp-bg-preview > div > div').css('background-color', mainBg);
         $('.smdp-bg-cat-bar-preview').css('background-color', catBarBg);
         $('.smdp-bg-content-preview').css('background-color', contentBg);
-        $('.smdp-bg-card-preview').css('background-color', cardBg);
       }
 
       // Update preview on any input change
@@ -3577,6 +3593,48 @@ class SMDP_Menu_App_Builder {
       'page' => 'smdp_menu_app_builder',
       'pwa_saved' => '1'
     ), admin_url( 'admin.php' ) ) );
+    exit;
+  }
+
+  /**
+   * Handle reset styles action - resets a specific style option to defaults
+   */
+  public static function handle_reset_styles() {
+    // Verify nonce
+    if (!isset($_POST['smdp_reset_nonce']) || !wp_verify_nonce($_POST['smdp_reset_nonce'], 'smdp_reset_styles')) {
+      wp_die('Security check failed');
+    }
+
+    // Check user capabilities
+    if (!current_user_can('manage_options')) {
+      wp_die('Insufficient permissions');
+    }
+
+    // Get which option to reset
+    $option_to_reset = isset($_POST['reset_option']) ? sanitize_text_field($_POST['reset_option']) : '';
+
+    // Validate it's one of our style options
+    $valid_options = array(
+      self::OPT_STYLES,
+      self::OPT_HELP_BTN_STYLES,
+      self::OPT_BG_COLORS,
+      self::OPT_ITEM_CARD_STYLES,
+      self::OPT_ITEM_DETAIL_STYLES
+    );
+
+    if (!in_array($option_to_reset, $valid_options)) {
+      wp_die('Invalid option specified');
+    }
+
+    // Delete the option to reset to defaults
+    delete_option($option_to_reset);
+
+    // Redirect back with success message
+    wp_redirect(add_query_arg(array(
+      'page' => 'smdp_menu_app_builder',
+      'reset_success' => '1',
+      'reset_type' => basename($option_to_reset)
+    ), admin_url('admin.php')));
     exit;
   }
 
