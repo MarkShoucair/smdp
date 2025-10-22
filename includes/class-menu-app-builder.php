@@ -1492,7 +1492,7 @@ class SMDP_Menu_App_Builder {
             <!-- End Left Column -->
 
             <!-- Right Column: Live Preview (Sticky) -->
-            <div style="position: sticky; top: 32px; max-height: calc(100vh - 64px); overflow-y: auto;">
+            <div style="position: sticky; top: 32px;">
           <div id="style-preview" style="padding:20px; background:#f9f9f9; border:1px solid #ddd; border-radius:8px;">
             <h3 style="margin-top:0;">Live Preview</h3>
 
