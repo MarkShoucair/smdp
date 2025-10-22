@@ -1563,6 +1563,21 @@ class SMDP_Menu_App_Builder {
               var catBtnBg = isDark ? '#2d2d2d' : '#ffffff';
               var catBtnBorder = isDark ? primary : adjustColor(primary, -10);
 
+              // === BOX SHADOWS ===
+              var boxShadowActionButtons = '0 4px 10px rgba(0,0,0,0.3)';
+              var boxShadowCards = '0 2px 4px rgba(0,0,0,0.1)';
+              var boxShadowModal = '0 0 30px ' + primary.replace('#', 'rgba(') + ', 0.6), 0 0 60px ' + primary.replace('#', 'rgba(') + ', 0.4)';
+
+              // Helper to convert hex to rgba for box shadow
+              function hexToRgba(hex, opacity) {
+                var r = parseInt(hex.substr(1,2), 16);
+                var g = parseInt(hex.substr(3,2), 16);
+                var b = parseInt(hex.substr(5,2), 16);
+                return 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+              }
+
+              boxShadowModal = '0 0 30px ' + hexToRgba(primary, 0.6) + ', 0 0 60px ' + hexToRgba(primary, 0.4);
+
               // === CATEGORY BUTTONS ===
               $('input[name="<?php echo self::OPT_STYLES; ?>[bg_color]"]').val(catBtnBg).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[text_color]"]').val(textPrimary).trigger('change');
@@ -1571,6 +1586,7 @@ class SMDP_Menu_App_Builder {
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_text_color]"]').val(primaryText).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[active_border_color]"]').val(primary).trigger('change');
               $('input[name="<?php echo self::OPT_STYLES; ?>[border_radius]"]').val(radius.category).trigger('change');
+              $('input[name="<?php echo self::OPT_STYLES; ?>[box_shadow]"]').val('none').trigger('change');
 
               // === HELP BUTTONS === (only if toggle is checked)
               if (includeHelpButtons) {
@@ -1580,6 +1596,7 @@ class SMDP_Menu_App_Builder {
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_bg_color]"]').val(accentDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_bg_color]"]').val(accentDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][border_radius]"]').val(radius.action).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
 
                 // Bill button - uses secondary color (green for money/payment)
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][bg_color]"]').val(secondary).trigger('change');
@@ -1587,17 +1604,20 @@ class SMDP_Menu_App_Builder {
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_bg_color]"]').val(secondaryDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_bg_color]"]').val(secondaryDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][border_radius]"]').val(radius.action).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
 
                 // View Bill button - uses darker secondary
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][bg_color]"]').val(secondaryDark).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][text_color]"]').val(getContrastColor(secondaryDark)).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][hover_bg_color]"]').val(adjustBrightness(secondaryDark, -10)).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][border_radius]"]').val(radius.action).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[view_bill][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
 
                 // Table Badge - uses primary brand color
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][bg_color]"]').val(primary).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][text_color]"]').val(primaryText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][border_radius]"]').val(radius.action).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
               }
 
               // === BACKGROUND COLORS ===
@@ -1612,6 +1632,7 @@ class SMDP_Menu_App_Builder {
               $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[price_color]"]').val(secondary).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[desc_color]"]').val(textSecondary).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[border_radius]"]').val(radius.card).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_CARD_STYLES; ?>[box_shadow]"]').val(boxShadowCards).trigger('change');
 
               // === ITEM DETAIL MODAL ===
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_bg]"]').val(bgCard).trigger('change');
@@ -1623,6 +1644,7 @@ class SMDP_Menu_App_Builder {
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_text]"]').val(primaryText).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[close_btn_hover_bg]"]').val(primaryDark).trigger('change');
               $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_border_radius]"]').val(radius.modal).trigger('change');
+              $('input[name="<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>[modal_box_shadow]"]').val(boxShadowModal).trigger('change');
 
               // Auto-save all settings via AJAX
               var formData = new FormData();
@@ -1638,7 +1660,9 @@ class SMDP_Menu_App_Builder {
                 var name = $(this).attr('name');
                 var match = name.match(/\[([^\]]+)\]$/);
                 if (match) {
-                  allData['<?php echo self::OPT_STYLES; ?>'][match[1]] = $(this).val();
+                  var val = $(this).val();
+                  // Properly escape special characters for JSON
+                  allData['<?php echo self::OPT_STYLES; ?>'][match[1]] = val ? String(val) : '';
                 }
               });
 
@@ -1651,7 +1675,8 @@ class SMDP_Menu_App_Builder {
                   if (!allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]]) {
                     allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]] = {};
                   }
-                  allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]][match[2]] = $(this).val();
+                  var val = $(this).val();
+                  allData['<?php echo self::OPT_HELP_BTN_STYLES; ?>'][match[1]][match[2]] = val ? String(val) : '';
                 }
               });
 
@@ -1661,7 +1686,8 @@ class SMDP_Menu_App_Builder {
                 var name = $(this).attr('name');
                 var match = name.match(/\[([^\]]+)\]$/);
                 if (match) {
-                  allData['<?php echo self::OPT_BG_COLORS; ?>'][match[1]] = $(this).val();
+                  var val = $(this).val();
+                  allData['<?php echo self::OPT_BG_COLORS; ?>'][match[1]] = val ? String(val) : '';
                 }
               });
 
@@ -1671,7 +1697,8 @@ class SMDP_Menu_App_Builder {
                 var name = $(this).attr('name');
                 var match = name.match(/\[([^\]]+)\]$/);
                 if (match) {
-                  allData['<?php echo self::OPT_ITEM_CARD_STYLES; ?>'][match[1]] = $(this).val();
+                  var val = $(this).val();
+                  allData['<?php echo self::OPT_ITEM_CARD_STYLES; ?>'][match[1]] = val ? String(val) : '';
                 }
               });
 
@@ -1681,7 +1708,8 @@ class SMDP_Menu_App_Builder {
                 var name = $(this).attr('name');
                 var match = name.match(/\[([^\]]+)\]$/);
                 if (match) {
-                  allData['<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>'][match[1]] = $(this).val();
+                  var val = $(this).val();
+                  allData['<?php echo self::OPT_ITEM_DETAIL_STYLES; ?>'][match[1]] = val ? String(val) : '';
                 }
               });
 
@@ -2545,8 +2573,64 @@ class SMDP_Menu_App_Builder {
         <tr>
           <th>Box Shadow</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[box_shadow]" value="<?php echo esc_attr($styles['box_shadow']); ?>" style="width: 300px;" placeholder="e.g., 0 2px 4px rgba(0,0,0,0.1)" />
-            <p class="description">CSS box-shadow value. Examples: <code>0 2px 4px rgba(0,0,0,0.1)</code> for subtle, <code>0 4px 8px rgba(0,0,0,0.2)</code> for prominent, <code>none</code> for no shadow</p>
+            <input type="hidden" name="<?php echo esc_attr($name); ?>[box_shadow]" class="smdp-box-shadow-value" value="<?php echo esc_attr($styles['box_shadow']); ?>" />
+
+            <div class="smdp-box-shadow-builder">
+              <label style="display:block; margin-bottom:10px;">
+                <strong>Shadow Preset:</strong>
+                <select class="smdp-shadow-preset" style="margin-left:10px;">
+                  <option value="none">None</option>
+                  <option value="subtle">Subtle (0 1px 3px)</option>
+                  <option value="medium">Medium (0 4px 6px)</option>
+                  <option value="strong">Strong (0 10px 25px)</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </label>
+
+              <div class="smdp-shadow-custom" style="display:none; margin-top:15px; padding:15px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;">
+                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px;">
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>X Offset (px):</strong>
+                      <input type="number" class="smdp-shadow-x" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Y Offset (px):</strong>
+                      <input type="number" class="smdp-shadow-y" value="4" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Blur (px):</strong>
+                      <input type="number" class="smdp-shadow-blur" value="6" min="0" max="100" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Spread (px):</strong>
+                      <input type="number" class="smdp-shadow-spread" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Color:</strong>
+                      <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Opacity (0-1):</strong>
+                      <input type="number" class="smdp-shadow-opacity" value="0.15" min="0" max="1" step="0.05" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                </div>
+                <div style="margin-top:10px;">
+                  <small style="color:#666;">Preview: <code class="smdp-shadow-preview" style="background:#fff; padding:3px 6px; border:1px solid #ddd;">0 4px 6px rgba(0,0,0,0.15)</code></small>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
       </table>
@@ -2646,6 +2730,106 @@ class SMDP_Menu_App_Builder {
 
       // Listen for color picker changes from external script
       $(document).on('smdp-color-changed', updatePreview);
+
+      // Box Shadow Builder
+      function updateBoxShadow($builder) {
+        var $container = $builder.closest('.smdp-box-shadow-builder');
+        var $hiddenInput = $container.siblings('.smdp-box-shadow-value');
+        var preset = $container.find('.smdp-shadow-preset').val();
+        var shadowValue = '';
+
+        if (preset === 'none') {
+          shadowValue = 'none';
+        } else if (preset === 'subtle') {
+          shadowValue = '0 1px 3px rgba(0,0,0,0.12)';
+        } else if (preset === 'medium') {
+          shadowValue = '0 4px 6px rgba(0,0,0,0.15)';
+        } else if (preset === 'strong') {
+          shadowValue = '0 10px 25px rgba(0,0,0,0.2)';
+        } else if (preset === 'custom') {
+          var x = $container.find('.smdp-shadow-x').val() || 0;
+          var y = $container.find('.smdp-shadow-y').val() || 0;
+          var blur = $container.find('.smdp-shadow-blur').val() || 0;
+          var spread = $container.find('.smdp-shadow-spread').val() || 0;
+          var color = $container.find('.smdp-shadow-color').val() || '#000000';
+          var opacity = $container.find('.smdp-shadow-opacity').val() || 0.15;
+
+          // Convert hex to rgb
+          var r = parseInt(color.substr(1,2), 16);
+          var g = parseInt(color.substr(3,2), 16);
+          var b = parseInt(color.substr(5,2), 16);
+
+          shadowValue = x + 'px ' + y + 'px ' + blur + 'px ' + spread + 'px rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+          $container.find('.smdp-shadow-preview').text(shadowValue);
+        }
+
+        $hiddenInput.val(shadowValue).trigger('change');
+      }
+
+      // Initialize box shadow builders
+      $('.smdp-box-shadow-builder').each(function() {
+        var $builder = $(this);
+        var $hiddenInput = $builder.siblings('.smdp-box-shadow-value');
+        var currentValue = $hiddenInput.val();
+
+        // Try to match current value to a preset
+        var matchedPreset = false;
+        if (currentValue === 'none' || !currentValue) {
+          $builder.find('.smdp-shadow-preset').val('none');
+          matchedPreset = true;
+        } else if (currentValue.includes('0 1px 3px') || currentValue.includes('0px 1px 3px')) {
+          $builder.find('.smdp-shadow-preset').val('subtle');
+          matchedPreset = true;
+        } else if (currentValue.includes('0 4px 6px') || currentValue.includes('0px 4px 6px')) {
+          $builder.find('.smdp-shadow-preset').val('medium');
+          matchedPreset = true;
+        } else if (currentValue.includes('0 10px 25px') || currentValue.includes('0px 10px 25px')) {
+          $builder.find('.smdp-shadow-preset').val('strong');
+          matchedPreset = true;
+        }
+
+        // If no preset matched, set to custom and parse values
+        if (!matchedPreset && currentValue && currentValue !== 'none') {
+          $builder.find('.smdp-shadow-preset').val('custom');
+          $builder.find('.smdp-shadow-custom').show();
+
+          // Try to parse the shadow value
+          var parts = currentValue.match(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px(?:\s+([-\d.]+)px)?\s+rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+          if (parts) {
+            $builder.find('.smdp-shadow-x').val(parts[1] || 0);
+            $builder.find('.smdp-shadow-y').val(parts[2] || 0);
+            $builder.find('.smdp-shadow-blur').val(parts[3] || 0);
+            $builder.find('.smdp-shadow-spread').val(parts[4] || 0);
+            var hexColor = '#' +
+              ('0' + parseInt(parts[5]).toString(16)).slice(-2) +
+              ('0' + parseInt(parts[6]).toString(16)).slice(-2) +
+              ('0' + parseInt(parts[7]).toString(16)).slice(-2);
+            $builder.find('.smdp-shadow-color').val(hexColor);
+            $builder.find('.smdp-shadow-opacity').val(parts[8] || 0.15);
+            $builder.find('.smdp-shadow-preview').text(currentValue);
+          }
+        }
+      });
+
+      // Shadow preset change
+      $(document).on('change', '.smdp-shadow-preset', function() {
+        var $builder = $(this).closest('.smdp-box-shadow-builder');
+        var preset = $(this).val();
+
+        if (preset === 'custom') {
+          $builder.find('.smdp-shadow-custom').show();
+        } else {
+          $builder.find('.smdp-shadow-custom').hide();
+        }
+
+        updateBoxShadow($builder);
+      });
+
+      // Custom shadow input changes
+      $(document).on('change keyup input', '.smdp-shadow-x, .smdp-shadow-y, .smdp-shadow-blur, .smdp-shadow-spread, .smdp-shadow-color, .smdp-shadow-opacity', function() {
+        var $builder = $(this).closest('.smdp-box-shadow-builder');
+        updateBoxShadow($builder);
+      });
     });
     </script>
     <?php
