@@ -100,7 +100,8 @@ class SMDP_Help_Request {
   }
   
   public function enqueue_admin( $hook ): void {
-    if( empty($_GET['page']) || $_GET['page'] !== 'smdp-help-tables' ) return;
+    // Load on both the standalone page and Menu App Builder (Action Buttons tab)
+    if( empty($_GET['page']) || !in_array($_GET['page'], ['smdp-help-tables', 'smdp_menu_app_builder']) ) return;
     wp_enqueue_script( 'jquery' ); // Ensure jQuery is loaded for inline scripts
     wp_enqueue_script( 'smdp-help-admin', plugins_url( '../assets/js/help-admin.js', __FILE__ ), ['jquery'], null, true );
     wp_localize_script( 'smdp-help-admin', 'smdpAdmin', [
@@ -945,94 +946,14 @@ class SMDP_Help_Request {
    * Used when embedding in the Menu App Builder's Action Buttons tab
    */
   public function render_help_bill_content_only(): void {
-    // Same as render_admin() but without the <div class="wrap"><h1> wrapper
-    if (!current_user_can('manage_options')) return;
-
-    // Handle form submissions
-    if (isset($_POST['smdp_save']) && check_admin_referer($this->nonce_action, 'smdp_help_admin_nonce')) {
-        $help = sanitize_text_field($_POST['smdp_help_item_id'] ?? '');
-        $bill = sanitize_text_field($_POST['smdp_bill_item_id'] ?? '');
-        $loc = sanitize_text_field($_POST['smdp_location_id'] ?? '');
-        $method = sanitize_text_field($_POST['smdp_bill_lookup_method'] ?? 'item');
-
-        update_option($this->opt_help_id, $help);
-        update_option($this->opt_bill_id, $bill);
-        update_option($this->opt_location, $loc);
-        update_option($this->opt_bill_lookup_method, $method);
-
-        echo '<div class="notice notice-success is-dismissible"><p>Help & Bill settings saved!</p></div>';
+    // Just render the admin page - the Menu App page will handle the wrapper
+    // Note: Don't render if already on standalone page
+    if (isset($_GET['page']) && $_GET['page'] === 'smdp-help-tables') {
+      return; // Avoid double rendering on standalone page
     }
 
-    if (isset($_POST['add_table_item']) && check_admin_referer($this->nonce_action, 'smdp_help_admin_nonce')) {
-        $table_num = sanitize_text_field($_POST['table_item_number'] ?? '');
-        $item_id = sanitize_text_field($_POST['table_item_id'] ?? '');
-
-        if ($table_num && $item_id) {
-            $table_items = get_option($this->opt_table_items, []);
-            $table_items[$table_num] = $item_id;
-            update_option($this->opt_table_items, $table_items);
-            echo '<div class="notice notice-success is-dismissible"><p>Table item added!</p></div>';
-        }
-    }
-
-    if (isset($_POST['delete_table_item']) && check_admin_referer($this->nonce_action, 'smdp_help_admin_nonce')) {
-        $table_num = sanitize_text_field($_POST['table_num'] ?? '');
-        if ($table_num) {
-            $table_items = get_option($this->opt_table_items, []);
-            unset($table_items[$table_num]);
-            update_option($this->opt_table_items, $table_items);
-            echo '<div class="notice notice-success is-dismissible"><p>Table item deleted!</p></div>';
-        }
-    }
-
-    // Get current settings
-    $help = get_option($this->opt_help_id, '');
-    $bill = get_option($this->opt_bill_id, '');
-    $loc = get_option($this->opt_location, '');
-    $method = get_option($this->opt_bill_lookup_method, 'item');
-    $table_items = get_option($this->opt_table_items, []);
-
-    // Get all catalog items
-    $all = get_option(SMDP_ITEMS_OPTION, []);
-    $items_list = [];
-    foreach($all as $obj) {
-        if ($obj['type'] === 'ITEM') {
-            $name = $obj['item_data']['name'] ?? '';
-            $variations = $obj['item_data']['variations'] ?? [];
-            foreach($variations as $v) {
-                $var_name = isset($v['item_variation_data']['name']) && $v['item_variation_data']['name'] !== 'Regular'
-                    ? $name . ' - ' . $v['item_variation_data']['name']
-                    : $name;
-                $items_list[] = [
-                    'variation_id' => $v['id'],
-                    'name' => $var_name
-                ];
-            }
-        }
-    }
-    usort($items_list, function($a, $b) {
-        return strcmp($a['name'], $b['name']);
-    });
-
-    // Get cached locations
-    $locations_list = get_option($this->opt_locations_cache, []);
-
-    // Output the content directly (same as render_admin lines 622-939)
-    // Two-column grid for Configuration and Table Setup
-    echo '<div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px;">';
-
-    // Call the same rendering logic from render_admin() starting at line 625
-    // This duplicates the code but keeps it maintainable
-    ob_start();
+    // Call render_admin which outputs everything
     $this->render_admin();
-    $full_output = ob_get_clean();
-
-    // Extract just the content between the opening container and closing wrap
-    // Strip out <div class="wrap"><h1>... and the closing </div>
-    $full_output = preg_replace('/<div class="wrap"><h1>.*?<\/h1>/', '', $full_output);
-    $full_output = preg_replace('/<\/div>\s*$/', '', $full_output);
-
-    echo $full_output;
   }
 
   /* --------------------------------------------------
