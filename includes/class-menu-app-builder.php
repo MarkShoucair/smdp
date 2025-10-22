@@ -1244,7 +1244,8 @@ class SMDP_Menu_App_Builder {
       .smdp-style-subtab-content.active { display: block !important; }
     </style>
     <script>
-      (function(){
+    // Enhanced tab switching with session state persistence
+    jQuery(document).ready(function($){
         // Bootstrap button handler
         var btn = document.getElementById('smdp-bootstrap-btn');
         var status = document.getElementById('smdp-bootstrap-status');
@@ -1263,12 +1264,11 @@ class SMDP_Menu_App_Builder {
               status.textContent = 'Failed.';
             });
           });
+        } else {
+          console.error('Rebuild cache button not found');
         }
-      })();
-    </script>
-    <script>
-    // Enhanced tab switching with session state persistence
-    jQuery(document).ready(function($){
+
+
         console.log('Menu App Builder: Tabs initializing');
 
         var $tabs = $('.nav-tab-wrapper .nav-tab');
@@ -1305,18 +1305,26 @@ class SMDP_Menu_App_Builder {
         var urlParams = new URLSearchParams(window.location.search);
         var settingsUpdated = urlParams.get('settings-updated');
 
-        // Restore tab state from session or use first tab
+        // Check for URL hash
+        var urlHash = window.location.hash;
+
+        // Restore tab state from URL hash, session, or use first tab
         var savedTab = sessionStorage.getItem('smdp_active_tab');
 
         // First, remove all active states to prevent multiple tabs showing
         $tabs.removeClass('nav-tab-active');
         $panes.removeClass('active');
 
-        // If settings were just updated, stay on the Styles tab
-        if (settingsUpdated === 'true' && savedTab === '#tab-styles') {
-            $tabs.filter('[href="#tab-styles"]').addClass('nav-tab-active');
-            $('#tab-styles').addClass('active');
-            console.log('Settings saved, staying on Styles tab');
+        // Priority: URL hash > saved session > first tab
+        if (urlHash && $(urlHash).length) {
+            $tabs.filter('[href="' + urlHash + '"]').addClass('nav-tab-active');
+            $(urlHash).addClass('active');
+            sessionStorage.setItem('smdp_active_tab', urlHash);
+            console.log('Loaded tab from URL hash:', urlHash);
+        } else if (settingsUpdated === 'true' && savedTab && $(savedTab).length) {
+            $tabs.filter('[href="' + savedTab + '"]').addClass('nav-tab-active');
+            $(savedTab).addClass('active');
+            console.log('Settings saved, staying on tab:', savedTab);
         } else if (savedTab && $(savedTab).length) {
             $tabs.filter('[href="' + savedTab + '"]').addClass('nav-tab-active');
             $(savedTab).addClass('active');
@@ -1325,6 +1333,7 @@ class SMDP_Menu_App_Builder {
             // Default to first tab if no saved state
             $tabs.first().addClass('nav-tab-active');
             $panes.first().addClass('active');
+            console.log('Defaulting to first tab');
         }
 
         // Style subtabs switching
