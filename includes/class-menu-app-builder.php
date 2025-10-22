@@ -11,6 +11,7 @@ class SMDP_Menu_App_Builder {
   const OPT_BG_COLORS = 'smdp_app_background_colors'; // Background colors
   const OPT_ITEM_CARD_STYLES = 'smdp_app_item_card_styles'; // Item card styles
   const OPT_ITEM_DETAIL_STYLES = 'smdp_app_item_detail_styles'; // Item detail modal styles
+  const OPT_STYLE_GENERATOR = 'smdp_app_style_generator_prefs'; // Style generator preferences (theme mode, button shape, colors)
 
   public static function init() {
     add_action('admin_menu', array(__CLASS__, 'admin_menu'));
@@ -22,6 +23,7 @@ class SMDP_Menu_App_Builder {
     add_action('admin_post_smdp_reset_styles', array(__CLASS__, 'handle_reset_styles'));
     add_action('admin_init', array(__CLASS__, 'handle_flush_rewrite_rules'));
     add_action('wp_ajax_smdp_save_all_styles', array(__CLASS__, 'ajax_save_all_styles'));
+    add_action('wp_ajax_smdp_reset_all_styles', array(__CLASS__, 'ajax_reset_all_styles'));
     add_shortcode('smdp_menu_app', array(__CLASS__, 'shortcode_render'));
 
     add_action('rest_api_init', function() {
@@ -317,6 +319,26 @@ class SMDP_Menu_App_Builder {
 
     register_setting('smdp_menu_app_item_detail_styles_group', self::OPT_ITEM_DETAIL_STYLES, array(
         'sanitize_callback' => $sanitize_item_detail_styles,
+        'default' => array()
+    ));
+
+    // Style generator preferences
+    $sanitize_style_generator = function($input) {
+        if (!is_array($input)) return array();
+
+        $sanitized = array();
+        $sanitized['theme_mode'] = !empty($input['theme_mode']) && in_array($input['theme_mode'], array('light', 'dark')) ? $input['theme_mode'] : 'light';
+        $sanitized['button_shape'] = !empty($input['button_shape']) && in_array($input['button_shape'], array('pill', 'rounded', 'slightly-rounded', 'square')) ? $input['button_shape'] : 'pill';
+        $sanitized['primary_color'] = !empty($input['primary_color']) ? sanitize_hex_color($input['primary_color']) : '#0986bf';
+        $sanitized['secondary_color'] = !empty($input['secondary_color']) ? sanitize_hex_color($input['secondary_color']) : '#27ae60';
+        $sanitized['accent_color'] = !empty($input['accent_color']) ? sanitize_hex_color($input['accent_color']) : '#e74c3c';
+        $sanitized['include_help_buttons'] = !empty($input['include_help_buttons']) ? true : false;
+
+        return $sanitized;
+    };
+
+    register_setting('smdp_menu_app_style_generator_group', self::OPT_STYLE_GENERATOR, array(
+        'sanitize_callback' => $sanitize_style_generator,
         'default' => array()
     ));
 
@@ -1085,6 +1107,16 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtab: Style Generator -->
         <div id="style-generator" class="smdp-style-subtab-content active" style="margin-top:20px;">
+          <?php
+          // Load saved style generator preferences
+          $generator_prefs = get_option(self::OPT_STYLE_GENERATOR, array());
+          $theme_mode = !empty($generator_prefs['theme_mode']) ? $generator_prefs['theme_mode'] : 'light';
+          $button_shape = !empty($generator_prefs['button_shape']) ? $generator_prefs['button_shape'] : 'pill';
+          $primary_color = !empty($generator_prefs['primary_color']) ? $generator_prefs['primary_color'] : '#0986bf';
+          $secondary_color = !empty($generator_prefs['secondary_color']) ? $generator_prefs['secondary_color'] : '#27ae60';
+          $accent_color = !empty($generator_prefs['accent_color']) ? $generator_prefs['accent_color'] : '#e74c3c';
+          $include_help_buttons = !empty($generator_prefs['include_help_buttons']);
+          ?>
           <h3>🎨 Smart Style Generator</h3>
           <p>Choose your brand colors and theme mode - we'll automatically generate a complete, cohesive design for all elements.</p>
 
@@ -1099,18 +1131,23 @@ class SMDP_Menu_App_Builder {
             </ul>
           </div>
 
+          <!-- Two Column Layout: Controls + Preview -->
+          <div style="display: grid; grid-template-columns: 1fr 500px; gap: 20px; align-items: start;">
+            <!-- Left Column: Form Controls -->
+            <div class="smdp-style-controls">
+
           <!-- Theme Mode Selection -->
           <table class="form-table" style="margin-bottom:30px;">
             <tr>
               <th style="width:200px;">Theme Mode</th>
               <td>
                 <label style="display:inline-block; margin-right:20px;">
-                  <input type="radio" name="theme_mode" value="light" checked>
+                  <input type="radio" name="theme_mode" value="light" <?php checked($theme_mode, 'light'); ?>>
                   <span style="font-size:16px;">☀️ Light Mode</span>
                   <span style="color:#666; display:block; margin-left:24px; font-size:13px;">White backgrounds, dark text</span>
                 </label>
                 <label style="display:inline-block;">
-                  <input type="radio" name="theme_mode" value="dark">
+                  <input type="radio" name="theme_mode" value="dark" <?php checked($theme_mode, 'dark'); ?>>
                   <span style="font-size:16px;">🌙 Dark Mode</span>
                   <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Dark backgrounds, light text</span>
                 </label>
@@ -1120,22 +1157,22 @@ class SMDP_Menu_App_Builder {
               <th>Button Shape</th>
               <td>
                 <label style="display:inline-block; margin-right:20px;">
-                  <input type="radio" name="button_shape" value="pill" checked>
+                  <input type="radio" name="button_shape" value="pill" <?php checked($button_shape, 'pill'); ?>>
                   <span style="font-size:16px;">💊 Pill</span>
                   <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Fully rounded ends (500px radius)</span>
                 </label>
                 <label style="display:inline-block; margin-right:20px;">
-                  <input type="radio" name="button_shape" value="rounded">
+                  <input type="radio" name="button_shape" value="rounded" <?php checked($button_shape, 'rounded'); ?>>
                   <span style="font-size:16px;">⬜ Rounded</span>
                   <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Moderately rounded corners (12px radius)</span>
                 </label>
                 <label style="display:inline-block; margin-right:20px;">
-                  <input type="radio" name="button_shape" value="slightly-rounded">
+                  <input type="radio" name="button_shape" value="slightly-rounded" <?php checked($button_shape, 'slightly-rounded'); ?>>
                   <span style="font-size:16px;">▢ Slightly Rounded</span>
                   <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Subtle rounded corners (4px radius)</span>
                 </label>
                 <label style="display:inline-block;">
-                  <input type="radio" name="button_shape" value="square">
+                  <input type="radio" name="button_shape" value="square" <?php checked($button_shape, 'square'); ?>>
                   <span style="font-size:16px;">◻️ Square</span>
                   <span style="color:#666; display:block; margin-left:24px; font-size:13px;">Sharp corners (0px radius)</span>
                 </label>
@@ -1146,10 +1183,10 @@ class SMDP_Menu_App_Builder {
               <th>Apply to Help Buttons</th>
               <td>
                 <label>
-                  <input type="checkbox" id="include_help_buttons" checked>
+                  <input type="checkbox" id="include_help_buttons" <?php checked($include_help_buttons); ?>>
                   <span>Include Help/Bill buttons in theme generation</span>
                 </label>
-                <p class="description">Uncheck this if you want to keep custom colors for Request Help, Request Bill, View Bill, and Table Badge buttons</p>
+                <p class="description">Check this to apply the theme colors to Request Help, Request Bill, View Bill, and Table Badge buttons. Leave unchecked to keep their custom colors.</p>
               </td>
             </tr>
           </table>
@@ -1172,14 +1209,14 @@ class SMDP_Menu_App_Builder {
             <tr>
               <th style="width:200px;">Primary Brand Color</th>
               <td>
-                <input type="text" id="brand_color_primary" value="#0986bf" class="smdp-color-picker" />
+                <input type="text" id="brand_color_primary" value="<?php echo esc_attr($primary_color); ?>" class="smdp-color-picker" />
                 <p class="description">Main brand color - Used for: Active category buttons, table badge, borders, highlights</p>
               </td>
             </tr>
             <tr>
               <th>Secondary Brand Color</th>
               <td>
-                <input type="text" id="brand_color_secondary" value="#27ae60" class="smdp-color-picker" />
+                <input type="text" id="brand_color_secondary" value="<?php echo esc_attr($secondary_color); ?>" class="smdp-color-picker" />
                 <button type="button" id="generate-analogous" class="button button-small" style="margin-left:10px;">🎨 Generate from Primary (Analogous)</button>
                 <button type="button" id="generate-complementary" class="button button-small" style="margin-left:5px;">🎨 Generate Complementary</button>
                 <p class="description">Secondary brand color - Used for: Bill button, price text, view bill button</p>
@@ -1188,85 +1225,94 @@ class SMDP_Menu_App_Builder {
             <tr>
               <th>Accent Color</th>
               <td>
-                <input type="text" id="brand_color_accent" value="#e74c3c" class="smdp-color-picker" />
+                <input type="text" id="brand_color_accent" value="<?php echo esc_attr($accent_color); ?>" class="smdp-color-picker" />
                 <button type="button" id="generate-accent-complementary" class="button button-small" style="margin-left:10px;">🎨 Generate Complementary</button>
                 <p class="description">Accent color for alerts - Used for: Help button, urgent actions, warnings</p>
               </td>
             </tr>
           </table>
 
-          <!-- Live Preview -->
-          <div id="style-preview" style="margin:30px 0; padding:25px; background:#f0f0f0; border:1px solid #ddd; border-radius:8px;">
-            <h4 style="margin-top:0;">Live Preview</h4>
+            </div>
+            <!-- End Left Column -->
+
+            <!-- Right Column: Live Preview (Sticky) -->
+            <div style="position: sticky; top: 32px;">
+          <div id="style-preview" style="padding:20px; background:#f9f9f9; border:1px solid #ddd; border-radius:8px;">
+            <h3 style="margin-top:0;">Live Preview</h3>
 
             <!-- Preview container with background -->
-            <div id="preview-container" style="background:#ffffff; padding:25px; border-radius:8px;">
+            <div id="preview-container" style="background:#ffffff; padding:20px; border-radius:8px;">
 
               <!-- Category Buttons Preview -->
-              <div style="margin-bottom:25px;">
-                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Category Buttons</p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                  <button type="button" id="preview-cat-btn" style="padding:16px 40px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:20px; cursor:pointer;">Appetizers</button>
-                  <button type="button" id="preview-cat-btn-active" style="padding:16px 40px; border-radius:500px; border:1px solid #0986bf; background:#0986bf; color:#fff; font-size:20px; cursor:pointer; font-weight:normal;">Entrees</button>
-                  <button type="button" style="padding:16px 40px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:20px; cursor:pointer;">Desserts</button>
+              <div style="margin-bottom:20px;">
+                <p style="font-size:12px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Category Buttons</p>
+                <div style="display:flex; gap:8px; flex-direction:column;">
+                  <button type="button" id="preview-cat-btn" style="padding:12px 30px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:16px; cursor:pointer;">Appetizers</button>
+                  <button type="button" id="preview-cat-btn-active" style="padding:12px 30px; border-radius:500px; border:1px solid #0986bf; background:#0986bf; color:#fff; font-size:16px; cursor:pointer; font-weight:normal;">Entrees</button>
+                  <button type="button" style="padding:12px 30px; border-radius:500px; border:1px solid #01669c; background:#ffffff; color:#000; font-size:16px; cursor:pointer;">Desserts</button>
                 </div>
               </div>
 
               <!-- Action Buttons Preview -->
-              <div style="margin-bottom:25px;">
-                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Action Buttons</p>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                  <button type="button" id="preview-help-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle;">
+              <div style="margin-bottom:20px;">
+                <p style="font-size:12px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Action Buttons</p>
+                <div style="display:flex; gap:8px; flex-direction:column;">
+                  <button type="button" id="preview-help-btn" style="padding:12px 20px; border-radius:8px; border:none; background:#e74c3c; color:#fff; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; box-shadow:0 3px 8px rgba(0,0,0,0.25);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle;">
                       <circle cx="12" cy="12" r="10"></circle>
                       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                       <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                     <span>Request Help</span>
                   </button>
-                  <button type="button" id="preview-bill-btn" style="padding:16px 24px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle;">
+                  <button type="button" id="preview-bill-btn" style="padding:12px 20px; border-radius:8px; border:none; background:#27ae60; color:#fff; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; box-shadow:0 3px 8px rgba(0,0,0,0.25);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:middle;">
                       <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                       <line x1="2" y1="10" x2="22" y2="10"></line>
                     </svg>
                     <span>Request Bill</span>
                   </button>
-                  <button type="button" id="preview-view-bill-btn" style="padding:12px 16px; border-radius:8px; border:none; background:#9b59b6; color:#fff; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.3);">View Bill</button>
+                  <button type="button" id="preview-view-bill-btn" style="padding:10px 16px; border-radius:8px; border:none; background:#9b59b6; color:#fff; font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 3px 8px rgba(0,0,0,0.25);">View Bill</button>
                 </div>
               </div>
 
               <!-- Item Cards Preview -->
-              <div style="margin-bottom:25px;">
-                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Menu Item Cards</p>
-                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
+              <div style="margin-bottom:20px;">
+                <p style="font-size:12px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Menu Item Cards</p>
+                <div style="display:flex; flex-direction:column; gap:12px;">
                   <div id="preview-item-card-1" style="padding:15px; background:#fff; border:1px solid #eee; border-radius:0; cursor:pointer;">
-                    <div id="preview-card-title" style="font-weight:bold; font-size:19px; color:#000; margin-bottom:5px;">Margherita Pizza</div>
-                    <div id="preview-card-price" style="font-weight:bold; font-size:16px; color:#000; margin-bottom:8px;">$12.99</div>
-                    <div id="preview-card-desc" style="font-size:14px; color:#666; line-height:1.4;">Fresh mozzarella, basil, and tomato sauce</div>
+                    <div id="preview-card-title" style="font-weight:bold; font-size:16px; color:#000; margin-bottom:5px;">Margherita Pizza</div>
+                    <div id="preview-card-price" style="font-weight:bold; font-size:14px; color:#000; margin-bottom:8px;">$12.99</div>
+                    <div id="preview-card-desc" style="font-size:13px; color:#666; line-height:1.5;">Fresh mozzarella, basil, and tomato sauce</div>
                   </div>
                   <div id="preview-item-card-2" style="padding:15px; background:#fff; border:1px solid #eee; border-radius:0; cursor:pointer;">
-                    <div style="font-weight:bold; font-size:19px; color:#000; margin-bottom:5px;">Caesar Salad</div>
-                    <div style="font-weight:bold; font-size:16px; color:#000; margin-bottom:8px;">$8.99</div>
-                    <div style="font-size:14px; color:#666; line-height:1.4;">Romaine, parmesan, croutons</div>
+                    <div style="font-weight:bold; font-size:16px; color:#000; margin-bottom:5px;">Caesar Salad</div>
+                    <div style="font-weight:bold; font-size:14px; color:#000; margin-bottom:8px;">$8.99</div>
+                    <div style="font-size:13px; color:#666; line-height:1.5;">Romaine, parmesan, croutons</div>
                   </div>
                 </div>
               </div>
 
               <!-- Item Detail Modal Preview -->
               <div>
-                <p style="font-size:13px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Item Detail Modal</p>
-                <div id="preview-modal" style="background:#ffffff; border:6px solid #3498db; border-radius:12px; padding:25px; max-width:400px; box-shadow:0 0 30px rgba(52,152,219,0.6);">
-                  <div id="preview-modal-title" style="font-size:24px; font-weight:bold; color:#000; margin-bottom:8px;">Margherita Pizza</div>
-                  <div id="preview-modal-price" style="font-size:19px; font-weight:bold; color:#27ae60; margin-bottom:15px;">$12.99</div>
-                  <div id="preview-modal-desc" style="font-size:16px; color:#666; line-height:1.6; margin-bottom:20px;">Fresh mozzarella cheese, fresh basil leaves, and homemade tomato sauce on a hand-tossed crust. Baked to perfection in our wood-fired oven.</div>
-                  <button type="button" id="preview-close-btn" style="margin-top:24px; padding:12px 32px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:16px; width:100%; display:block;">Close</button>
+                <p style="font-size:12px; color:#666; margin-bottom:10px; text-transform:uppercase; font-weight:600;">Item Detail Modal</p>
+                <div id="preview-modal" style="background:#ffffff; border:5px solid #3498db; border-radius:12px; padding:20px; box-shadow:0 0 25px rgba(52,152,219,0.5);">
+                  <div id="preview-modal-title" style="font-size:20px; font-weight:bold; color:#000; margin-bottom:8px;">Margherita Pizza</div>
+                  <div id="preview-modal-price" style="font-size:17px; font-weight:bold; color:#27ae60; margin-bottom:12px;">$12.99</div>
+                  <div id="preview-modal-desc" style="font-size:14px; color:#666; line-height:1.6; margin-bottom:15px;">Fresh mozzarella cheese, fresh basil leaves, and homemade tomato sauce.</div>
+                  <button type="button" id="preview-close-btn" style="margin-top:15px; padding:10px 20px; background:#3498db; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px; width:100%; display:block;">Close</button>
                 </div>
               </div>
 
             </div>
           </div>
+            </div>
+            <!-- End Right Column -->
 
-          <!-- Generate Button -->
+          </div>
+          <!-- End Grid Layout -->
+
+          <!-- Generate Button (Full Width Below Grid) -->
           <div style="background:#fff; border:1px solid #ddd; border-left:4px solid #00a32a; padding:15px; margin:20px 0;">
             <button type="button" id="generate-styles" class="button button-primary button-hero" style="margin-bottom:10px;">
               🎨 Generate & Apply Complete Theme
@@ -1274,16 +1320,24 @@ class SMDP_Menu_App_Builder {
             <p style="margin:0; color:#666; font-size:13px;">This will update ALL style settings instantly. You can fine-tune individual elements afterward in their respective tabs.</p>
           </div>
 
+          <!-- Reset All Styles Button -->
+          <div style="background:#fff; border:1px solid #ddd; border-left:4px solid #dc3232; padding:15px; margin:20px 0;">
+            <button type="button" id="reset-all-styles" class="button button-secondary button-large" style="color:#dc3232; border-color:#dc3232;">
+              🔄 Reset All Styles to Plugin Defaults
+            </button>
+            <p style="margin:10px 0 0 0; color:#666; font-size:13px;">This will delete ALL custom styles across ALL tabs and restore the plugin's default appearance. This cannot be undone!</p>
+          </div>
+
           <script>
           jQuery(document).ready(function($) {
-            // Initialize color pickers
-            $('#brand_color_primary, #brand_color_secondary, #brand_color_accent').wpColorPicker({
-              change: function() {
-                updateStylePreview();
-              },
-              clear: function() {
-                updateStylePreview();
-              }
+            // Initialize custom color pickers
+            if (typeof window.initColorPickers === 'function') {
+              setTimeout(window.initColorPickers, 100);
+            }
+
+            // Listen for custom color picker changes
+            $(document).on('smdp-color-changed', function() {
+              updateStylePreview();
             });
 
             // Preset buttons
@@ -1291,9 +1345,9 @@ class SMDP_Menu_App_Builder {
               var primary = $(this).data('primary');
               var secondary = $(this).data('secondary');
               var accent = $(this).data('accent');
-              $('#brand_color_primary').iris('color', primary);
-              $('#brand_color_secondary').iris('color', secondary);
-              $('#brand_color_accent').iris('color', accent);
+              $('#brand_color_primary').val(primary).trigger('change');
+              $('#brand_color_secondary').val(secondary).trigger('change');
+              $('#brand_color_accent').val(accent).trigger('change');
               updateStylePreview();
             });
 
@@ -1413,21 +1467,21 @@ class SMDP_Menu_App_Builder {
             $('#generate-analogous').on('click', function() {
               var primary = $('#brand_color_primary').val();
               var analogous = getAnalogousColor(primary);
-              $('#brand_color_secondary').iris('color', analogous);
+              $('#brand_color_secondary').val(analogous).trigger('change');
               updateStylePreview();
             });
 
             $('#generate-complementary').on('click', function() {
               var primary = $('#brand_color_primary').val();
               var complementary = getComplementaryColor(primary);
-              $('#brand_color_secondary').iris('color', complementary);
+              $('#brand_color_secondary').val(complementary).trigger('change');
               updateStylePreview();
             });
 
             $('#generate-accent-complementary').on('click', function() {
               var primary = $('#brand_color_primary').val();
               var complementary = getComplementaryColor(primary);
-              $('#brand_color_accent').iris('color', complementary);
+              $('#brand_color_accent').val(complementary).trigger('change');
               updateStylePreview();
             });
 
@@ -1594,7 +1648,9 @@ class SMDP_Menu_App_Builder {
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][bg_color]"]').val(accent).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][text_color]"]').val(accentText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_bg_color]"]').val(accentDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][hover_text_color]"]').val(accentText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_bg_color]"]').val(accentDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][disabled_text_color]"]').val(accentText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][border_radius]"]').val(radius.action).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[help][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
 
@@ -1602,7 +1658,9 @@ class SMDP_Menu_App_Builder {
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][bg_color]"]').val(secondary).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][text_color]"]').val(secondaryText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_bg_color]"]').val(secondaryDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][hover_text_color]"]').val(secondaryText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_bg_color]"]').val(secondaryDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][disabled_text_color]"]').val(secondaryText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][border_radius]"]').val(radius.action).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[bill][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
 
@@ -1616,6 +1674,8 @@ class SMDP_Menu_App_Builder {
                 // Table Badge - uses primary brand color
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][bg_color]"]').val(primary).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][text_color]"]').val(primaryText).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][hover_bg_color]"]').val(primaryDark).trigger('change');
+                $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][hover_text_color]"]').val(primaryText).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][border_radius]"]').val(radius.action).trigger('change');
                 $('input[name="<?php echo self::OPT_HELP_BTN_STYLES; ?>[table_badge][box_shadow]"]').val(boxShadowActionButtons).trigger('change');
               }
@@ -1713,7 +1773,23 @@ class SMDP_Menu_App_Builder {
                 }
               });
 
+              // Style Generator Preferences
+              allData['<?php echo self::OPT_STYLE_GENERATOR; ?>'] = {
+                'theme_mode': $('input[name="theme_mode"]:checked').val() || 'light',
+                'button_shape': $('input[name="button_shape"]:checked').val() || 'pill',
+                'primary_color': $('#brand_color_primary').val() || '#0986bf',
+                'secondary_color': $('#brand_color_secondary').val() || '#27ae60',
+                'accent_color': $('#brand_color_accent').val() || '#e74c3c',
+                'include_help_buttons': $('#include_help_buttons').is(':checked')
+              };
+
               formData.append('style_data', JSON.stringify(allData));
+
+              // Debug logging
+              console.log('=== AJAX SAVE DEBUG ===');
+              console.log('All data being sent:', allData);
+              console.log('JSON stringified:', JSON.stringify(allData).substring(0, 200));
+              console.log('======================');
 
               // Show loading
               $('#generate-styles').prop('disabled', true).text('⏳ Generating & Saving...');
@@ -1724,27 +1800,35 @@ class SMDP_Menu_App_Builder {
                 body: formData
               })
               .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
                 // First check if response is ok
                 if (!response.ok) {
                   throw new Error('HTTP error ' + response.status);
                 }
                 // Get the text first to see what we're dealing with
                 return response.text().then(text => {
+                  console.log('Response text (first 500 chars):', text.substring(0, 500));
                   try {
-                    return JSON.parse(text);
+                    var parsed = JSON.parse(text);
+                    console.log('Parsed JSON:', parsed);
+                    return parsed;
                   } catch (e) {
-                    console.error('Response was not JSON:', text.substring(0, 500));
+                    console.error('JSON parse error:', e);
+                    console.error('Full response text:', text);
                     throw new Error('Server returned invalid JSON. Check console for details.');
                   }
                 });
               })
               .then(data => {
+                console.log('Success handler - data:', data);
                 $('#generate-styles').prop('disabled', false).text('🎨 Generate & Apply Complete Theme');
                 if (data.success) {
                   alert('✅ Complete theme generated and saved!\n\n' +
                         'All styles have been applied and saved automatically.\n' +
                         'You can fine-tune individual elements in their respective tabs if needed.');
                 } else {
+                  console.error('Save failed with data:', data);
                   alert('⚠️ Theme generated but save failed: ' + (data.data || 'Unknown error') + '\n\n' +
                         'Please click "Save" on each section manually:\n' +
                         '• Category Buttons\n' +
@@ -1759,6 +1843,44 @@ class SMDP_Menu_App_Builder {
                 alert('⚠️ Theme generated but save failed: ' + error.message + '\n\n' +
                       'Please click "Save" on each section manually.');
                 console.error('Full error:', error);
+              });
+            });
+
+            // Reset All Styles Button
+            $('#reset-all-styles').on('click', function() {
+              if (!confirm('⚠️ WARNING: This will delete ALL custom styles and restore plugin defaults!\n\nThis includes:\n• Category Button Styles\n• Help Button Styles\n• Background Colors\n• Item Card Styles\n• Item Detail Styles\n• Style Generator Preferences\n\nThis action cannot be undone. Are you sure?')) {
+                return;
+              }
+
+              if (!confirm('Are you ABSOLUTELY sure? All your custom styling will be lost!')) {
+                return;
+              }
+
+              var $btn = $(this);
+              $btn.prop('disabled', true).text('⏳ Resetting All Styles...');
+
+              var formData = new FormData();
+              formData.append('action', 'smdp_reset_all_styles');
+              formData.append('security', '<?php echo wp_create_nonce("smdp_reset_all_styles_nonce"); ?>');
+
+              fetch('<?php echo admin_url("admin-ajax.php"); ?>', {
+                method: 'POST',
+                body: formData
+              })
+              .then(response => response.json())
+              .then(data => {
+                $btn.prop('disabled', false).text('🔄 Reset All Styles to Plugin Defaults');
+                if (data.success) {
+                  alert('✅ All styles have been reset to defaults!\n\nThe page will now reload to show the default styles.');
+                  window.location.reload();
+                } else {
+                  alert('❌ Reset failed: ' + (data.data || 'Unknown error'));
+                }
+              })
+              .catch(error => {
+                $btn.prop('disabled', false).text('🔄 Reset All Styles to Plugin Defaults');
+                alert('❌ Reset failed: ' + error.message);
+                console.error('Reset error:', error);
               });
             });
 
@@ -2631,7 +2753,7 @@ class SMDP_Menu_App_Builder {
                   <div>
                     <label style="display:block; margin-bottom:5px;">
                       <strong>Color:</strong>
-                      <input type="text" class="smdp-shadow-color smdp-shadow-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
+                      <input type="text" class="smdp-shadow-color smdp-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
                     </label>
                   </div>
                   <div>
@@ -2825,18 +2947,8 @@ class SMDP_Menu_App_Builder {
           }
         }
 
-        // Initialize WordPress color picker for shadow color
-        $builder.find('.smdp-shadow-color-picker').wpColorPicker({
-          change: function() {
-            var $builder = $(this).closest('.smdp-box-shadow-builder');
-            updateBoxShadow($builder);
-          },
-          clear: function() {
-            var $builder = $(this).closest('.smdp-box-shadow-builder');
-            $(this).val('#000000');
-            updateBoxShadow($builder);
-          }
-        });
+        // Custom color picker will be initialized by menu-app-builder-admin.js
+        // No initialization needed here - the plugin's custom color picker handles it automatically
       });
 
       // Shadow preset change
@@ -2846,19 +2958,12 @@ class SMDP_Menu_App_Builder {
 
         if (preset === 'custom') {
           $builder.find('.smdp-shadow-custom').show();
-          // Re-initialize color picker when custom is shown
-          var $colorPicker = $builder.find('.smdp-shadow-color-picker');
-          if (!$colorPicker.hasClass('wp-color-picker')) {
-            $colorPicker.wpColorPicker({
-              change: function() {
-                updateBoxShadow($builder);
-              },
-              clear: function() {
-                $(this).val('#000000');
-                updateBoxShadow($builder);
-              }
-            });
-          }
+          // Re-initialize custom color picker when custom is shown
+          setTimeout(function() {
+            if (typeof initColorPickers === 'function') {
+              initColorPickers();
+            }
+          }, 100);
         } else {
           $builder.find('.smdp-shadow-custom').hide();
         }
@@ -3122,7 +3227,7 @@ class SMDP_Menu_App_Builder {
                   <div>
                     <label style="display:block; margin-bottom:5px;">
                       <strong>Color:</strong>
-                      <input type="text" class="smdp-shadow-color smdp-shadow-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
+                      <input type="text" class="smdp-shadow-color smdp-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
                     </label>
                   </div>
                   <div>
@@ -3504,7 +3609,7 @@ class SMDP_Menu_App_Builder {
                     <div>
                       <label style="display:block; margin-bottom:5px;">
                         <strong>Color:</strong>
-                        <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                        <input type="text" class="smdp-shadow-color smdp-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
                       </label>
                     </div>
                     <div>
@@ -3797,7 +3902,7 @@ class SMDP_Menu_App_Builder {
                     <div>
                       <label style="display:block; margin-bottom:5px;">
                         <strong>Color:</strong>
-                        <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                        <input type="text" class="smdp-shadow-color smdp-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
                       </label>
                     </div>
                     <div>
@@ -4810,67 +4915,134 @@ class SMDP_Menu_App_Builder {
 
       // Save each option using the existing sanitization callbacks
       $saved_count = 0;
-      $errors = array();
 
-    // Save Category Buttons
-    if ( isset( $style_data[ self::OPT_STYLES ] ) ) {
-      $sanitized = self::sanitize_styles( $style_data[ self::OPT_STYLES ] );
-      if ( update_option( self::OPT_STYLES, $sanitized ) !== false ) {
+      // Get the registered sanitization callbacks from WordPress
+      global $wp_registered_settings;
+
+      // Save Category Buttons
+      if ( isset( $style_data[ self::OPT_STYLES ] ) ) {
+        $callback = isset( $wp_registered_settings[ self::OPT_STYLES ]['sanitize_callback'] )
+                    ? $wp_registered_settings[ self::OPT_STYLES ]['sanitize_callback']
+                    : null;
+        $sanitized = $callback ? call_user_func( $callback, $style_data[ self::OPT_STYLES ] ) : $style_data[ self::OPT_STYLES ];
+        update_option( self::OPT_STYLES, $sanitized );
         $saved_count++;
-      } else {
-        $errors[] = 'Category Buttons';
       }
-    }
 
-    // Save Help Buttons
-    if ( isset( $style_data[ self::OPT_HELP_BTN_STYLES ] ) ) {
-      $sanitized = self::sanitize_help_button_styles( $style_data[ self::OPT_HELP_BTN_STYLES ] );
-      if ( update_option( self::OPT_HELP_BTN_STYLES, $sanitized ) !== false ) {
+      // Save Help Buttons
+      if ( isset( $style_data[ self::OPT_HELP_BTN_STYLES ] ) ) {
+        $callback = isset( $wp_registered_settings[ self::OPT_HELP_BTN_STYLES ]['sanitize_callback'] )
+                    ? $wp_registered_settings[ self::OPT_HELP_BTN_STYLES ]['sanitize_callback']
+                    : null;
+        $sanitized = $callback ? call_user_func( $callback, $style_data[ self::OPT_HELP_BTN_STYLES ] ) : $style_data[ self::OPT_HELP_BTN_STYLES ];
+        update_option( self::OPT_HELP_BTN_STYLES, $sanitized );
         $saved_count++;
-      } else {
-        $errors[] = 'Help Buttons';
       }
-    }
 
-    // Save Background Colors
-    if ( isset( $style_data[ self::OPT_BG_COLORS ] ) ) {
-      $sanitized = self::sanitize_bg_colors( $style_data[ self::OPT_BG_COLORS ] );
-      if ( update_option( self::OPT_BG_COLORS, $sanitized ) !== false ) {
+      // Save Background Colors
+      if ( isset( $style_data[ self::OPT_BG_COLORS ] ) ) {
+        $callback = isset( $wp_registered_settings[ self::OPT_BG_COLORS ]['sanitize_callback'] )
+                    ? $wp_registered_settings[ self::OPT_BG_COLORS ]['sanitize_callback']
+                    : null;
+        $sanitized = $callback ? call_user_func( $callback, $style_data[ self::OPT_BG_COLORS ] ) : $style_data[ self::OPT_BG_COLORS ];
+        update_option( self::OPT_BG_COLORS, $sanitized );
         $saved_count++;
-      } else {
-        $errors[] = 'Background Colors';
       }
-    }
 
-    // Save Item Cards
-    if ( isset( $style_data[ self::OPT_ITEM_CARD_STYLES ] ) ) {
-      $sanitized = self::sanitize_item_card_styles( $style_data[ self::OPT_ITEM_CARD_STYLES ] );
-      if ( update_option( self::OPT_ITEM_CARD_STYLES, $sanitized ) !== false ) {
+      // Save Item Cards
+      if ( isset( $style_data[ self::OPT_ITEM_CARD_STYLES ] ) ) {
+        $callback = isset( $wp_registered_settings[ self::OPT_ITEM_CARD_STYLES ]['sanitize_callback'] )
+                    ? $wp_registered_settings[ self::OPT_ITEM_CARD_STYLES ]['sanitize_callback']
+                    : null;
+        $sanitized = $callback ? call_user_func( $callback, $style_data[ self::OPT_ITEM_CARD_STYLES ] ) : $style_data[ self::OPT_ITEM_CARD_STYLES ];
+        update_option( self::OPT_ITEM_CARD_STYLES, $sanitized );
         $saved_count++;
-      } else {
-        $errors[] = 'Item Cards';
       }
-    }
 
-    // Save Item Detail
-    if ( isset( $style_data[ self::OPT_ITEM_DETAIL_STYLES ] ) ) {
-      $sanitized = self::sanitize_item_detail_styles( $style_data[ self::OPT_ITEM_DETAIL_STYLES ] );
-      if ( update_option( self::OPT_ITEM_DETAIL_STYLES, $sanitized ) !== false ) {
+      // Save Item Detail
+      if ( isset( $style_data[ self::OPT_ITEM_DETAIL_STYLES ] ) ) {
+        $callback = isset( $wp_registered_settings[ self::OPT_ITEM_DETAIL_STYLES ]['sanitize_callback'] )
+                    ? $wp_registered_settings[ self::OPT_ITEM_DETAIL_STYLES ]['sanitize_callback']
+                    : null;
+        $sanitized = $callback ? call_user_func( $callback, $style_data[ self::OPT_ITEM_DETAIL_STYLES ] ) : $style_data[ self::OPT_ITEM_DETAIL_STYLES ];
+        update_option( self::OPT_ITEM_DETAIL_STYLES, $sanitized );
         $saved_count++;
-      } else {
-        $errors[] = 'Item Detail';
       }
-    }
 
-      if ( $saved_count > 0 && empty( $errors ) ) {
+      // Save Style Generator Preferences
+      if ( isset( $style_data[ self::OPT_STYLE_GENERATOR ] ) ) {
+        $callback = isset( $wp_registered_settings[ self::OPT_STYLE_GENERATOR ]['sanitize_callback'] )
+                    ? $wp_registered_settings[ self::OPT_STYLE_GENERATOR ]['sanitize_callback']
+                    : null;
+        $sanitized = $callback ? call_user_func( $callback, $style_data[ self::OPT_STYLE_GENERATOR ] ) : $style_data[ self::OPT_STYLE_GENERATOR ];
+        update_option( self::OPT_STYLE_GENERATOR, $sanitized );
+        $saved_count++;
+      }
+
+      if ( $saved_count > 0 ) {
         wp_send_json_success( array(
           'message' => "Successfully saved $saved_count style sections",
           'count' => $saved_count
         ) );
-      } else if ( ! empty( $errors ) ) {
-        wp_send_json_error( 'Failed to save: ' . implode( ', ', $errors ) );
       } else {
         wp_send_json_error( 'No style sections were saved' );
+      }
+    } catch ( Exception $e ) {
+      wp_send_json_error( 'Exception: ' . $e->getMessage() );
+    }
+  }
+
+  public static function ajax_reset_all_styles() {
+    try {
+      // Verify nonce
+      if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'smdp_reset_all_styles_nonce' ) ) {
+        wp_send_json_error( 'Security check failed' );
+        return;
+      }
+
+      // Check user capabilities
+      if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Insufficient permissions' );
+        return;
+      }
+
+      // Delete all style options
+      $deleted_count = 0;
+
+      if ( delete_option( self::OPT_STYLES ) ) {
+        $deleted_count++;
+      }
+
+      if ( delete_option( self::OPT_HELP_BTN_STYLES ) ) {
+        $deleted_count++;
+      }
+
+      if ( delete_option( self::OPT_BG_COLORS ) ) {
+        $deleted_count++;
+      }
+
+      if ( delete_option( self::OPT_ITEM_CARD_STYLES ) ) {
+        $deleted_count++;
+      }
+
+      if ( delete_option( self::OPT_ITEM_DETAIL_STYLES ) ) {
+        $deleted_count++;
+      }
+
+      if ( delete_option( self::OPT_STYLE_GENERATOR ) ) {
+        $deleted_count++;
+      }
+
+      if ( $deleted_count > 0 ) {
+        wp_send_json_success( array(
+          'message' => "Successfully reset $deleted_count style sections to defaults",
+          'count' => $deleted_count
+        ) );
+      } else {
+        wp_send_json_success( array(
+          'message' => 'No custom styles found - already using defaults',
+          'count' => 0
+        ) );
       }
     } catch ( Exception $e ) {
       wp_send_json_error( 'Exception: ' . $e->getMessage() );

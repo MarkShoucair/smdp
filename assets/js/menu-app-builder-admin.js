@@ -1,8 +1,7 @@
 (function($){
-  $(function(){
-    // Function to initialize custom color pickers
-    function initColorPickers() {
-      var $pickers = $('.smdp-color-picker, .smdp-pwa-color-picker');
+  // Expose initColorPickers globally
+  window.initColorPickers = function() {
+    var $pickers = $('.smdp-color-picker, .smdp-pwa-color-picker');
 
       // Debug: log how many pickers we found
       if ($pickers.length > 0) {
@@ -61,45 +60,46 @@
           }
         });
       });
-    }
+    };
 
-    // Initialize color pickers on page load
-    setTimeout(initColorPickers, 100);
+    $(function(){
+      // Initialize color pickers on page load
+      setTimeout(window.initColorPickers, 100);
 
-    // Also initialize after a longer delay to catch any late-loaded elements
-    setTimeout(initColorPickers, 500);
+      // Also initialize after a longer delay to catch any late-loaded elements
+      setTimeout(window.initColorPickers, 500);
 
-    // Re-initialize when configuration subtabs change
-    $(document).on('click', '.smdp-config-subtab', function(){
-      setTimeout(initColorPickers, 100);
-      setTimeout(initColorPickers, 300);
-    });
+      // Re-initialize when configuration subtabs change
+      $(document).on('click', '.smdp-config-subtab', function(){
+        setTimeout(window.initColorPickers, 100);
+        setTimeout(window.initColorPickers, 300);
+      });
 
-    // Re-initialize when style subtabs change
-    $(document).on('click', '.smdp-style-subtab', function(e){
-      e.preventDefault();
-      var target = $(this).attr('href');
+      // Re-initialize when style subtabs change
+      $(document).on('click', '.smdp-style-subtab', function(e){
+        e.preventDefault();
+        var target = $(this).attr('href');
 
-      // Switch active tab
-      $('.smdp-style-subtab').removeClass('active').css({'border-bottom': 'none', 'color': '#666'});
-      $(this).addClass('active').css({'border-bottom': '2px solid #2271b1', 'color': '#000'});
+        // Switch active tab
+        $('.smdp-style-subtab').removeClass('active').css({'border-bottom': 'none', 'color': '#666'});
+        $(this).addClass('active').css({'border-bottom': '2px solid #2271b1', 'color': '#000'});
 
-      // Show/hide content
-      $('.smdp-style-subtab-content').hide();
-      $(target).show();
+        // Show/hide content
+        $('.smdp-style-subtab-content').hide();
+        $(target).show();
 
-      // Re-initialize color pickers for newly shown content
-      setTimeout(initColorPickers, 100);
-      setTimeout(initColorPickers, 300);
+        // Re-initialize color pickers for newly shown content
+        setTimeout(window.initColorPickers, 100);
+        setTimeout(window.initColorPickers, 300);
 
-      return false;
-    });
+        return false;
+      });
 
-    // Also re-initialize when main tabs change
-    $(document).on('click', '.nav-tab', function(){
-      setTimeout(initColorPickers, 100);
-      setTimeout(initColorPickers, 300);
-    });
+      // Also re-initialize when main tabs change
+      $(document).on('click', '.nav-tab', function(){
+        setTimeout(window.initColorPickers, 100);
+        setTimeout(window.initColorPickers, 300);
+      });
 
     var $list = $('#smdp-cat-order');
     if ($list.length && $.fn.sortable) {
