@@ -1,34 +1,85 @@
 (function($){
   $(function(){
-    // Function to initialize color pickers
+    // Function to initialize custom color pickers
     function initColorPickers() {
-      if ($.fn.wpColorPicker) {
-        $('.smdp-color-picker:visible, .smdp-pwa-color-picker:visible').each(function(){
-          if (!$(this).hasClass('wp-color-picker')) {
-            var $input = $(this);
-            // Initialize with change handler for preview updates
-            $input.wpColorPicker({
-              change: function(event, ui) {
-                // Trigger custom event for inline scripts to hook into
-                $(document).trigger('smdp-color-changed');
-              }
-            });
+      $('.smdp-color-picker, .smdp-pwa-color-picker').each(function(){
+        var $textInput = $(this);
+
+        // Skip if already initialized
+        if ($textInput.data('color-picker-initialized')) {
+          return;
+        }
+
+        $textInput.data('color-picker-initialized', true);
+
+        // Create wrapper
+        var $wrapper = $('<div class="smdp-custom-color-picker"></div>');
+
+        // Create HTML5 color input
+        var $colorInput = $('<input type="color" class="smdp-color-visual">');
+        $colorInput.val($textInput.val() || '#ffffff');
+
+        // Style the text input
+        $textInput.css({
+          'width': '100px',
+          'margin-left': '8px',
+          'font-family': 'monospace',
+          'text-transform': 'uppercase'
+        });
+
+        // Wrap both inputs
+        $textInput.before($wrapper);
+        $wrapper.append($colorInput);
+        $wrapper.append($textInput);
+
+        // Sync color input -> text input
+        $colorInput.on('input change', function(){
+          $textInput.val($(this).val().toUpperCase());
+          $textInput.trigger('change');
+          $(document).trigger('smdp-color-changed');
+        });
+
+        // Sync text input -> color input
+        $textInput.on('input change blur', function(){
+          var val = $(this).val();
+          // Validate and format hex color
+          if (val.match(/^#?[0-9A-Fa-f]{6}$/)) {
+            if (!val.startsWith('#')) {
+              val = '#' + val;
+              $(this).val(val);
+            }
+            $colorInput.val(val);
+            $(document).trigger('smdp-color-changed');
           }
         });
-      }
+      });
     }
 
-    // Initialize color pickers on page load - use slight delay to ensure DOM is ready
-    setTimeout(initColorPickers, 200);
+    // Initialize color pickers on page load
+    setTimeout(initColorPickers, 100);
 
     // Re-initialize when configuration subtabs change
     $(document).on('click', '.smdp-config-subtab', function(){
-      setTimeout(initColorPickers, 100);
+      setTimeout(initColorPickers, 200);
     });
 
     // Re-initialize when style subtabs change
-    $(document).on('click', '.smdp-style-subtab', function(){
-      setTimeout(initColorPickers, 100);
+    $(document).on('click', '.smdp-style-subtab', function(e){
+      e.preventDefault();
+      var target = $(this).attr('href');
+
+      // Switch active tab
+      $('.smdp-style-subtab').removeClass('active').css({'border-bottom': 'none', 'color': '#666'});
+      $(this).addClass('active').css({'border-bottom': '2px solid #2271b1', 'color': '#000'});
+
+      // Show/hide content
+      $('.smdp-style-subtab-content').hide();
+      $(target).show();
+
+      // Re-initialize color pickers for newly shown content
+      setTimeout(initColorPickers, 200);
+
+      return false;
     });
 
     var $list = $('#smdp-cat-order');

@@ -558,7 +558,8 @@ class SMDP_Menu_App_Builder {
   background-color: <?php echo esc_attr($bg_colors['main_bg']); ?> !important;
 }
 
-/* Category bar background */
+/* Category bar background - includes header wrapper and bar itself */
+.smdp-app-header,
 .smdp-cat-bar {
   background-color: <?php echo esc_attr($bg_colors['category_bar_bg']); ?> !important;
 }

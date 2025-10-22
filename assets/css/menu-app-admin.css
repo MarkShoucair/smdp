@@ -1,1 +1,26 @@
 .smdp-tab{display:none}.smdp-tab.active{display:block}
+
+/* Custom Color Picker Styles */
+.smdp-custom-color-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.smdp-color-visual {
+  width: 50px;
+  height: 32px;
+  border: 1px solid #8c8f94;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.smdp-color-visual:hover {
+  border-color: #2271b1;
+}
+
+.smdp-color-visual:focus {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
