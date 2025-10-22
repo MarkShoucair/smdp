@@ -10,6 +10,7 @@ class SMDP_Menu_App_Builder {
   const OPT_HELP_BTN_STYLES = 'smdp_app_help_button_styles'; // Help button styles
   const OPT_BG_COLORS = 'smdp_app_background_colors'; // Background colors
   const OPT_ITEM_CARD_STYLES = 'smdp_app_item_card_styles'; // Item card styles
+  const OPT_ITEM_DETAIL_STYLES = 'smdp_app_item_detail_styles'; // Item detail modal styles
 
   public static function init() {
     add_action('admin_menu', array(__CLASS__, 'admin_menu'));
@@ -282,6 +283,35 @@ class SMDP_Menu_App_Builder {
 
     register_setting('smdp_menu_app_item_card_styles_group', self::OPT_ITEM_CARD_STYLES, array(
         'sanitize_callback' => $sanitize_item_card_styles,
+        'default' => array()
+    ));
+
+    // Item detail modal styles settings (Styles tab > Item Detail subtab) - SEPARATE GROUP
+    $sanitize_item_detail_styles = function($input) {
+        if (!is_array($input)) return array();
+
+        $sanitized = array();
+        $sanitized['modal_bg'] = !empty($input['modal_bg']) ? sanitize_hex_color($input['modal_bg']) : '#ffffff';
+        $sanitized['modal_border_color'] = !empty($input['modal_border_color']) ? sanitize_hex_color($input['modal_border_color']) : '#3498db';
+        $sanitized['modal_border_width'] = isset($input['modal_border_width']) ? absint($input['modal_border_width']) : 6;
+        $sanitized['modal_border_radius'] = isset($input['modal_border_radius']) ? absint($input['modal_border_radius']) : 12;
+        $sanitized['title_color'] = !empty($input['title_color']) ? sanitize_hex_color($input['title_color']) : '#000000';
+        $sanitized['title_size'] = isset($input['title_size']) ? absint($input['title_size']) : 24;
+        $sanitized['title_weight'] = !empty($input['title_weight']) ? sanitize_text_field($input['title_weight']) : 'bold';
+        $sanitized['price_color'] = !empty($input['price_color']) ? sanitize_hex_color($input['price_color']) : '#27ae60';
+        $sanitized['price_size'] = isset($input['price_size']) ? absint($input['price_size']) : 19;
+        $sanitized['price_weight'] = !empty($input['price_weight']) ? sanitize_text_field($input['price_weight']) : 'bold';
+        $sanitized['desc_color'] = !empty($input['desc_color']) ? sanitize_hex_color($input['desc_color']) : '#666666';
+        $sanitized['desc_size'] = isset($input['desc_size']) ? absint($input['desc_size']) : 16;
+        $sanitized['close_btn_bg'] = !empty($input['close_btn_bg']) ? sanitize_hex_color($input['close_btn_bg']) : '#3498db';
+        $sanitized['close_btn_text'] = !empty($input['close_btn_text']) ? sanitize_hex_color($input['close_btn_text']) : '#ffffff';
+        $sanitized['close_btn_hover_bg'] = !empty($input['close_btn_hover_bg']) ? sanitize_hex_color($input['close_btn_hover_bg']) : '#2980b9';
+
+        return $sanitized;
+    };
+
+    register_setting('smdp_menu_app_item_detail_styles_group', self::OPT_ITEM_DETAIL_STYLES, array(
+        'sanitize_callback' => $sanitize_item_detail_styles,
         'default' => array()
     ));
 
@@ -671,6 +701,78 @@ class SMDP_Menu_App_Builder {
 </style>
 <?php
     }
+
+    // Get saved Item Detail styles
+    $item_detail_styles = get_option(self::OPT_ITEM_DETAIL_STYLES, array());
+
+    if (!empty($item_detail_styles)) {
+      // Default values
+      $defaults = array(
+        'modal_bg' => '#ffffff',
+        'modal_border_color' => '#3498db',
+        'modal_border_width' => 6,
+        'modal_border_radius' => 12,
+        'title_color' => '#000000',
+        'title_size' => 24,
+        'title_weight' => 'bold',
+        'price_color' => '#27ae60',
+        'price_size' => 19,
+        'price_weight' => 'bold',
+        'desc_color' => '#666666',
+        'desc_size' => 16,
+        'close_btn_bg' => '#3498db',
+        'close_btn_text' => '#ffffff',
+        'close_btn_hover_bg' => '#2980b9',
+      );
+
+      $item_detail_styles = array_merge($defaults, $item_detail_styles);
+
+      // Generate CSS for item detail modal
+      ?>
+<style id="smdp-custom-item-detail-styles">
+/* Custom Item Detail Modal Styles from Menu App Builder */
+
+/* Modal container */
+#smdp-item-modal .smdp-item-modal-inner {
+  background-color: <?php echo esc_attr($item_detail_styles['modal_bg']); ?> !important;
+  border: <?php echo esc_attr($item_detail_styles['modal_border_width']); ?>px solid <?php echo esc_attr($item_detail_styles['modal_border_color']); ?> !important;
+  border-radius: <?php echo esc_attr($item_detail_styles['modal_border_radius']); ?>px !important;
+  box-shadow: 0 0 30px <?php echo esc_attr($item_detail_styles['modal_border_color']); ?>99,
+              0 0 60px <?php echo esc_attr($item_detail_styles['modal_border_color']); ?>66 !important;
+}
+
+/* Item title in modal */
+#smdp-item-modal #smdp-item-name {
+  color: <?php echo esc_attr($item_detail_styles['title_color']); ?> !important;
+  font-size: <?php echo esc_attr($item_detail_styles['title_size']); ?>px !important;
+  font-weight: <?php echo esc_attr($item_detail_styles['title_weight']); ?> !important;
+}
+
+/* Item price in modal */
+#smdp-item-modal #smdp-item-price {
+  color: <?php echo esc_attr($item_detail_styles['price_color']); ?> !important;
+  font-size: <?php echo esc_attr($item_detail_styles['price_size']); ?>px !important;
+  font-weight: <?php echo esc_attr($item_detail_styles['price_weight']); ?> !important;
+}
+
+/* Item description in modal */
+#smdp-item-modal #smdp-item-desc {
+  color: <?php echo esc_attr($item_detail_styles['desc_color']); ?> !important;
+  font-size: <?php echo esc_attr($item_detail_styles['desc_size']); ?>px !important;
+}
+
+/* Close button */
+#smdp-item-modal #smdp-item-close {
+  background-color: <?php echo esc_attr($item_detail_styles['close_btn_bg']); ?> !important;
+  color: <?php echo esc_attr($item_detail_styles['close_btn_text']); ?> !important;
+}
+
+#smdp-item-modal #smdp-item-close:hover {
+  background-color: <?php echo esc_attr($item_detail_styles['close_btn_hover_bg']); ?> !important;
+}
+</style>
+<?php
+    }
   }
 
   public static function render_admin_page() {
@@ -964,6 +1066,7 @@ class SMDP_Menu_App_Builder {
           <a href="#style-help-buttons" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Help Buttons</a>
           <a href="#style-background" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Background Colors</a>
           <a href="#style-item-cards" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Cards</a>
+          <a href="#style-item-detail" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Detail</a>
           <a href="#style-custom-css" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Custom CSS</a>
         </div>
 
@@ -1007,6 +1110,17 @@ class SMDP_Menu_App_Builder {
             <p class="description">Customize the appearance of menu item cards</p>
             <?php self::field_item_card_styles(); ?>
             <?php submit_button('Save Item Card Styles'); ?>
+          </form>
+        </div>
+
+        <!-- Subtab: Item Detail -->
+        <div id="style-item-detail" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_item_detail_styles_group'); ?>
+            <h3>Item Detail Modal Styles</h3>
+            <p class="description">Customize the appearance of the item detail popup/modal</p>
+            <?php self::field_item_detail_styles(); ?>
+            <?php submit_button('Save Item Detail Styles'); ?>
           </form>
         </div>
 
@@ -2533,6 +2647,295 @@ class SMDP_Menu_App_Builder {
 
       // Listen for color picker changes
       $(document).on('smdp-color-changed', updateItemCardPreview);
+    });
+    </script>
+    <?php
+  }
+
+  public static function field_item_detail_styles() {
+    $styles = get_option(self::OPT_ITEM_DETAIL_STYLES, array());
+    $name = self::OPT_ITEM_DETAIL_STYLES;
+
+    // Default values based on current hardcoded styles in item-detail.js
+    $defaults = array(
+      'modal_bg' => '#ffffff',
+      'modal_border_color' => '#3498db',
+      'modal_border_width' => 6,
+      'modal_border_radius' => 12,
+      'title_color' => '#000000',
+      'title_size' => 24,
+      'title_weight' => 'bold',
+      'price_color' => '#27ae60',
+      'price_size' => 19,
+      'price_weight' => 'bold',
+      'desc_color' => '#666666',
+      'desc_size' => 16,
+      'close_btn_bg' => '#3498db',
+      'close_btn_text' => '#ffffff',
+      'close_btn_hover_bg' => '#2980b9',
+    );
+    $styles = array_merge($defaults, $styles);
+    ?>
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;">
+      <!-- Left Column: Form Controls -->
+      <div>
+        <h3 style="margin-top: 0;">Modal Container</h3>
+        <table class="form-table">
+          <tr>
+            <th>Background Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[modal_bg]" value="<?php echo esc_attr($styles['modal_bg']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="modal_bg" />
+              <p class="description">Background color for the modal popup</p>
+            </td>
+          </tr>
+          <tr>
+            <th>Border Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[modal_border_color]" value="<?php echo esc_attr($styles['modal_border_color']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="modal_border_color" />
+              <p class="description">The blue glow border around the modal</p>
+            </td>
+          </tr>
+          <tr>
+            <th>Border Width (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[modal_border_width]" value="<?php echo esc_attr($styles['modal_border_width']); ?>" min="0" max="20" style="width: 80px;" class="smdp-item-detail-field" data-style="modal_border_width" />
+            </td>
+          </tr>
+          <tr>
+            <th>Border Radius (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[modal_border_radius]" value="<?php echo esc_attr($styles['modal_border_radius']); ?>" min="0" max="50" style="width: 80px;" class="smdp-item-detail-field" data-style="modal_border_radius" />
+              <p class="description">Rounded corners of the modal</p>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Item Title</h3>
+        <table class="form-table">
+          <tr>
+            <th>Title Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[title_color]" value="<?php echo esc_attr($styles['title_color']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="title_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Title Font Size (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[title_size]" value="<?php echo esc_attr($styles['title_size']); ?>" min="10" max="48" style="width: 80px;" class="smdp-item-detail-field" data-style="title_size" />
+            </td>
+          </tr>
+          <tr>
+            <th>Title Font Weight</th>
+            <td>
+              <select name="<?php echo esc_attr($name); ?>[title_weight]" class="smdp-item-detail-field" data-style="title_weight">
+                <option value="normal" <?php selected($styles['title_weight'], 'normal'); ?>>Normal</option>
+                <option value="bold" <?php selected($styles['title_weight'], 'bold'); ?>>Bold</option>
+                <option value="600" <?php selected($styles['title_weight'], '600'); ?>>Semi-Bold (600)</option>
+                <option value="500" <?php selected($styles['title_weight'], '500'); ?>>Medium (500)</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Price</h3>
+        <table class="form-table">
+          <tr>
+            <th>Price Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[price_color]" value="<?php echo esc_attr($styles['price_color']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="price_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Price Font Size (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[price_size]" value="<?php echo esc_attr($styles['price_size']); ?>" min="10" max="40" style="width: 80px;" class="smdp-item-detail-field" data-style="price_size" />
+            </td>
+          </tr>
+          <tr>
+            <th>Price Font Weight</th>
+            <td>
+              <select name="<?php echo esc_attr($name); ?>[price_weight]" class="smdp-item-detail-field" data-style="price_weight">
+                <option value="normal" <?php selected($styles['price_weight'], 'normal'); ?>>Normal</option>
+                <option value="bold" <?php selected($styles['price_weight'], 'bold'); ?>>Bold</option>
+                <option value="600" <?php selected($styles['price_weight'], '600'); ?>>Semi-Bold (600)</option>
+                <option value="500" <?php selected($styles['price_weight'], '500'); ?>>Medium (500)</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Description</h3>
+        <table class="form-table">
+          <tr>
+            <th>Description Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[desc_color]" value="<?php echo esc_attr($styles['desc_color']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="desc_color" />
+            </td>
+          </tr>
+          <tr>
+            <th>Description Font Size (px)</th>
+            <td>
+              <input type="number" name="<?php echo esc_attr($name); ?>[desc_size]" value="<?php echo esc_attr($styles['desc_size']); ?>" min="10" max="24" style="width: 80px;" class="smdp-item-detail-field" data-style="desc_size" />
+            </td>
+          </tr>
+        </table>
+
+        <h3>Close Button</h3>
+        <table class="form-table">
+          <tr>
+            <th>Background Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[close_btn_bg]" value="<?php echo esc_attr($styles['close_btn_bg']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="close_btn_bg" />
+            </td>
+          </tr>
+          <tr>
+            <th>Text Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[close_btn_text]" value="<?php echo esc_attr($styles['close_btn_text']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="close_btn_text" />
+            </td>
+          </tr>
+          <tr>
+            <th>Hover Background Color</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[close_btn_hover_bg]" value="<?php echo esc_attr($styles['close_btn_hover_bg']); ?>" class="smdp-color-picker smdp-item-detail-field" data-style="close_btn_hover_bg" />
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Right Column: Live Preview -->
+      <div style="position: sticky; top: 20px;">
+        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+          <h4 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: #666;">Live Preview</h4>
+          <p class="description" style="font-size: 11px; margin-bottom: 15px;">Simplified preview of the modal</p>
+
+          <div id="smdp-item-detail-preview" style="
+            background: <?php echo esc_attr($styles['modal_bg']); ?>;
+            border: <?php echo esc_attr($styles['modal_border_width']); ?>px solid <?php echo esc_attr($styles['modal_border_color']); ?>;
+            border-radius: <?php echo esc_attr($styles['modal_border_radius']); ?>px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.4);
+          ">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23e0e0e0' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-family='Arial' font-size='14'%3EItem Image%3C/text%3E%3C/svg%3E" alt="Sample" style="max-width: 100%; display: block; margin-bottom: 10px;" />
+
+            <h2 id="smdp-item-detail-preview-title" style="
+              color: <?php echo esc_attr($styles['title_color']); ?>;
+              font-size: <?php echo esc_attr($styles['title_size']); ?>px;
+              font-weight: <?php echo esc_attr($styles['title_weight']); ?>;
+              margin: 0 0 8px;
+            ">Burger & Fries</h2>
+
+            <p id="smdp-item-detail-preview-price" style="
+              color: <?php echo esc_attr($styles['price_color']); ?>;
+              font-size: <?php echo esc_attr($styles['price_size']); ?>px;
+              font-weight: <?php echo esc_attr($styles['price_weight']); ?>;
+              margin: 0 0 8px;
+            "><strong>$12.99</strong></p>
+
+            <p id="smdp-item-detail-preview-desc" style="
+              color: <?php echo esc_attr($styles['desc_color']); ?>;
+              font-size: <?php echo esc_attr($styles['desc_size']); ?>px;
+              margin: 0 0 16px;
+              line-height: 1.5;
+            ">Juicy beef patty with crispy golden fries and our special sauce</p>
+
+            <button type="button" id="smdp-item-detail-preview-btn" style="
+              background: <?php echo esc_attr($styles['close_btn_bg']); ?>;
+              color: <?php echo esc_attr($styles['close_btn_text']); ?>;
+              border: none;
+              padding: 12px 32px;
+              border-radius: 25px;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              width: 100%;
+            ">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    jQuery(document).ready(function($){
+      // Function to update item detail preview
+      function updateItemDetailPreview() {
+        var prefix = 'input[name="<?php echo esc_js($name); ?>';
+
+        var modalBg = $(prefix + '[modal_bg]"]').val();
+        var modalBorderColor = $(prefix + '[modal_border_color]"]').val();
+        var modalBorderWidth = $(prefix + '[modal_border_width]"]').val();
+        var modalBorderRadius = $(prefix + '[modal_border_radius]"]').val();
+        var titleColor = $(prefix + '[title_color]"]').val();
+        var titleSize = $(prefix + '[title_size]"]').val();
+        var titleWeight = $('select[name="<?php echo esc_js($name); ?>[title_weight]"]').val();
+        var priceColor = $(prefix + '[price_color]"]').val();
+        var priceSize = $(prefix + '[price_size]"]').val();
+        var priceWeight = $('select[name="<?php echo esc_js($name); ?>[price_weight]"]').val();
+        var descColor = $(prefix + '[desc_color]"]').val();
+        var descSize = $(prefix + '[desc_size]"]').val();
+        var closeBtnBg = $(prefix + '[close_btn_bg]"]').val();
+        var closeBtnText = $(prefix + '[close_btn_text]"]').val();
+        var closeBtnHoverBg = $(prefix + '[close_btn_hover_bg]"]').val();
+
+        // Update modal container
+        $('#smdp-item-detail-preview').css({
+          'background-color': modalBg,
+          'border': modalBorderWidth + 'px solid ' + modalBorderColor,
+          'border-radius': modalBorderRadius + 'px',
+          'box-shadow': '0 0 20px ' + modalBorderColor + '66'
+        });
+
+        // Update title
+        $('#smdp-item-detail-preview-title').css({
+          'color': titleColor,
+          'font-size': titleSize + 'px',
+          'font-weight': titleWeight
+        });
+
+        // Update price
+        $('#smdp-item-detail-preview-price').css({
+          'color': priceColor,
+          'font-size': priceSize + 'px',
+          'font-weight': priceWeight
+        });
+
+        // Update description
+        $('#smdp-item-detail-preview-desc').css({
+          'color': descColor,
+          'font-size': descSize + 'px'
+        });
+
+        // Update close button
+        $('#smdp-item-detail-preview-btn').css({
+          'background-color': closeBtnBg,
+          'color': closeBtnText
+        });
+
+        // Store hover color in data attribute
+        $('#smdp-item-detail-preview-btn').data('hover-bg', closeBtnHoverBg);
+      }
+
+      // Update on field changes
+      $('.smdp-item-detail-field').on('change keyup input', updateItemDetailPreview);
+
+      // Listen for color picker changes
+      $(document).on('smdp-color-changed', updateItemDetailPreview);
+
+      // Button hover effect
+      $(document).on('mouseenter', '#smdp-item-detail-preview-btn', function(){
+        var hoverBg = $(this).data('hover-bg');
+        if (hoverBg) {
+          $(this).css('background-color', hoverBg);
+        }
+      });
+
+      $(document).on('mouseleave', '#smdp-item-detail-preview-btn', function(){
+        var prefix = 'input[name="<?php echo esc_js($name); ?>';
+        var normalBg = $(prefix + '[close_btn_bg]"]').val();
+        $(this).css('background-color', normalBg);
+      });
     });
     </script>
     <?php
