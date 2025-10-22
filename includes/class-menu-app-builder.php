@@ -3038,8 +3038,64 @@ class SMDP_Menu_App_Builder {
         <tr>
           <th>Box Shadow</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][box_shadow]" value="<?php echo esc_attr($styles['box_shadow']); ?>" style="width: 300px;" placeholder="e.g., 0 4px 10px rgba(0,0,0,0.3)" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="box_shadow" />
-            <p class="description">CSS box-shadow value. Examples: <code>0 4px 10px rgba(0,0,0,0.3)</code> for prominent, <code>0 2px 4px rgba(0,0,0,0.1)</code> for subtle, <code>none</code> for no shadow</p>
+            <input type="hidden" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][box_shadow]" class="smdp-box-shadow-value smdp-<?php echo esc_attr($button_type); ?>-field" data-style="box_shadow" value="<?php echo esc_attr($styles['box_shadow']); ?>" />
+
+            <div class="smdp-box-shadow-builder">
+              <label style="display:block; margin-bottom:10px;">
+                <strong>Shadow Preset:</strong>
+                <select class="smdp-shadow-preset" style="margin-left:10px;">
+                  <option value="none">None</option>
+                  <option value="subtle">Subtle (0 1px 3px)</option>
+                  <option value="medium">Medium (0 4px 6px)</option>
+                  <option value="strong">Strong (0 10px 25px)</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </label>
+
+              <div class="smdp-shadow-custom" style="display:none; margin-top:15px; padding:15px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;">
+                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px;">
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>X Offset (px):</strong>
+                      <input type="number" class="smdp-shadow-x" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Y Offset (px):</strong>
+                      <input type="number" class="smdp-shadow-y" value="4" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Blur (px):</strong>
+                      <input type="number" class="smdp-shadow-blur" value="6" min="0" max="100" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Spread (px):</strong>
+                      <input type="number" class="smdp-shadow-spread" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Color:</strong>
+                      <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                  <div>
+                    <label style="display:block; margin-bottom:5px;">
+                      <strong>Opacity (0-1):</strong>
+                      <input type="number" class="smdp-shadow-opacity" value="0.15" min="0" max="1" step="0.05" style="width:100%; margin-top:5px;" />
+                    </label>
+                  </div>
+                </div>
+                <div style="margin-top:10px;">
+                  <small style="color:#666;">Preview: <code class="smdp-shadow-preview" style="background:#fff; padding:3px 6px; border:1px solid #ddd;">0 4px 6px rgba(0,0,0,0.15)</code></small>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
       </table>
@@ -3364,8 +3420,64 @@ class SMDP_Menu_App_Builder {
           <tr>
             <th>Box Shadow</th>
             <td>
-              <input type="text" name="<?php echo esc_attr($name); ?>[box_shadow]" value="<?php echo esc_attr($styles['box_shadow']); ?>" style="width: 300px;" placeholder="e.g., 0 2px 4px rgba(0,0,0,0.1)" class="smdp-item-card-field" data-style="box_shadow" />
-              <p class="description">CSS box-shadow value. Examples: <code>0 2px 4px rgba(0,0,0,0.1)</code> for subtle, <code>0 4px 8px rgba(0,0,0,0.2)</code> for prominent, <code>none</code> for no shadow</p>
+              <input type="hidden" name="<?php echo esc_attr($name); ?>[box_shadow]" class="smdp-box-shadow-value smdp-item-card-field" data-style="box_shadow" value="<?php echo esc_attr($styles['box_shadow']); ?>" />
+
+              <div class="smdp-box-shadow-builder">
+                <label style="display:block; margin-bottom:10px;">
+                  <strong>Shadow Preset:</strong>
+                  <select class="smdp-shadow-preset" style="margin-left:10px;">
+                    <option value="none">None</option>
+                    <option value="subtle">Subtle (0 1px 3px)</option>
+                    <option value="medium">Medium (0 4px 6px)</option>
+                    <option value="strong">Strong (0 10px 25px)</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+
+                <div class="smdp-shadow-custom" style="display:none; margin-top:15px; padding:15px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;">
+                  <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px;">
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>X Offset (px):</strong>
+                        <input type="number" class="smdp-shadow-x" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Y Offset (px):</strong>
+                        <input type="number" class="smdp-shadow-y" value="4" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Blur (px):</strong>
+                        <input type="number" class="smdp-shadow-blur" value="6" min="0" max="100" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Spread (px):</strong>
+                        <input type="number" class="smdp-shadow-spread" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Color:</strong>
+                        <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Opacity (0-1):</strong>
+                        <input type="number" class="smdp-shadow-opacity" value="0.15" min="0" max="1" step="0.05" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                  </div>
+                  <div style="margin-top:10px;">
+                    <small style="color:#666;">Preview: <code class="smdp-shadow-preview" style="background:#fff; padding:3px 6px; border:1px solid #ddd;">0 4px 6px rgba(0,0,0,0.15)</code></small>
+                  </div>
+                </div>
+              </div>
             </td>
           </tr>
         </table>
@@ -3601,8 +3713,67 @@ class SMDP_Menu_App_Builder {
           <tr>
             <th>Box Shadow</th>
             <td>
-              <input type="text" name="<?php echo esc_attr($name); ?>[modal_box_shadow]" value="<?php echo esc_attr($styles['modal_box_shadow']); ?>" style="width: 400px;" placeholder="e.g., 0 0 30px rgba(52,152,219,0.6)" class="smdp-item-detail-field" data-style="modal_box_shadow" />
-              <p class="description">CSS box-shadow value. Example: <code>0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)</code> for glowing effect, <code>0 4px 20px rgba(0,0,0,0.3)</code> for drop shadow, <code>none</code> for no shadow</p>
+              <input type="hidden" name="<?php echo esc_attr($name); ?>[modal_box_shadow]" class="smdp-box-shadow-value smdp-item-detail-field" data-style="modal_box_shadow" value="<?php echo esc_attr($styles['modal_box_shadow']); ?>" />
+
+              <div class="smdp-box-shadow-builder">
+                <label style="display:block; margin-bottom:10px;">
+                  <strong>Shadow Preset:</strong>
+                  <select class="smdp-shadow-preset" style="margin-left:10px;">
+                    <option value="none">None</option>
+                    <option value="subtle">Subtle (0 1px 3px)</option>
+                    <option value="medium">Medium (0 4px 6px)</option>
+                    <option value="strong">Strong (0 10px 25px)</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+
+                <div class="smdp-shadow-custom" style="display:none; margin-top:15px; padding:15px; background:#f9f9f9; border:1px solid #ddd; border-radius:4px;">
+                  <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px;">
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>X Offset (px):</strong>
+                        <input type="number" class="smdp-shadow-x" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Y Offset (px):</strong>
+                        <input type="number" class="smdp-shadow-y" value="4" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Blur (px):</strong>
+                        <input type="number" class="smdp-shadow-blur" value="6" min="0" max="100" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Spread (px):</strong>
+                        <input type="number" class="smdp-shadow-spread" value="0" min="-50" max="50" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Color:</strong>
+                        <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                    <div>
+                      <label style="display:block; margin-bottom:5px;">
+                        <strong>Opacity (0-1):</strong>
+                        <input type="number" class="smdp-shadow-opacity" value="0.15" min="0" max="1" step="0.05" style="width:100%; margin-top:5px;" />
+                      </label>
+                    </div>
+                  </div>
+                  <div style="margin-top:10px;">
+                    <small style="color:#666;">Preview: <code class="smdp-shadow-preview" style="background:#fff; padding:3px 6px; border:1px solid #ddd;">0 4px 6px rgba(0,0,0,0.15)</code></small>
+                  </div>
+                  <div style="margin-top:10px; padding:10px; background:#fffbcc; border:1px solid #f0e68c; border-radius:4px;">
+                    <small><strong>Tip:</strong> For a glowing effect around the modal, try multiple shadows like: <code>0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)</code></small>
+                  </div>
+                </div>
+              </div>
             </td>
           </tr>
         </table>
@@ -4563,29 +4734,42 @@ class SMDP_Menu_App_Builder {
    * AJAX handler to save all style sections at once from the Style Generator
    */
   public static function ajax_save_all_styles() {
-    // Verify nonce
-    if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'smdp_save_all_styles_nonce' ) ) {
-      wp_send_json_error( 'Security check failed' );
-    }
+    try {
+      // Verify nonce
+      if ( ! isset( $_POST['security'] ) || ! wp_verify_nonce( $_POST['security'], 'smdp_save_all_styles_nonce' ) ) {
+        wp_send_json_error( 'Security check failed' );
+        return;
+      }
 
-    // Check user capabilities
-    if ( ! current_user_can( 'manage_options' ) ) {
-      wp_send_json_error( 'Insufficient permissions' );
-    }
+      // Check user capabilities
+      if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Insufficient permissions' );
+        return;
+      }
 
-    // Get style data
-    if ( ! isset( $_POST['style_data'] ) ) {
-      wp_send_json_error( 'No style data provided' );
-    }
+      // Get style data
+      if ( ! isset( $_POST['style_data'] ) ) {
+        wp_send_json_error( 'No style data provided' );
+        return;
+      }
 
-    $style_data = json_decode( stripslashes( $_POST['style_data'] ), true );
-    if ( ! is_array( $style_data ) ) {
-      wp_send_json_error( 'Invalid style data format' );
-    }
+      $json_string = stripslashes( $_POST['style_data'] );
+      $style_data = json_decode( $json_string, true );
 
-    // Save each option using the existing sanitization callbacks
-    $saved_count = 0;
-    $errors = array();
+      // Check for JSON errors
+      if ( json_last_error() !== JSON_ERROR_NONE ) {
+        wp_send_json_error( 'JSON parsing error: ' . json_last_error_msg() . ' - First 200 chars: ' . substr($json_string, 0, 200) );
+        return;
+      }
+
+      if ( ! is_array( $style_data ) ) {
+        wp_send_json_error( 'Invalid style data format - not an array' );
+        return;
+      }
+
+      // Save each option using the existing sanitization callbacks
+      $saved_count = 0;
+      $errors = array();
 
     // Save Category Buttons
     if ( isset( $style_data[ self::OPT_STYLES ] ) ) {
@@ -4637,15 +4821,18 @@ class SMDP_Menu_App_Builder {
       }
     }
 
-    if ( $saved_count > 0 && empty( $errors ) ) {
-      wp_send_json_success( array(
-        'message' => "Successfully saved $saved_count style sections",
-        'count' => $saved_count
-      ) );
-    } else if ( ! empty( $errors ) ) {
-      wp_send_json_error( 'Failed to save: ' . implode( ', ', $errors ) );
-    } else {
-      wp_send_json_error( 'No style sections were saved' );
+      if ( $saved_count > 0 && empty( $errors ) ) {
+        wp_send_json_success( array(
+          'message' => "Successfully saved $saved_count style sections",
+          'count' => $saved_count
+        ) );
+      } else if ( ! empty( $errors ) ) {
+        wp_send_json_error( 'Failed to save: ' . implode( ', ', $errors ) );
+      } else {
+        wp_send_json_error( 'No style sections were saved' );
+      }
+    } catch ( Exception $e ) {
+      wp_send_json_error( 'Exception: ' . $e->getMessage() );
     }
   }
 }
