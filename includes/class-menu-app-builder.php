@@ -2461,48 +2461,6 @@ class SMDP_Menu_App_Builder {
       <p class="description">This only changes the placement of category tiles. Cards remain exactly the same as your existing menu output.</p>
     </fieldset>
 
-    <hr style="margin:25px 0; border:none; border-top:1px solid #ddd;">
-
-    <fieldset>
-      <legend style="font-weight:600; font-size:14px; margin-bottom:10px;">Action Buttons</legend>
-      <p class="description" style="margin-bottom:15px;">Control which action buttons appear in the bottom-right corner of the menu app.</p>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_help_btn]" value="1" <?php checked($enable_help_btn, '1'); ?>>
-        <strong>Enable "Request Help" button</strong>
-      </label>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_bill_btn]" value="1" <?php checked($enable_bill_btn, '1'); ?>>
-        <strong>Enable "Request Bill" button</strong>
-      </label>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_view_bill_btn]" value="1" <?php checked($enable_view_bill_btn, '1'); ?>>
-        <strong>Enable "View Bill" button</strong>
-      </label>
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_table_badge]" value="1" <?php checked($enable_table_badge, '1'); ?>>
-        <strong>Enable Table Number Badge</strong>
-      </label>
-
-      <hr style="margin:15px 0; border:none; border-top:1px solid #e0e0e0;">
-
-      <label style="display:block; margin-bottom:8px;">
-        <input type="checkbox" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[enable_table_selector]" value="1" <?php checked($enable_table_selector, '1'); ?>>
-        <strong>Enable Table Number Selector</strong>
-      </label>
-
-      <p class="description" style="margin-top:10px;">Uncheck "Table Number Selector" to skip the table selection popup entirely. The other options control which buttons appear after a table is set.</p>
-    </fieldset>
-
-    <hr style="margin:25px 0; border:none; border-top:1px solid #ddd;">
-
-    <p class="description" style="padding:15px; background:#f0f6fc; border-left:4px solid #2271b1; margin:20px 0;">
-      <strong>Note:</strong> Item Detail Modal enable/disable settings have been moved to
-      <strong><a href="<?php echo admin_url('admin.php?page=smdp_styles_customization#style-item-detail'); ?>">Styles & Customization → Item Detail</a></strong>
-    </p>
     <?php
   }
 
