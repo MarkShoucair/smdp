@@ -1087,15 +1087,13 @@ class SMDP_Menu_App_Builder {
             <?php settings_fields('smdp_menu_app_styles_group'); ?>
             <h3>Category Button Styles</h3>
             <?php self::field_styles(); ?>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <?php submit_button('Save Category Button Styles', 'primary', 'submit', false); ?>
-              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Category Button styles to defaults? This cannot be undone.');">
-                <input type="hidden" name="action" value="smdp_reset_styles">
-                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_STYLES); ?>">
-                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
-                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
-              </form>
-            </div>
+            <?php submit_button('Save Category Button Styles', 'primary', 'submit', false); ?>
+          </form>
+          <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 10px;" onsubmit="return confirm('Are you sure you want to reset Category Button styles to defaults? This cannot be undone.');">
+            <input type="hidden" name="action" value="smdp_reset_styles">
+            <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_STYLES); ?>">
+            <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+            <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
           </form>
         </div>
 
@@ -1106,15 +1104,13 @@ class SMDP_Menu_App_Builder {
             <h3>Action Button Styles</h3>
             <p class="description">These styles apply to: Request Help, Request Bill, View Bill, and Table Badge buttons</p>
             <?php self::field_help_button_styles(); ?>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <?php submit_button('Save Action Button Styles', 'primary', 'submit', false); ?>
-              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Action Button styles to defaults? This cannot be undone.');">
-                <input type="hidden" name="action" value="smdp_reset_styles">
-                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_HELP_BTN_STYLES); ?>">
-                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
-                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
-              </form>
-            </div>
+            <?php submit_button('Save Action Button Styles', 'primary', 'submit', false); ?>
+          </form>
+          <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 10px;" onsubmit="return confirm('Are you sure you want to reset Action Button styles to defaults? This cannot be undone.');">
+            <input type="hidden" name="action" value="smdp_reset_styles">
+            <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_HELP_BTN_STYLES); ?>">
+            <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+            <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
           </form>
         </div>
 
@@ -1125,15 +1121,13 @@ class SMDP_Menu_App_Builder {
             <h3>Background Colors</h3>
             <p class="description">Customize background colors for different sections of the menu app</p>
             <?php self::field_background_colors(); ?>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <?php submit_button('Save Background Colors', 'primary', 'submit', false); ?>
-              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Background Colors to defaults? This cannot be undone.');">
-                <input type="hidden" name="action" value="smdp_reset_styles">
-                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_BG_COLORS); ?>">
-                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
-                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
-              </form>
-            </div>
+            <?php submit_button('Save Background Colors', 'primary', 'submit', false); ?>
+          </form>
+          <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 10px;" onsubmit="return confirm('Are you sure you want to reset Background Colors to defaults? This cannot be undone.');">
+            <input type="hidden" name="action" value="smdp_reset_styles">
+            <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_BG_COLORS); ?>">
+            <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+            <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
           </form>
         </div>
 
@@ -1144,15 +1138,13 @@ class SMDP_Menu_App_Builder {
             <h3>Item Card Styles</h3>
             <p class="description">Customize the appearance of menu item cards</p>
             <?php self::field_item_card_styles(); ?>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <?php submit_button('Save Item Card Styles', 'primary', 'submit', false); ?>
-              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Item Card styles to defaults? This cannot be undone.');">
-                <input type="hidden" name="action" value="smdp_reset_styles">
-                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_CARD_STYLES); ?>">
-                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
-                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
-              </form>
-            </div>
+            <?php submit_button('Save Item Card Styles', 'primary', 'submit', false); ?>
+          </form>
+          <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 10px;" onsubmit="return confirm('Are you sure you want to reset Item Card styles to defaults? This cannot be undone.');">
+            <input type="hidden" name="action" value="smdp_reset_styles">
+            <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_CARD_STYLES); ?>">
+            <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+            <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
           </form>
         </div>
 
@@ -1163,15 +1155,13 @@ class SMDP_Menu_App_Builder {
             <h3>Item Detail Modal Styles</h3>
             <p class="description">Customize the appearance of the item detail popup/modal</p>
             <?php self::field_item_detail_styles(); ?>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <?php submit_button('Save Item Detail Styles', 'primary', 'submit', false); ?>
-              <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 0;" onsubmit="return confirm('Are you sure you want to reset Item Detail styles to defaults? This cannot be undone.');">
-                <input type="hidden" name="action" value="smdp_reset_styles">
-                <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_DETAIL_STYLES); ?>">
-                <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
-                <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
-              </form>
-            </div>
+            <?php submit_button('Save Item Detail Styles', 'primary', 'submit', false); ?>
+          </form>
+          <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-top: 10px;" onsubmit="return confirm('Are you sure you want to reset Item Detail styles to defaults? This cannot be undone.');">
+            <input type="hidden" name="action" value="smdp_reset_styles">
+            <input type="hidden" name="reset_option" value="<?php echo esc_attr(self::OPT_ITEM_DETAIL_STYLES); ?>">
+            <?php wp_nonce_field('smdp_reset_styles', 'smdp_reset_nonce'); ?>
+            <?php submit_button('Reset to Defaults', 'secondary', 'reset', false); ?>
           </form>
         </div>
 
