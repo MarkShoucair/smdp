@@ -54,11 +54,11 @@ class SMDP_Menu_App_Builder {
   /** ---------------- Admin ---------------- */
 
   public static function admin_menu() {
-    // Add Menu App Builder submenu
+    // Add Menu App submenu
     add_submenu_page(
       'smdp_main',                          // Parent slug (Square Menu)
-      'Menu App Builder',                   // Page title
-      'Menu App Builder',                   // Menu title
+      'Menu App',                           // Page title
+      'Menu App',                           // Menu title
       'manage_options',                     // Capability
       'smdp_menu_app_builder',              // Menu slug
       array(__CLASS__, 'render_admin_page') // Callback
@@ -118,16 +118,19 @@ class SMDP_Menu_App_Builder {
         }
 
         // Action button enable/disable settings
-        // Only update if layout field is present (means this is from App Layout form, not Promo/PWA form)
-        if (isset($input['layout'])) {
+        // Only update if layout field is present OR _form_type is action_buttons
+        if (isset($input['layout']) || (isset($input['_form_type']) && $input['_form_type'] === 'action_buttons')) {
             // Note: Checkboxes only send value when checked, so we need to handle unchecked state
             $sanitized['enable_help_btn'] = isset($input['enable_help_btn']) ? '1' : '0';
             $sanitized['enable_bill_btn'] = isset($input['enable_bill_btn']) ? '1' : '0';
             $sanitized['enable_view_bill_btn'] = isset($input['enable_view_bill_btn']) ? '1' : '0';
             $sanitized['enable_table_badge'] = isset($input['enable_table_badge']) ? '1' : '0';
             $sanitized['enable_table_selector'] = isset($input['enable_table_selector']) ? '1' : '0';
+        }
 
-            // Item detail modal settings
+        // Item detail modal settings
+        // Only update if layout field is present OR _form_type is item_detail_modal
+        if (isset($input['layout']) || (isset($input['_form_type']) && $input['_form_type'] === 'item_detail_modal')) {
             $sanitized['enable_modal_shortcode'] = isset($input['enable_modal_shortcode']) ? '1' : '0';
             $sanitized['enable_modal_menuapp'] = isset($input['enable_modal_menuapp']) ? '1' : '0';
             $sanitized['enable_modal_filter'] = isset($input['enable_modal_filter']) ? '1' : '0';
@@ -836,7 +839,7 @@ class SMDP_Menu_App_Builder {
   public static function render_admin_page() {
     ?>
     <div class="wrap smdp-menu-app">
-      <h1>Menu App Builder</h1>
+      <h1>Menu App</h1>
       <p>Create an app-like, tablet-friendly menu layout. <strong>Categories and items come from your Menu Editor</strong>. Edit there to see changes live.</p>
 
       <div style="margin:10px 0 18px;">
@@ -1105,8 +1108,6 @@ class SMDP_Menu_App_Builder {
             });
           });
           </script>
-        </div>
-
         </div>
       </div>
 
@@ -2175,6 +2176,7 @@ class SMDP_Menu_App_Builder {
               $settings = get_option(self::OPT_SETTINGS, array());
               if (!is_array($settings)) $settings = array();
               ?>
+              <input type="hidden" name="<?php echo esc_attr(self::OPT_SETTINGS); ?>[_form_type]" value="item_detail_modal">
 
               <fieldset>
                 <legend style="font-weight:600; font-size:14px; margin-bottom:10px;">Enable/Disable Item Detail Modal</legend>

@@ -622,10 +622,11 @@ class SMDP_Help_Request {
     ?>
     <form method="post" action="options.php">
     <?php settings_fields('smdp_menu_app_layout_group'); ?>
+    <input type="hidden" name="smdp_app_settings[_form_type]" value="action_buttons">
     <?php
 
     // Get button enable/disable settings (default to enabled)
-    $app_settings = get_option('smdp_menu_app_settings', array());
+    $app_settings = get_option('smdp_app_settings', array());
     if (!is_array($app_settings)) $app_settings = array();
     $enable_help_btn = isset($app_settings['enable_help_btn']) ? $app_settings['enable_help_btn'] : '1';
     $enable_bill_btn = isset($app_settings['enable_bill_btn']) ? $app_settings['enable_bill_btn'] : '1';
@@ -639,29 +640,29 @@ class SMDP_Help_Request {
     echo '<fieldset style="margin-bottom:20px;">';
 
     echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_menu_app_settings[enable_help_btn]" value="1" ' . checked($enable_help_btn, '1', false) . '>';
+    echo '<input type="checkbox" name="smdp_app_settings[enable_help_btn]" value="1" ' . checked($enable_help_btn, '1', false) . '>';
     echo '<strong>Enable "Request Help" button</strong>';
     echo '</label>';
 
     echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_menu_app_settings[enable_bill_btn]" value="1" ' . checked($enable_bill_btn, '1', false) . '>';
+    echo '<input type="checkbox" name="smdp_app_settings[enable_bill_btn]" value="1" ' . checked($enable_bill_btn, '1', false) . '>';
     echo '<strong>Enable "Request Bill" button</strong>';
     echo '</label>';
 
     echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_menu_app_settings[enable_view_bill_btn]" value="1" ' . checked($enable_view_bill_btn, '1', false) . '>';
+    echo '<input type="checkbox" name="smdp_app_settings[enable_view_bill_btn]" value="1" ' . checked($enable_view_bill_btn, '1', false) . '>';
     echo '<strong>Enable "View Bill" button</strong>';
     echo '</label>';
 
     echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_menu_app_settings[enable_table_badge]" value="1" ' . checked($enable_table_badge, '1', false) . '>';
+    echo '<input type="checkbox" name="smdp_app_settings[enable_table_badge]" value="1" ' . checked($enable_table_badge, '1', false) . '>';
     echo '<strong>Enable Table Number Badge</strong>';
     echo '</label>';
 
     echo '<hr style="margin:15px 0; border:none; border-top:1px solid #e0e0e0;">';
 
     echo '<label style="display:block; margin-bottom:8px;">';
-    echo '<input type="checkbox" name="smdp_menu_app_settings[enable_table_selector]" value="1" ' . checked($enable_table_selector, '1', false) . '>';
+    echo '<input type="checkbox" name="smdp_app_settings[enable_table_selector]" value="1" ' . checked($enable_table_selector, '1', false) . '>';
     echo '<strong>Enable Table Number Selector</strong>';
     echo '</label>';
 
