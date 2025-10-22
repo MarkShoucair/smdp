@@ -1723,7 +1723,21 @@ class SMDP_Menu_App_Builder {
                 method: 'POST',
                 body: formData
               })
-              .then(response => response.json())
+              .then(response => {
+                // First check if response is ok
+                if (!response.ok) {
+                  throw new Error('HTTP error ' + response.status);
+                }
+                // Get the text first to see what we're dealing with
+                return response.text().then(text => {
+                  try {
+                    return JSON.parse(text);
+                  } catch (e) {
+                    console.error('Response was not JSON:', text.substring(0, 500));
+                    throw new Error('Server returned invalid JSON. Check console for details.');
+                  }
+                });
+              })
               .then(data => {
                 $('#generate-styles').prop('disabled', false).text('🎨 Generate & Apply Complete Theme');
                 if (data.success) {
@@ -1744,6 +1758,7 @@ class SMDP_Menu_App_Builder {
                 $('#generate-styles').prop('disabled', false).text('🎨 Generate & Apply Complete Theme');
                 alert('⚠️ Theme generated but save failed: ' + error.message + '\n\n' +
                       'Please click "Save" on each section manually.');
+                console.error('Full error:', error);
               });
             });
 
