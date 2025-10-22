@@ -54,7 +54,7 @@ class SMDP_Menu_App_Builder {
   /** ---------------- Admin ---------------- */
 
   public static function admin_menu() {
-    // Add as submenu under Square Menu instead of top-level menu
+    // Add Menu App Builder submenu
     add_submenu_page(
       'smdp_main',                          // Parent slug (Square Menu)
       'Menu App Builder',                   // Page title
@@ -62,6 +62,16 @@ class SMDP_Menu_App_Builder {
       'manage_options',                     // Capability
       'smdp_menu_app_builder',              // Menu slug
       array(__CLASS__, 'render_admin_page') // Callback
+    );
+
+    // Add Styles & Customization submenu
+    add_submenu_page(
+      'smdp_main',                              // Parent slug (Square Menu)
+      'Styles & Customization',                 // Page title
+      'Styles & Customization',                 // Menu title
+      'manage_options',                         // Capability
+      'smdp_styles_customization',              // Menu slug
+      array(__CLASS__, 'render_styles_page')    // Callback
     );
   }
 
@@ -349,7 +359,8 @@ class SMDP_Menu_App_Builder {
   }
 
   public static function enqueue_admin($hook) {
-    if ($hook !== 'square-menu_page_smdp_menu_app_builder') return;
+    // Load assets for both Menu App Builder and Styles pages
+    if ($hook !== 'square-menu_page_smdp_menu_app_builder' && $hook !== 'square-menu_page_smdp_styles_customization') return;
 
     // Enqueue media uploader for promo image
     wp_enqueue_media();
@@ -822,7 +833,6 @@ class SMDP_Menu_App_Builder {
 
       <h2 class="nav-tab-wrapper">
         <a href="#tab-layout" class="nav-tab nav-tab-active">Configuration</a>
-        <a href="#tab-styles" class="nav-tab">Styles</a>
         <a href="#tab-advanced" class="nav-tab">Advanced</a>
       </h2>
 
@@ -1089,10 +1099,244 @@ class SMDP_Menu_App_Builder {
         </div>
       </div>
 
-      <div id="tab-styles" class="smdp-tab">
+      <!-- Items and Categories tabs moved to Menu Management → Menu Editor -->
+      <!-- Styles tab moved to separate "Styles & Customization" page -->
+
+      <!-- Tab: Advanced -->
+      <div id="tab-advanced" class="smdp-tab">
         <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-        <h2 style="margin-top:0;">Styling & Customization</h2>
-        <p>Customize colors, fonts, and appearance of the menu app.</p>
+        <h2 style="margin-top:0;">Advanced Settings</h2>
+        <p>Advanced configuration and troubleshooting tools for the menu app.</p>
+
+          <h3>Menu App URL</h3>
+          <?php
+          $menu_app_url = home_url( '/menu-app/' );
+          $flushed = get_transient( 'smdp_rewrite_rules_flushed' );
+          ?>
+
+          <p class="description">Standalone menu app URL: <strong><a href="<?php echo esc_url( $menu_app_url ); ?>" target="_blank"><?php echo esc_html( $menu_app_url ); ?></a></strong></p>
+
+          <?php if ( $flushed ): ?>
+            <div class="notice notice-success inline" style="margin: 10px 0; padding: 10px;">
+              <p><strong>Success!</strong> Rewrite rules have been flushed. The menu app URL should now work.</p>
+            </div>
+          <?php endif; ?>
+
+          <p class="description">If the menu app URL returns a 404 error, click the button below to fix it:</p>
+          <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=smdp_menu_app_builder&action=flush_rewrite_rules' ), 'smdp_flush_rewrite_rules' ) ); ?>" class="button button-secondary">Fix Menu App URL (Flush Rewrite Rules)</a>
+          <p class="description" style="margin-top: 10px;"><em>This re-registers WordPress URL routing rules. Safe to click anytime the menu app URL isn't working.</em></p>
+        </div>
+      </div>
+
+    </div>
+    <style>
+      .smdp-tab { display:none !important; }
+      .smdp-tab.active { display:block !important; }
+      .nav-tab-wrapper { margin-top: 12px; }
+
+      /* Configuration subtabs */
+      .smdp-config-subtab { cursor: pointer; transition: all 0.2s; }
+      .smdp-config-subtab:hover { color: #2271b1; }
+      .smdp-config-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
+      .smdp-config-subtab-content { display: none !important; }
+      .smdp-config-subtab-content.active { display: block !important; }
+
+      /* Style subtabs */
+      .smdp-style-subtab { cursor: pointer; transition: all 0.2s; }
+      .smdp-style-subtab:hover { color: #2271b1; }
+      .smdp-style-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
+      .smdp-style-subtab-content { display: none !important; }
+      .smdp-style-subtab-content.active { display: block !important; }
+    </style>
+    <script>
+      (function(){
+        // Bootstrap button handler
+        var btn = document.getElementById('smdp-bootstrap-btn');
+        var status = document.getElementById('smdp-bootstrap-status');
+        if (btn) {
+          btn.addEventListener('click', function(){
+            status.textContent = 'Building…';
+            fetch('<?php echo esc_js( rest_url('smdp/v1/bootstrap') ); ?>', {
+              method: 'POST',
+              headers: {'X-WP-Nonce':'<?php echo esc_js( wp_create_nonce('wp_rest') ); ?>'}
+            }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+            .then(function(res){
+              if (!res.ok) { console.error('Bootstrap error:', res.j); }
+              status.textContent = (res.ok && res.j && res.j.ok) ? 'Done.' : 'Failed.';
+            }).catch(function(err){
+              console.error(err);
+              status.textContent = 'Failed.';
+            });
+          });
+        }
+      })();
+    </script>
+    <script>
+    // Enhanced tab switching with session state persistence
+    jQuery(document).ready(function($){
+        console.log('Menu App Builder: Tabs initializing');
+
+        var $tabs = $('.nav-tab-wrapper .nav-tab');
+        var $panes = $('.smdp-tab');
+
+        console.log('Found tabs:', $tabs.length, 'Found panes:', $panes.length);
+
+        $tabs.on('click', function(e){
+            e.preventDefault();
+            var target = $(this).attr('href');
+            console.log('Tab clicked:', target);
+
+            // Remove all active states
+            $tabs.removeClass('nav-tab-active');
+            $panes.removeClass('active');
+
+            // Add active to clicked tab
+            $(this).addClass('nav-tab-active');
+
+            // Show corresponding pane
+            var $targetPane = $(target);
+
+            if ($targetPane.length) {
+                $targetPane.addClass('active');
+                console.log('Activated pane:', target);
+                // Save to session storage
+                sessionStorage.setItem('smdp_active_tab', target);
+            } else {
+                console.error('Pane not found:', target);
+            }
+        });
+
+        // Check if we just saved settings (WordPress adds settings-updated parameter)
+        var urlParams = new URLSearchParams(window.location.search);
+        var settingsUpdated = urlParams.get('settings-updated');
+
+        // Restore tab state from session or use first tab
+        var savedTab = sessionStorage.getItem('smdp_active_tab');
+
+        // First, remove all active states to prevent multiple tabs showing
+        $tabs.removeClass('nav-tab-active');
+        $panes.removeClass('active');
+
+        // If settings were just updated, stay on the Styles tab
+        if (settingsUpdated === 'true' && savedTab === '#tab-styles') {
+            $tabs.filter('[href="#tab-styles"]').addClass('nav-tab-active');
+            $('#tab-styles').addClass('active');
+            console.log('Settings saved, staying on Styles tab');
+        } else if (savedTab && $(savedTab).length) {
+            $tabs.filter('[href="' + savedTab + '"]').addClass('nav-tab-active');
+            $(savedTab).addClass('active');
+            console.log('Restored tab:', savedTab);
+        } else {
+            // Default to first tab if no saved state
+            $tabs.first().addClass('nav-tab-active');
+            $panes.first().addClass('active');
+        }
+
+        // Configuration subtabs switching
+        var $configSubtabs = $('.smdp-config-subtab');
+        var $configSubtabPanes = $('.smdp-config-subtab-content');
+
+        $configSubtabs.on('click', function(e){
+            e.preventDefault();
+            var target = $(this).attr('href');
+            console.log('Config subtab clicked:', target);
+
+            // Remove all active states
+            $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $configSubtabPanes.removeClass('active').hide();
+
+            // Add active to clicked subtab
+            $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+
+            // Show corresponding pane
+            $(target).addClass('active').show();
+
+            // Save to session storage
+            sessionStorage.setItem('smdp_active_config_subtab', target);
+
+            console.log('Activated config subtab:', target);
+        });
+
+        // Restore config subtab state
+        var savedConfigSubtab = sessionStorage.getItem('smdp_active_config_subtab');
+        if (savedConfigSubtab && $(savedConfigSubtab).length) {
+            $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $configSubtabPanes.removeClass('active').hide();
+            $configSubtabs.filter('[href="' + savedConfigSubtab + '"]').addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+            $(savedConfigSubtab).addClass('active').show();
+            console.log('Restored config subtab:', savedConfigSubtab);
+        }
+
+        // Style subtabs switching
+        var $styleSubtabs = $('.smdp-style-subtab');
+        var $styleSubtabPanes = $('.smdp-style-subtab-content');
+
+        $styleSubtabs.on('click', function(e){
+            e.preventDefault();
+            var target = $(this).attr('href');
+            console.log('Style subtab clicked:', target);
+
+            // Remove all active states
+            $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $styleSubtabPanes.removeClass('active').hide();
+
+            // Add active to clicked subtab
+            $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+
+            // Show corresponding pane
+            $(target).addClass('active').show();
+
+            // Save to session storage
+            sessionStorage.setItem('smdp_active_style_subtab', target);
+
+            console.log('Activated style subtab:', target);
+        });
+
+        // Restore style subtab state
+        var savedStyleSubtab = sessionStorage.getItem('smdp_active_style_subtab');
+        if (savedStyleSubtab && $(savedStyleSubtab).length) {
+            $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
+            $styleSubtabPanes.removeClass('active').hide();
+            $styleSubtabs.filter('[href="' + savedStyleSubtab + '"]').addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
+            $(savedStyleSubtab).addClass('active').show();
+            console.log('Restored style subtab:', savedStyleSubtab);
+        }
+
+        // Save current tab/subtab state before any form submission
+        $('form').on('submit', function() {
+            // Save which main tab is currently active
+            var activeTab = $tabs.filter('.nav-tab-active').attr('href');
+            if (activeTab) {
+                sessionStorage.setItem('smdp_active_tab', activeTab);
+                console.log('Saving tab state before submit:', activeTab);
+            }
+
+            // Save which config subtab is currently active (if any)
+            var activeConfigSubtab = $configSubtabs.filter('.active').attr('href');
+            if (activeConfigSubtab) {
+                sessionStorage.setItem('smdp_active_config_subtab', activeConfigSubtab);
+                console.log('Saving config subtab state before submit:', activeConfigSubtab);
+            }
+
+            // Save which style subtab is currently active (if any)
+            var activeStyleSubtab = $styleSubtabs.filter('.active').attr('href');
+            if (activeStyleSubtab) {
+                sessionStorage.setItem('smdp_active_style_subtab', activeStyleSubtab);
+                console.log('Saving style subtab state before submit:', activeStyleSubtab);
+            }
+        });
+    });
+    </script>
+    <?php
+  }
+
+  public static function render_styles_page() {
+    ?>
+    <div class="wrap">
+      <h1>Styles & Customization</h1>
+      <p>Customize colors, fonts, and appearance of the menu app.</p>
+
+      <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
 
         <!-- Subtabs for Styles -->
         <div class="smdp-style-subtabs" style="margin:20px 0; border-bottom:1px solid #ccc;">
@@ -1102,7 +1346,6 @@ class SMDP_Menu_App_Builder {
           <a href="#style-background" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Background Colors</a>
           <a href="#style-item-cards" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Cards</a>
           <a href="#style-item-detail" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Detail</a>
-          <?php /* <a href="#style-custom-css" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Custom CSS</a> */ ?>
         </div>
 
         <!-- Subtab: Style Generator -->
@@ -1974,61 +2217,10 @@ class SMDP_Menu_App_Builder {
           </form>
         </div>
 
-        <?php /* Subtab: Custom CSS - Disabled for now
-        <div id="style-custom-css" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
-          <form method="post" action="options.php">
-            <?php settings_fields('smdp_menu_app_layout_group'); ?>
-            <h3>Custom CSS</h3>
-            <p class="description">Add your own CSS to override any default styling. This CSS loads after all other styles.</p>
-            <?php self::field_css(); ?>
-            <?php submit_button('Save Custom CSS'); ?>
-          </form>
-        </div>
-        */ ?>
-        </div>
       </div>
-
-      <!-- Items and Categories tabs moved to Menu Management → Menu Editor -->
-
-      <!-- Tab: Advanced -->
-      <div id="tab-advanced" class="smdp-tab">
-        <div style="background:#fff;border:1px solid #ccd0d4;box-shadow:0 1px 1px rgba(0,0,0,0.04);padding:20px;margin:20px 0;">
-        <h2 style="margin-top:0;">Advanced Settings</h2>
-        <p>Advanced configuration and troubleshooting tools for the menu app.</p>
-
-          <h3>Menu App URL</h3>
-          <?php
-          $menu_app_url = home_url( '/menu-app/' );
-          $flushed = get_transient( 'smdp_rewrite_rules_flushed' );
-          ?>
-
-          <p class="description">Standalone menu app URL: <strong><a href="<?php echo esc_url( $menu_app_url ); ?>" target="_blank"><?php echo esc_html( $menu_app_url ); ?></a></strong></p>
-
-          <?php if ( $flushed ): ?>
-            <div class="notice notice-success inline" style="margin: 10px 0; padding: 10px;">
-              <p><strong>Success!</strong> Rewrite rules have been flushed. The menu app URL should now work.</p>
-            </div>
-          <?php endif; ?>
-
-          <p class="description">If the menu app URL returns a 404 error, click the button below to fix it:</p>
-          <a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=smdp_menu_app_builder&action=flush_rewrite_rules' ), 'smdp_flush_rewrite_rules' ) ); ?>" class="button button-secondary">Fix Menu App URL (Flush Rewrite Rules)</a>
-          <p class="description" style="margin-top: 10px;"><em>This re-registers WordPress URL routing rules. Safe to click anytime the menu app URL isn't working.</em></p>
-        </div>
-      </div>
-
     </div>
+
     <style>
-      .smdp-tab { display:none !important; }
-      .smdp-tab.active { display:block !important; }
-      .nav-tab-wrapper { margin-top: 12px; }
-
-      /* Configuration subtabs */
-      .smdp-config-subtab { cursor: pointer; transition: all 0.2s; }
-      .smdp-config-subtab:hover { color: #2271b1; }
-      .smdp-config-subtab.active { color: #2271b1; font-weight: 600; border-bottom: 2px solid #2271b1; }
-      .smdp-config-subtab-content { display: none !important; }
-      .smdp-config-subtab-content.active { display: block !important; }
-
       /* Style subtabs */
       .smdp-style-subtab { cursor: pointer; transition: all 0.2s; }
       .smdp-style-subtab:hover { color: #2271b1; }
@@ -2036,183 +2228,43 @@ class SMDP_Menu_App_Builder {
       .smdp-style-subtab-content { display: none !important; }
       .smdp-style-subtab-content.active { display: block !important; }
     </style>
+
     <script>
-      (function(){
-        // Bootstrap button handler
-        var btn = document.getElementById('smdp-bootstrap-btn');
-        var status = document.getElementById('smdp-bootstrap-status');
-        if (btn) {
-          btn.addEventListener('click', function(){
-            status.textContent = 'Building…';
-            fetch('<?php echo esc_js( rest_url('smdp/v1/bootstrap') ); ?>', {
-              method: 'POST',
-              headers: {'X-WP-Nonce':'<?php echo esc_js( wp_create_nonce('wp_rest') ); ?>'}
-            }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
-            .then(function(res){
-              if (!res.ok) { console.error('Bootstrap error:', res.j); }
-              status.textContent = (res.ok && res.j && res.j.ok) ? 'Done.' : 'Failed.';
-            }).catch(function(err){
-              console.error(err);
-              status.textContent = 'Failed.';
-            });
-          });
-        }
-      })();
-    </script>
-    <script>
-    // Enhanced tab switching with session state persistence
     jQuery(document).ready(function($){
-        console.log('Menu App Builder: Tabs initializing');
+      // Style subtabs switching
+      $('.smdp-style-subtab').on('click', function(e){
+        e.preventDefault();
+        var target = $(this).attr('href');
 
-        var $tabs = $('.nav-tab-wrapper .nav-tab');
-        var $panes = $('.smdp-tab');
+        // Remove all active states
+        $('.smdp-style-subtab').removeClass('active');
+        $('.smdp-style-subtab-content').removeClass('active');
 
-        console.log('Found tabs:', $tabs.length, 'Found panes:', $panes.length);
+        // Add active states to clicked tab and its content
+        $(this).addClass('active');
+        $(target).addClass('active');
 
-        $tabs.on('click', function(e){
-            e.preventDefault();
-            var target = $(this).attr('href');
-            console.log('Tab clicked:', target);
+        // Save which style subtab is currently active
+        sessionStorage.setItem('smdp_active_style_subtab', target);
+      });
 
-            // Remove all active states
-            $tabs.removeClass('nav-tab-active');
-            $panes.removeClass('active');
+      // Restore active style subtab from session storage
+      var savedStyleSubtab = sessionStorage.getItem('smdp_active_style_subtab');
+      if (savedStyleSubtab) {
+        $('.smdp-style-subtab').removeClass('active');
+        $('.smdp-style-subtab-content').removeClass('active');
+        $('.smdp-style-subtab[href="' + savedStyleSubtab + '"]').addClass('active');
+        $(savedStyleSubtab).addClass('active');
+      }
 
-            // Add active to clicked tab
-            $(this).addClass('nav-tab-active');
-
-            // Show corresponding pane
-            var $targetPane = $(target);
-
-            if ($targetPane.length) {
-                $targetPane.addClass('active');
-                console.log('Activated pane:', target);
-                // Save to session storage
-                sessionStorage.setItem('smdp_active_tab', target);
-            } else {
-                console.error('Pane not found:', target);
-            }
-        });
-
-        // Check if we just saved settings (WordPress adds settings-updated parameter)
-        var urlParams = new URLSearchParams(window.location.search);
-        var settingsUpdated = urlParams.get('settings-updated');
-
-        // Restore tab state from session or use first tab
-        var savedTab = sessionStorage.getItem('smdp_active_tab');
-
-        // First, remove all active states to prevent multiple tabs showing
-        $tabs.removeClass('nav-tab-active');
-        $panes.removeClass('active');
-
-        // If settings were just updated, stay on the Styles tab
-        if (settingsUpdated === 'true' && savedTab === '#tab-styles') {
-            $tabs.filter('[href="#tab-styles"]').addClass('nav-tab-active');
-            $('#tab-styles').addClass('active');
-            console.log('Settings saved, staying on Styles tab');
-        } else if (savedTab && $(savedTab).length) {
-            $tabs.filter('[href="' + savedTab + '"]').addClass('nav-tab-active');
-            $(savedTab).addClass('active');
-            console.log('Restored tab:', savedTab);
-        } else {
-            // Default to first tab if no saved state
-            $tabs.first().addClass('nav-tab-active');
-            $panes.first().addClass('active');
+      // Save current subtab state before any form submission
+      $('form').on('submit', function(){
+        // Save which style subtab is currently active (if any)
+        var $activeStyleSubtab = $('.smdp-style-subtab.active');
+        if ($activeStyleSubtab.length) {
+          sessionStorage.setItem('smdp_active_style_subtab', $activeStyleSubtab.attr('href'));
         }
-
-        // Configuration subtabs switching
-        var $configSubtabs = $('.smdp-config-subtab');
-        var $configSubtabPanes = $('.smdp-config-subtab-content');
-
-        $configSubtabs.on('click', function(e){
-            e.preventDefault();
-            var target = $(this).attr('href');
-            console.log('Config subtab clicked:', target);
-
-            // Remove all active states
-            $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
-            $configSubtabPanes.removeClass('active').hide();
-
-            // Add active to clicked subtab
-            $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
-
-            // Show corresponding pane
-            $(target).addClass('active').show();
-
-            // Save to session storage
-            sessionStorage.setItem('smdp_active_config_subtab', target);
-
-            console.log('Activated config subtab:', target);
-        });
-
-        // Restore config subtab state
-        var savedConfigSubtab = sessionStorage.getItem('smdp_active_config_subtab');
-        if (savedConfigSubtab && $(savedConfigSubtab).length) {
-            $configSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
-            $configSubtabPanes.removeClass('active').hide();
-            $configSubtabs.filter('[href="' + savedConfigSubtab + '"]').addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
-            $(savedConfigSubtab).addClass('active').show();
-            console.log('Restored config subtab:', savedConfigSubtab);
-        }
-
-        // Style subtabs switching
-        var $styleSubtabs = $('.smdp-style-subtab');
-        var $styleSubtabPanes = $('.smdp-style-subtab-content');
-
-        $styleSubtabs.on('click', function(e){
-            e.preventDefault();
-            var target = $(this).attr('href');
-            console.log('Style subtab clicked:', target);
-
-            // Remove all active states
-            $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
-            $styleSubtabPanes.removeClass('active').hide();
-
-            // Add active to clicked subtab
-            $(this).addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
-
-            // Show corresponding pane
-            $(target).addClass('active').show();
-
-            // Save to session storage
-            sessionStorage.setItem('smdp_active_style_subtab', target);
-
-            console.log('Activated style subtab:', target);
-        });
-
-        // Restore style subtab state
-        var savedStyleSubtab = sessionStorage.getItem('smdp_active_style_subtab');
-        if (savedStyleSubtab && $(savedStyleSubtab).length) {
-            $styleSubtabs.removeClass('active').css({'color': '#666', 'border-bottom': 'none'});
-            $styleSubtabPanes.removeClass('active').hide();
-            $styleSubtabs.filter('[href="' + savedStyleSubtab + '"]').addClass('active').css({'color': '#2271b1', 'border-bottom': '2px solid #2271b1', 'font-weight': '600'});
-            $(savedStyleSubtab).addClass('active').show();
-            console.log('Restored style subtab:', savedStyleSubtab);
-        }
-
-        // Save current tab/subtab state before any form submission
-        $('form').on('submit', function() {
-            // Save which main tab is currently active
-            var activeTab = $tabs.filter('.nav-tab-active').attr('href');
-            if (activeTab) {
-                sessionStorage.setItem('smdp_active_tab', activeTab);
-                console.log('Saving tab state before submit:', activeTab);
-            }
-
-            // Save which config subtab is currently active (if any)
-            var activeConfigSubtab = $configSubtabs.filter('.active').attr('href');
-            if (activeConfigSubtab) {
-                sessionStorage.setItem('smdp_active_config_subtab', activeConfigSubtab);
-                console.log('Saving config subtab state before submit:', activeConfigSubtab);
-            }
-
-            // Save which style subtab is currently active (if any)
-            var activeStyleSubtab = $styleSubtabs.filter('.active').attr('href');
-            if (activeStyleSubtab) {
-                sessionStorage.setItem('smdp_active_style_subtab', activeStyleSubtab);
-                console.log('Saving style subtab state before submit:', activeStyleSubtab);
-            }
-        });
+      });
     });
     </script>
     <?php
