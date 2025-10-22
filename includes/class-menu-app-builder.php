@@ -118,8 +118,8 @@ class SMDP_Menu_App_Builder {
         }
 
         // Action button enable/disable settings
-        // Only update if layout field is present OR _form_type is action_buttons
-        if (isset($input['layout']) || (isset($input['_form_type']) && $input['_form_type'] === 'action_buttons')) {
+        // Only update if _form_type is action_buttons
+        if (isset($input['_form_type']) && $input['_form_type'] === 'action_buttons') {
             // Note: Checkboxes only send value when checked, so we need to handle unchecked state
             $sanitized['enable_help_btn'] = isset($input['enable_help_btn']) ? '1' : '0';
             $sanitized['enable_bill_btn'] = isset($input['enable_bill_btn']) ? '1' : '0';
@@ -129,8 +129,8 @@ class SMDP_Menu_App_Builder {
         }
 
         // Item detail modal settings
-        // Only update if layout field is present OR _form_type is item_detail_modal
-        if (isset($input['layout']) || (isset($input['_form_type']) && $input['_form_type'] === 'item_detail_modal')) {
+        // Only update if _form_type is item_detail_modal
+        if (isset($input['_form_type']) && $input['_form_type'] === 'item_detail_modal') {
             $sanitized['enable_modal_shortcode'] = isset($input['enable_modal_shortcode']) ? '1' : '0';
             $sanitized['enable_modal_menuapp'] = isset($input['enable_modal_menuapp']) ? '1' : '0';
             $sanitized['enable_modal_filter'] = isset($input['enable_modal_filter']) ? '1' : '0';
