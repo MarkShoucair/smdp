@@ -2631,7 +2631,7 @@ class SMDP_Menu_App_Builder {
                   <div>
                     <label style="display:block; margin-bottom:5px;">
                       <strong>Color:</strong>
-                      <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                      <input type="text" class="smdp-shadow-color smdp-shadow-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
                     </label>
                   </div>
                   <div>
@@ -2824,6 +2824,19 @@ class SMDP_Menu_App_Builder {
             $builder.find('.smdp-shadow-preview').text(currentValue);
           }
         }
+
+        // Initialize WordPress color picker for shadow color
+        $builder.find('.smdp-shadow-color-picker').wpColorPicker({
+          change: function() {
+            var $builder = $(this).closest('.smdp-box-shadow-builder');
+            updateBoxShadow($builder);
+          },
+          clear: function() {
+            var $builder = $(this).closest('.smdp-box-shadow-builder');
+            $(this).val('#000000');
+            updateBoxShadow($builder);
+          }
+        });
       });
 
       // Shadow preset change
@@ -2833,6 +2846,19 @@ class SMDP_Menu_App_Builder {
 
         if (preset === 'custom') {
           $builder.find('.smdp-shadow-custom').show();
+          // Re-initialize color picker when custom is shown
+          var $colorPicker = $builder.find('.smdp-shadow-color-picker');
+          if (!$colorPicker.hasClass('wp-color-picker')) {
+            $colorPicker.wpColorPicker({
+              change: function() {
+                updateBoxShadow($builder);
+              },
+              clear: function() {
+                $(this).val('#000000');
+                updateBoxShadow($builder);
+              }
+            });
+          }
         } else {
           $builder.find('.smdp-shadow-custom').hide();
         }
@@ -3096,7 +3122,7 @@ class SMDP_Menu_App_Builder {
                   <div>
                     <label style="display:block; margin-bottom:5px;">
                       <strong>Color:</strong>
-                      <input type="text" class="smdp-shadow-color" value="#000000" style="width:100%; margin-top:5px;" />
+                      <input type="text" class="smdp-shadow-color smdp-shadow-color-picker" value="#000000" style="width:100%; margin-top:5px;" />
                     </label>
                   </div>
                   <div>
