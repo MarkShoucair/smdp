@@ -319,7 +319,8 @@ class SMDP_Help_Request {
 
   /* ══════════════════  Admin page  ══════════════════ */
   public function add_admin_page(): void {
-    $parent='smdp_main'; $slug='smdp-help-tables'; global $submenu;
+    // Nest Help & Bill under Menu App instead of top-level Square Menu
+    $parent='smdp_menu_app_builder'; $slug='smdp-help-tables'; global $submenu;
     if(isset($submenu[$parent])){foreach($submenu[$parent] as $it){if($it[2]===$slug) return;}}
     add_submenu_page($parent,'Help & Bill','Help & Bill','manage_options',$slug,[ $this,'render_admin' ]);
 
