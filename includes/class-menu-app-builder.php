@@ -66,7 +66,7 @@ class SMDP_Menu_App_Builder {
     // Sanitize callback for styles
     $sanitize_styles = function($input) {
         if (!is_array($input)) return array();
-        
+
         $sanitized = array();
         $sanitized['bg_color'] = !empty($input['bg_color']) ? sanitize_hex_color($input['bg_color']) : '#ffffff';
         $sanitized['text_color'] = !empty($input['text_color']) ? sanitize_hex_color($input['text_color']) : '#333333';
@@ -81,7 +81,8 @@ class SMDP_Menu_App_Builder {
         $sanitized['border_width'] = !empty($input['border_width']) ? intval($input['border_width']) : 1;
         $sanitized['font_weight'] = !empty($input['font_weight']) ? sanitize_text_field($input['font_weight']) : 'normal';
         $sanitized['font_family'] = !empty($input['font_family']) ? sanitize_text_field($input['font_family']) : '';
-        
+        $sanitized['box_shadow'] = !empty($input['box_shadow']) ? sanitize_text_field($input['box_shadow']) : '0 2px 4px rgba(0,0,0,0.1)';
+
         return $sanitized;
     };
     
@@ -231,6 +232,7 @@ class SMDP_Menu_App_Builder {
             $sanitized[$type]['border_width'] = !empty($btn['border_width']) ? intval($btn['border_width']) : 0;
             $sanitized[$type]['font_weight'] = !empty($btn['font_weight']) ? sanitize_text_field($btn['font_weight']) : '600';
             $sanitized[$type]['font_family'] = !empty($btn['font_family']) ? sanitize_text_field($btn['font_family']) : '';
+            $sanitized[$type]['box_shadow'] = !empty($btn['box_shadow']) ? sanitize_text_field($btn['box_shadow']) : '0 4px 10px rgba(0,0,0,0.3)';
         }
 
         return $sanitized;
@@ -277,6 +279,7 @@ class SMDP_Menu_App_Builder {
         $sanitized['price_weight'] = !empty($input['price_weight']) ? sanitize_text_field($input['price_weight']) : 'bold';
         $sanitized['desc_color'] = !empty($input['desc_color']) ? sanitize_hex_color($input['desc_color']) : '#666666';
         $sanitized['desc_size'] = isset($input['desc_size']) ? absint($input['desc_size']) : 14;
+        $sanitized['box_shadow'] = !empty($input['box_shadow']) ? sanitize_text_field($input['box_shadow']) : '0 2px 4px rgba(0,0,0,0.1)';
 
         return $sanitized;
     };
@@ -295,6 +298,7 @@ class SMDP_Menu_App_Builder {
         $sanitized['modal_border_color'] = !empty($input['modal_border_color']) ? sanitize_hex_color($input['modal_border_color']) : '#3498db';
         $sanitized['modal_border_width'] = isset($input['modal_border_width']) ? absint($input['modal_border_width']) : 6;
         $sanitized['modal_border_radius'] = isset($input['modal_border_radius']) ? absint($input['modal_border_radius']) : 12;
+        $sanitized['modal_box_shadow'] = !empty($input['modal_box_shadow']) ? sanitize_text_field($input['modal_box_shadow']) : '0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)';
         $sanitized['title_color'] = !empty($input['title_color']) ? sanitize_hex_color($input['title_color']) : '#000000';
         $sanitized['title_size'] = isset($input['title_size']) ? absint($input['title_size']) : 24;
         $sanitized['title_weight'] = !empty($input['title_weight']) ? sanitize_text_field($input['title_weight']) : 'bold';
@@ -429,6 +433,7 @@ class SMDP_Menu_App_Builder {
       'border_width' => 1,
       'font_weight' => '600',
       'font_family' => '',
+      'box_shadow' => '0 2px 4px rgba(0,0,0,0.1)',
     );
 
     $styles = array_merge($defaults, $styles);
@@ -445,6 +450,7 @@ class SMDP_Menu_App_Builder {
   padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px !important;
   border-radius: <?php echo esc_attr($styles['border_radius']); ?>px !important;
   font-weight: <?php echo esc_attr($styles['font_weight']); ?> !important;
+  box-shadow: <?php echo esc_attr($styles['box_shadow']); ?> !important;
   <?php if (!empty($styles['font_family'])): ?>
   font-family: <?php echo esc_attr($styles['font_family']); ?> !important;
   <?php endif; ?>
@@ -478,6 +484,7 @@ class SMDP_Menu_App_Builder {
           'disabled_bg_color' => '#c0392b', 'disabled_text_color' => '#ffffff',
           'font_size' => 16, 'padding_vertical' => 16, 'padding_horizontal' => 24,
           'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+          'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
         ),
         'bill' => array(
           'bg_color' => '#27ae60', 'text_color' => '#ffffff', 'border_color' => '#27ae60',
@@ -485,18 +492,21 @@ class SMDP_Menu_App_Builder {
           'disabled_bg_color' => '#1e8449', 'disabled_text_color' => '#ffffff',
           'font_size' => 16, 'padding_vertical' => 16, 'padding_horizontal' => 24,
           'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+          'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
         ),
         'view_bill' => array(
           'bg_color' => '#9b59b6', 'text_color' => '#ffffff', 'border_color' => '#9b59b6',
           'hover_bg_color' => '#8e44ad', 'hover_text_color' => '#ffffff', 'hover_border_color' => '#8e44ad',
           'font_size' => 14, 'padding_vertical' => 12, 'padding_horizontal' => 16,
           'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+          'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
         ),
         'table_badge' => array(
           'bg_color' => '#3498db', 'text_color' => '#ffffff', 'border_color' => '#3498db',
           'hover_bg_color' => '#2980b9', 'hover_text_color' => '#ffffff', 'hover_border_color' => '#2980b9',
           'font_size' => 14, 'padding_vertical' => 12, 'padding_horizontal' => 16,
           'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+          'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
         ),
       );
 
@@ -520,6 +530,7 @@ class SMDP_Menu_App_Builder {
   padding: <?php echo esc_attr($all_help_styles['help']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['help']['padding_horizontal']); ?>px !important;
   border-radius: <?php echo esc_attr($all_help_styles['help']['border_radius']); ?>px !important;
   font-weight: <?php echo esc_attr($all_help_styles['help']['font_weight']); ?> !important;
+  box-shadow: <?php echo esc_attr($all_help_styles['help']['box_shadow']); ?> !important;
   <?php if (!empty($all_help_styles['help']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['help']['font_family']); ?> !important;<?php endif; ?>
 }
 .smdp-help-btn:hover {
@@ -542,6 +553,7 @@ class SMDP_Menu_App_Builder {
   padding: <?php echo esc_attr($all_help_styles['bill']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['bill']['padding_horizontal']); ?>px !important;
   border-radius: <?php echo esc_attr($all_help_styles['bill']['border_radius']); ?>px !important;
   font-weight: <?php echo esc_attr($all_help_styles['bill']['font_weight']); ?> !important;
+  box-shadow: <?php echo esc_attr($all_help_styles['bill']['box_shadow']); ?> !important;
   <?php if (!empty($all_help_styles['bill']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['bill']['font_family']); ?> !important;<?php endif; ?>
 }
 .smdp-bill-btn:hover {
@@ -564,6 +576,7 @@ class SMDP_Menu_App_Builder {
   padding: <?php echo esc_attr($all_help_styles['view_bill']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['view_bill']['padding_horizontal']); ?>px !important;
   border-radius: <?php echo esc_attr($all_help_styles['view_bill']['border_radius']); ?>px !important;
   font-weight: <?php echo esc_attr($all_help_styles['view_bill']['font_weight']); ?> !important;
+  box-shadow: <?php echo esc_attr($all_help_styles['view_bill']['box_shadow']); ?> !important;
   <?php if (!empty($all_help_styles['view_bill']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['view_bill']['font_family']); ?> !important;<?php endif; ?>
 }
 .smdp-view-bill-btn:hover {
@@ -581,6 +594,7 @@ class SMDP_Menu_App_Builder {
   padding: <?php echo esc_attr($all_help_styles['table_badge']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['table_badge']['padding_horizontal']); ?>px !important;
   border-radius: <?php echo esc_attr($all_help_styles['table_badge']['border_radius']); ?>px !important;
   font-weight: <?php echo esc_attr($all_help_styles['table_badge']['font_weight']); ?> !important;
+  box-shadow: <?php echo esc_attr($all_help_styles['table_badge']['box_shadow']); ?> !important;
   <?php if (!empty($all_help_styles['table_badge']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['table_badge']['font_family']); ?> !important;<?php endif; ?>
 }
 #smdp-table-badge:hover {
@@ -651,6 +665,7 @@ class SMDP_Menu_App_Builder {
         'price_weight' => 'bold',
         'desc_color' => '#666666',
         'desc_size' => 14,
+        'box_shadow' => '0 2px 4px rgba(0,0,0,0.1)',
       );
 
       $item_card_styles = array_merge($defaults, $item_card_styles);
@@ -667,6 +682,7 @@ class SMDP_Menu_App_Builder {
   border: <?php echo esc_attr($item_card_styles['border_width']); ?>px solid <?php echo esc_attr($item_card_styles['border_color']); ?> !important;
   border-radius: <?php echo esc_attr($item_card_styles['border_radius']); ?>px !important;
   padding: <?php echo esc_attr($item_card_styles['padding']); ?>px !important;
+  box-shadow: <?php echo esc_attr($item_card_styles['box_shadow']); ?> !important;
 }
 
 /* Item title */
@@ -707,6 +723,7 @@ class SMDP_Menu_App_Builder {
         'modal_border_color' => '#3498db',
         'modal_border_width' => 6,
         'modal_border_radius' => 12,
+        'modal_box_shadow' => '0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)',
         'title_color' => '#000000',
         'title_size' => 24,
         'title_weight' => 'bold',
@@ -732,8 +749,7 @@ class SMDP_Menu_App_Builder {
   background-color: <?php echo esc_attr($item_detail_styles['modal_bg']); ?> !important;
   border: <?php echo esc_attr($item_detail_styles['modal_border_width']); ?>px solid <?php echo esc_attr($item_detail_styles['modal_border_color']); ?> !important;
   border-radius: <?php echo esc_attr($item_detail_styles['modal_border_radius']); ?>px !important;
-  box-shadow: 0 0 30px <?php echo esc_attr($item_detail_styles['modal_border_color']); ?>99,
-              0 0 60px <?php echo esc_attr($item_detail_styles['modal_border_color']); ?>66 !important;
+  box-shadow: <?php echo esc_attr($item_detail_styles['modal_box_shadow']); ?> !important;
 }
 
 /* Item title in modal */
@@ -1062,7 +1078,7 @@ class SMDP_Menu_App_Builder {
           <a href="#style-background" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Background Colors</a>
           <a href="#style-item-cards" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Cards</a>
           <a href="#style-item-detail" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Item Detail</a>
-          <a href="#style-custom-css" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Custom CSS</a>
+          <?php /* <a href="#style-custom-css" class="smdp-style-subtab" style="display:inline-block; padding:10px 20px; text-decoration:none; color:#666;">Custom CSS</a> */ ?>
         </div>
 
         <!-- Subtab: Category Buttons -->
@@ -1159,7 +1175,7 @@ class SMDP_Menu_App_Builder {
           </form>
         </div>
 
-        <!-- Subtab: Custom CSS -->
+        <?php /* Subtab: Custom CSS - Disabled for now
         <div id="style-custom-css" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
           <form method="post" action="options.php">
             <?php settings_fields('smdp_menu_app_layout_group'); ?>
@@ -1169,6 +1185,7 @@ class SMDP_Menu_App_Builder {
             <?php submit_button('Save Custom CSS'); ?>
           </form>
         </div>
+        */ ?>
         </div>
       </div>
 
@@ -1746,7 +1763,7 @@ class SMDP_Menu_App_Builder {
   public static function field_styles() {
     $styles = get_option(self::OPT_STYLES, array());
     $name = self::OPT_STYLES;
-    
+
     // Default values
     $defaults = array(
       'bg_color' => '#5C7BA6',
@@ -1762,7 +1779,8 @@ class SMDP_Menu_App_Builder {
       'border_width' => 1,
       'font_weight' => '600',
       'font_family' => '',
-    );    
+      'box_shadow' => '0 2px 4px rgba(0,0,0,0.1)',
+    );
     $styles = array_merge($defaults, $styles);
     ?>
     <div style="display: grid; grid-template-columns: 1fr 320px; gap: 15px; align-items: start;">
@@ -1890,6 +1908,13 @@ class SMDP_Menu_App_Builder {
             <p class="description">Use 999 for pill-shaped buttons, 0 for square, or 8-12 for rounded corners</p>
           </td>
         </tr>
+        <tr>
+          <th>Box Shadow</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[box_shadow]" value="<?php echo esc_attr($styles['box_shadow']); ?>" style="width: 300px;" placeholder="e.g., 0 2px 4px rgba(0,0,0,0.1)" />
+            <p class="description">CSS box-shadow value. Examples: <code>0 2px 4px rgba(0,0,0,0.1)</code> for subtle, <code>0 4px 8px rgba(0,0,0,0.2)</code> for prominent, <code>none</code> for no shadow</p>
+          </td>
+        </tr>
       </table>
 
       </div>
@@ -1910,6 +1935,7 @@ class SMDP_Menu_App_Builder {
               border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
               font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
               font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              box-shadow: <?php echo esc_attr($styles['box_shadow']); ?>;
               cursor: pointer;
               transition: all 0.3s ease;
             ">Category Button</button>
@@ -1926,6 +1952,7 @@ class SMDP_Menu_App_Builder {
               border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
               font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
               font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              box-shadow: <?php echo esc_attr($styles['box_shadow']); ?>;
               cursor: pointer;
               transition: all 0.3s ease;
             ">Active Category</button>
@@ -1951,6 +1978,7 @@ class SMDP_Menu_App_Builder {
         var borderWidth = $('input[name="<?php echo esc_js($name); ?>[border_width]"]').val();
         var fontWeight = $('select[name="<?php echo esc_js($name); ?>[font_weight]"]').val();
         var fontFamily = $('select[name="<?php echo esc_js($name); ?>[font_family]"]').val();
+        var boxShadow = $('input[name="<?php echo esc_js($name); ?>[box_shadow]"]').val();
 
         $preview.find('.smdp-preview-btn').not('.smdp-preview-active').css({
           'background': bgColor,
@@ -1961,7 +1989,8 @@ class SMDP_Menu_App_Builder {
           'border-radius': borderRadius + 'px',
           'border-width': borderWidth + 'px',
           'font-weight': fontWeight,
-          'font-family': fontFamily
+          'font-family': fontFamily,
+          'box-shadow': boxShadow
         });
 
         $preview.find('.smdp-preview-btn.smdp-preview-active').css({
@@ -1973,7 +2002,8 @@ class SMDP_Menu_App_Builder {
           'border-radius': borderRadius + 'px',
           'border-width': borderWidth + 'px',
           'font-weight': fontWeight,
-          'font-family': fontFamily
+          'font-family': fontFamily,
+          'box-shadow': boxShadow
         });
       }
 
@@ -2009,6 +2039,7 @@ class SMDP_Menu_App_Builder {
         'border_width' => 0,
         'font_weight' => '600',
         'font_family' => '',
+        'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
       ),
       'bill' => array(
         'bg_color' => '#27ae60',
@@ -2026,6 +2057,7 @@ class SMDP_Menu_App_Builder {
         'border_width' => 0,
         'font_weight' => '600',
         'font_family' => '',
+        'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
       ),
       'view_bill' => array(
         'bg_color' => '#9b59b6',
@@ -2041,6 +2073,7 @@ class SMDP_Menu_App_Builder {
         'border_width' => 0,
         'font_weight' => '600',
         'font_family' => '',
+        'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
       ),
       'table_badge' => array(
         'bg_color' => '#3498db',
@@ -2056,6 +2089,7 @@ class SMDP_Menu_App_Builder {
         'border_width' => 0,
         'font_weight' => '600',
         'font_family' => '',
+        'box_shadow' => '0 4px 10px rgba(0,0,0,0.3)',
       ),
     );
 
@@ -2183,6 +2217,13 @@ class SMDP_Menu_App_Builder {
             <input type="number" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][border_radius]" value="<?php echo esc_attr($styles['border_radius']); ?>" min="0" max="999" style="width: 80px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="border_radius" />
           </td>
         </tr>
+        <tr>
+          <th>Box Shadow</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][box_shadow]" value="<?php echo esc_attr($styles['box_shadow']); ?>" style="width: 300px;" placeholder="e.g., 0 4px 10px rgba(0,0,0,0.3)" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="box_shadow" />
+            <p class="description">CSS box-shadow value. Examples: <code>0 4px 10px rgba(0,0,0,0.3)</code> for prominent, <code>0 2px 4px rgba(0,0,0,0.1)</code> for subtle, <code>none</code> for no shadow</p>
+          </td>
+        </tr>
       </table>
         </div><!-- End Left Column -->
 
@@ -2199,9 +2240,9 @@ class SMDP_Menu_App_Builder {
               border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
               font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
               <?php if (!empty($styles['font_family'])): ?>font-family: <?php echo esc_attr($styles['font_family']); ?>;<?php endif; ?>
+              box-shadow: <?php echo esc_attr($styles['box_shadow']); ?>;
               cursor: pointer;
               transition: all 0.3s ease;
-              box-shadow: 0 4px 10px rgba(0,0,0,0.3);
               white-space: nowrap;
               line-height: 1;
               display: flex;
@@ -2289,6 +2330,7 @@ class SMDP_Menu_App_Builder {
         var paddingH = $(prefix + '[padding_horizontal]"]').val();
         var fontWeight = $(prefix + '[font_weight]"] option:selected').val();
         var fontFamily = $(prefix + '[font_family]"] option:selected').val();
+        var boxShadow = $(prefix + '[box_shadow]"]').val();
         var disabledBgColor = $(prefix + '[disabled_bg_color]"]').val();
         var disabledTextColor = $(prefix + '[disabled_text_color]"]').val();
 
@@ -2301,7 +2343,8 @@ class SMDP_Menu_App_Builder {
           'font-size': fontSize + 'px',
           'padding': paddingV + 'px ' + paddingH + 'px',
           'font-weight': fontWeight,
-          'font-family': fontFamily
+          'font-family': fontFamily,
+          'box-shadow': boxShadow
         });
 
         // Update disabled state preview (if exists)
@@ -2314,7 +2357,8 @@ class SMDP_Menu_App_Builder {
             'font-size': fontSize + 'px',
             'padding': paddingV + 'px ' + paddingH + 'px',
             'font-weight': fontWeight,
-            'font-family': fontFamily
+            'font-family': fontFamily,
+            'box-shadow': boxShadow
           });
         }
       }
@@ -2457,6 +2501,7 @@ class SMDP_Menu_App_Builder {
       'price_weight' => 'bold',
       'desc_color' => '#666666',
       'desc_size' => 14,
+      'box_shadow' => '0 2px 4px rgba(0,0,0,0.1)',
     );
     $styles = array_merge($defaults, $styles);
     ?>
@@ -2496,6 +2541,13 @@ class SMDP_Menu_App_Builder {
             <td>
               <input type="number" name="<?php echo esc_attr($name); ?>[padding]" value="<?php echo esc_attr($styles['padding']); ?>" min="0" max="50" style="width: 80px;" class="smdp-item-card-field" data-style="padding" />
               <p class="description">Space inside the card</p>
+            </td>
+          </tr>
+          <tr>
+            <th>Box Shadow</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[box_shadow]" value="<?php echo esc_attr($styles['box_shadow']); ?>" style="width: 300px;" placeholder="e.g., 0 2px 4px rgba(0,0,0,0.1)" class="smdp-item-card-field" data-style="box_shadow" />
+              <p class="description">CSS box-shadow value. Examples: <code>0 2px 4px rgba(0,0,0,0.1)</code> for subtle, <code>0 4px 8px rgba(0,0,0,0.2)</code> for prominent, <code>none</code> for no shadow</p>
             </td>
           </tr>
         </table>
@@ -2581,6 +2633,7 @@ class SMDP_Menu_App_Builder {
             border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
             border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
             padding: <?php echo esc_attr($styles['padding']); ?>px;
+            box-shadow: <?php echo esc_attr($styles['box_shadow']); ?>;
             position: relative;
           ">
             <h3 id="smdp-item-card-preview-title" style="
@@ -2620,6 +2673,7 @@ class SMDP_Menu_App_Builder {
         var borderWidth = $(prefix + '[border_width]"]').val();
         var borderRadius = $(prefix + '[border_radius]"]').val();
         var padding = $(prefix + '[padding]"]').val();
+        var boxShadow = $(prefix + '[box_shadow]"]').val();
         var titleColor = $(prefix + '[title_color]"]').val();
         var titleSize = $(prefix + '[title_size]"]').val();
         var titleWeight = $('select[name="<?php echo esc_js($name); ?>[title_weight]"]').val();
@@ -2634,7 +2688,8 @@ class SMDP_Menu_App_Builder {
           'background-color': bgColor,
           'border': borderWidth + 'px solid ' + borderColor,
           'border-radius': borderRadius + 'px',
-          'padding': padding + 'px'
+          'padding': padding + 'px',
+          'box-shadow': boxShadow
         });
 
         // Update title
@@ -2678,6 +2733,7 @@ class SMDP_Menu_App_Builder {
       'modal_border_color' => '#3498db',
       'modal_border_width' => 6,
       'modal_border_radius' => 12,
+      'modal_box_shadow' => '0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)',
       'title_color' => '#000000',
       'title_size' => 24,
       'title_weight' => 'bold',
@@ -2722,6 +2778,13 @@ class SMDP_Menu_App_Builder {
             <td>
               <input type="number" name="<?php echo esc_attr($name); ?>[modal_border_radius]" value="<?php echo esc_attr($styles['modal_border_radius']); ?>" min="0" max="50" style="width: 80px;" class="smdp-item-detail-field" data-style="modal_border_radius" />
               <p class="description">Rounded corners of the modal</p>
+            </td>
+          </tr>
+          <tr>
+            <th>Box Shadow</th>
+            <td>
+              <input type="text" name="<?php echo esc_attr($name); ?>[modal_box_shadow]" value="<?php echo esc_attr($styles['modal_box_shadow']); ?>" style="width: 400px;" placeholder="e.g., 0 0 30px rgba(52,152,219,0.6)" class="smdp-item-detail-field" data-style="modal_box_shadow" />
+              <p class="description">CSS box-shadow value. Example: <code>0 0 30px rgba(52,152,219,0.6), 0 0 60px rgba(52,152,219,0.4)</code> for glowing effect, <code>0 4px 20px rgba(0,0,0,0.3)</code> for drop shadow, <code>none</code> for no shadow</p>
             </td>
           </tr>
         </table>
@@ -2831,7 +2894,7 @@ class SMDP_Menu_App_Builder {
             border-radius: <?php echo esc_attr($styles['modal_border_radius']); ?>px;
             padding: 20px;
             position: relative;
-            box-shadow: 0 0 20px rgba(52, 152, 219, 0.4);
+            box-shadow: <?php echo esc_attr($styles['modal_box_shadow']); ?>;
           ">
             <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23e0e0e0' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-family='Arial' font-size='14'%3EItem Image%3C/text%3E%3C/svg%3E" alt="Sample" style="max-width: 100%; display: block; margin-bottom: 10px;" />
 
@@ -2883,6 +2946,7 @@ class SMDP_Menu_App_Builder {
         var modalBorderColor = $(prefix + '[modal_border_color]"]').val();
         var modalBorderWidth = $(prefix + '[modal_border_width]"]').val();
         var modalBorderRadius = $(prefix + '[modal_border_radius]"]').val();
+        var modalBoxShadow = $(prefix + '[modal_box_shadow]"]').val();
         var titleColor = $(prefix + '[title_color]"]').val();
         var titleSize = $(prefix + '[title_size]"]').val();
         var titleWeight = $('select[name="<?php echo esc_js($name); ?>[title_weight]"]').val();
@@ -2900,7 +2964,7 @@ class SMDP_Menu_App_Builder {
           'background-color': modalBg,
           'border': modalBorderWidth + 'px solid ' + modalBorderColor,
           'border-radius': modalBorderRadius + 'px',
-          'box-shadow': '0 0 20px ' + modalBorderColor + '66'
+          'box-shadow': modalBoxShadow
         });
 
         // Update title
