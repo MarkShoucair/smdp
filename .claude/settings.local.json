@@ -1,28 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(test:*)",
-      "Read(//c/Users/mark/Local Sites/menu-app-testing/**)",
-      "Bash(dir:*)",
-      "Bash(awk -F: '$1 > 1190 && $1 < 1400 {print}')",
-      "Bash(copy \"C:\\Users\\mark\\Local Sites\\menu-app-testing\\STYLING_REVIEW.md\" \"C:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\STYLING_REVIEW.md\")",
-      "Read(//c/Users/mark/OneDrive/Desktop/Oct 7 Stable/3.0/**)",
-      "Bash(git checkout:*)",
-      "Bash(copy:*)",
-      "Read(//c/Users/mark/OneDrive/Desktop/**)",
-      "Bash(find:*)",
-      "Bash(git log:*)",
-      "Bash(php -l:*)",
-      "Bash(move \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\LOGGING_AUDIT.md\" \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\documentation\\LOGGING_AUDIT.md\")",
-      "Bash(move \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\PRODUCTION-READY.md\" \"c:\\Users\\mark\\OneDrive\\Desktop\\Oct 17\\3.1\\smdp\\documentation\\PRODUCTION-READY.md\")",
-      "Bash(move:*)",
-      "Bash(cat:*)",
-      "Bash(python3:*)",
-      "Bash(php -r:*)",
-      "Bash(for file in *.md)",
-      "Bash(do echo \"=== $file ===\")",
-      "Bash(tail:*)",
-      "Bash(done)"
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

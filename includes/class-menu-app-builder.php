@@ -8,6 +8,7 @@ class SMDP_Menu_App_Builder {
   const OPT_SETTINGS = 'smdp_app_settings'; // ['layout' => 'top'|'left', 'promo_image' => url, 'promo_timeout' => seconds]
   const OPT_STYLES   = 'smdp_app_button_styles'; // Category button styles
   const OPT_HELP_BTN_STYLES = 'smdp_app_help_button_styles'; // Help button styles
+  const OPT_BG_COLORS = 'smdp_app_background_colors'; // Background colors
 
   public static function init() {
     add_action('admin_menu', array(__CLASS__, 'admin_menu'));
@@ -191,8 +192,67 @@ class SMDP_Menu_App_Builder {
     ));
 
     // Help button styles settings (Styles tab > Help Buttons subtab) - SEPARATE GROUP
+    // Each button type has its own set of styles
+    $sanitize_help_btn_styles = function($input) {
+        if (!is_array($input)) return array();
+
+        $sanitized = array();
+
+        // Process each button type
+        $button_types = array('help', 'bill', 'view_bill', 'table_badge');
+        foreach ($button_types as $type) {
+            if (!isset($input[$type]) || !is_array($input[$type])) {
+                $sanitized[$type] = array();
+                continue;
+            }
+
+            $btn = $input[$type];
+            $sanitized[$type] = array();
+            $sanitized[$type]['bg_color'] = !empty($btn['bg_color']) ? sanitize_hex_color($btn['bg_color']) : '#ffffff';
+            $sanitized[$type]['text_color'] = !empty($btn['text_color']) ? sanitize_hex_color($btn['text_color']) : '#ffffff';
+            $sanitized[$type]['border_color'] = !empty($btn['border_color']) ? sanitize_hex_color($btn['border_color']) : '#ffffff';
+            $sanitized[$type]['hover_bg_color'] = !empty($btn['hover_bg_color']) ? sanitize_hex_color($btn['hover_bg_color']) : '#ffffff';
+            $sanitized[$type]['hover_text_color'] = !empty($btn['hover_text_color']) ? sanitize_hex_color($btn['hover_text_color']) : '#ffffff';
+            $sanitized[$type]['hover_border_color'] = !empty($btn['hover_border_color']) ? sanitize_hex_color($btn['hover_border_color']) : '#ffffff';
+
+            // Disabled states only for help and bill buttons
+            if ($type === 'help' || $type === 'bill') {
+                $sanitized[$type]['disabled_bg_color'] = !empty($btn['disabled_bg_color']) ? sanitize_hex_color($btn['disabled_bg_color']) : '#ffffff';
+                $sanitized[$type]['disabled_text_color'] = !empty($btn['disabled_text_color']) ? sanitize_hex_color($btn['disabled_text_color']) : '#ffffff';
+            }
+
+            $sanitized[$type]['font_size'] = !empty($btn['font_size']) ? intval($btn['font_size']) : 16;
+            $sanitized[$type]['padding_vertical'] = !empty($btn['padding_vertical']) ? intval($btn['padding_vertical']) : 10;
+            $sanitized[$type]['padding_horizontal'] = !empty($btn['padding_horizontal']) ? intval($btn['padding_horizontal']) : 14;
+            $sanitized[$type]['border_radius'] = !empty($btn['border_radius']) ? intval($btn['border_radius']) : 8;
+            $sanitized[$type]['border_width'] = !empty($btn['border_width']) ? intval($btn['border_width']) : 0;
+            $sanitized[$type]['font_weight'] = !empty($btn['font_weight']) ? sanitize_text_field($btn['font_weight']) : '600';
+            $sanitized[$type]['font_family'] = !empty($btn['font_family']) ? sanitize_text_field($btn['font_family']) : '';
+        }
+
+        return $sanitized;
+    };
+
     register_setting('smdp_menu_app_help_btn_styles_group', self::OPT_HELP_BTN_STYLES, array(
-        'sanitize_callback' => $sanitize_styles,
+        'sanitize_callback' => $sanitize_help_btn_styles,
+        'default' => array()
+    ));
+
+    // Background colors settings (Styles tab > Background Colors subtab) - SEPARATE GROUP
+    $sanitize_bg_colors = function($input) {
+        if (!is_array($input)) return array();
+
+        $sanitized = array();
+        $sanitized['main_bg'] = !empty($input['main_bg']) ? sanitize_hex_color($input['main_bg']) : '#ffffff';
+        $sanitized['category_bar_bg'] = !empty($input['category_bar_bg']) ? sanitize_hex_color($input['category_bar_bg']) : '#ffffff';
+        $sanitized['content_area_bg'] = !empty($input['content_area_bg']) ? sanitize_hex_color($input['content_area_bg']) : '#ffffff';
+        $sanitized['item_card_bg'] = !empty($input['item_card_bg']) ? sanitize_hex_color($input['item_card_bg']) : '#ffffff';
+
+        return $sanitized;
+    };
+
+    register_setting('smdp_menu_app_bg_colors_group', self::OPT_BG_COLORS, array(
+        'sanitize_callback' => $sanitize_bg_colors,
         'default' => array()
     ));
 
@@ -346,68 +406,171 @@ class SMDP_Menu_App_Builder {
 </style>
 <?php
 
-    // Get saved Help button styles
-    $help_styles = get_option(self::OPT_HELP_BTN_STYLES, array());
+    // Get saved Help button styles (individual for each button type)
+    $all_help_styles = get_option(self::OPT_HELP_BTN_STYLES, array());
 
     // If custom Help button styles are saved, output them
-    if (!empty($help_styles)) {
-      // Default values
+    if (!empty($all_help_styles)) {
+      // Default values for each button type
       $help_defaults = array(
-        'bg_color' => '#e74c3c',
-        'text_color' => '#ffffff',
-        'border_color' => '#e74c3c',
-        'hover_bg_color' => '#c0392b',
-        'hover_text_color' => '#ffffff',
-        'hover_border_color' => '#c0392b',
-        'disabled_bg_color' => '#c0392b',
-        'disabled_text_color' => '#ffffff',
-        'font_size' => 16,
-        'padding_vertical' => 16,
-        'padding_horizontal' => 24,
-        'border_radius' => 8,
-        'border_width' => 0,
-        'font_weight' => 'normal',
-        'font_family' => '',
+        'help' => array(
+          'bg_color' => '#e74c3c', 'text_color' => '#ffffff', 'border_color' => '#e74c3c',
+          'hover_bg_color' => '#c0392b', 'hover_text_color' => '#ffffff', 'hover_border_color' => '#c0392b',
+          'disabled_bg_color' => '#c0392b', 'disabled_text_color' => '#ffffff',
+          'font_size' => 16, 'padding_vertical' => 16, 'padding_horizontal' => 24,
+          'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+        ),
+        'bill' => array(
+          'bg_color' => '#27ae60', 'text_color' => '#ffffff', 'border_color' => '#27ae60',
+          'hover_bg_color' => '#1e8449', 'hover_text_color' => '#ffffff', 'hover_border_color' => '#1e8449',
+          'disabled_bg_color' => '#1e8449', 'disabled_text_color' => '#ffffff',
+          'font_size' => 16, 'padding_vertical' => 16, 'padding_horizontal' => 24,
+          'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+        ),
+        'view_bill' => array(
+          'bg_color' => '#9b59b6', 'text_color' => '#ffffff', 'border_color' => '#9b59b6',
+          'hover_bg_color' => '#8e44ad', 'hover_text_color' => '#ffffff', 'hover_border_color' => '#8e44ad',
+          'font_size' => 14, 'padding_vertical' => 12, 'padding_horizontal' => 16,
+          'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+        ),
+        'table_badge' => array(
+          'bg_color' => '#3498db', 'text_color' => '#ffffff', 'border_color' => '#3498db',
+          'hover_bg_color' => '#2980b9', 'hover_text_color' => '#ffffff', 'hover_border_color' => '#2980b9',
+          'font_size' => 14, 'padding_vertical' => 12, 'padding_horizontal' => 16,
+          'border_radius' => 8, 'border_width' => 0, 'font_weight' => '600', 'font_family' => '',
+        ),
       );
 
-      $help_styles = array_merge($help_defaults, $help_styles);
+      // Merge with saved values for each button type
+      foreach ($help_defaults as $type => $defaults) {
+        if (!isset($all_help_styles[$type])) $all_help_styles[$type] = array();
+        $all_help_styles[$type] = array_merge($defaults, $all_help_styles[$type]);
+      }
 
-      // Generate CSS for all Help/Bill/View Bill/Table Badge buttons
+      // Generate individual CSS for each button type
       ?>
 <style id="smdp-custom-help-button-styles">
-/* Custom Help & Bill Button Styles from Menu App Builder */
-/* Applied to: Request Help, Request Bill, View Bill, Table Badge */
-.smdp-help-btn,
-.smdp-bill-btn,
-.smdp-view-bill-btn,
-#smdp-table-badge {
-  background-color: <?php echo esc_attr($help_styles['bg_color']); ?> !important;
-  color: <?php echo esc_attr($help_styles['text_color']); ?> !important;
-  border: <?php echo esc_attr($help_styles['border_width']); ?>px solid <?php echo esc_attr($help_styles['border_color']); ?> !important;
-  font-size: <?php echo esc_attr($help_styles['font_size']); ?>px !important;
-  padding: <?php echo esc_attr($help_styles['padding_vertical']); ?>px <?php echo esc_attr($help_styles['padding_horizontal']); ?>px !important;
-  border-radius: <?php echo esc_attr($help_styles['border_radius']); ?>px !important;
-  font-weight: <?php echo esc_attr($help_styles['font_weight']); ?> !important;
-  <?php if (!empty($help_styles['font_family'])): ?>
-  font-family: <?php echo esc_attr($help_styles['font_family']); ?> !important;
-  <?php endif; ?>
-}
+/* Custom Action Button Styles from Menu App Builder - Individual Styling */
 
-.smdp-help-btn:hover,
-.smdp-bill-btn:hover,
-.smdp-view-bill-btn:hover,
-#smdp-table-badge:hover {
-  background-color: <?php echo esc_attr($help_styles['hover_bg_color']); ?> !important;
-  color: <?php echo esc_attr($help_styles['hover_text_color']); ?> !important;
-  border-color: <?php echo esc_attr($help_styles['hover_border_color']); ?> !important;
+/* Request Help Button */
+.smdp-help-btn {
+  background-color: <?php echo esc_attr($all_help_styles['help']['bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['help']['text_color']); ?> !important;
+  border: <?php echo esc_attr($all_help_styles['help']['border_width']); ?>px solid <?php echo esc_attr($all_help_styles['help']['border_color']); ?> !important;
+  font-size: <?php echo esc_attr($all_help_styles['help']['font_size']); ?>px !important;
+  padding: <?php echo esc_attr($all_help_styles['help']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['help']['padding_horizontal']); ?>px !important;
+  border-radius: <?php echo esc_attr($all_help_styles['help']['border_radius']); ?>px !important;
+  font-weight: <?php echo esc_attr($all_help_styles['help']['font_weight']); ?> !important;
+  <?php if (!empty($all_help_styles['help']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['help']['font_family']); ?> !important;<?php endif; ?>
 }
-
+.smdp-help-btn:hover {
+  background-color: <?php echo esc_attr($all_help_styles['help']['hover_bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['help']['hover_text_color']); ?> !important;
+  border-color: <?php echo esc_attr($all_help_styles['help']['hover_border_color']); ?> !important;
+}
 .smdp-help-btn.smdp-btn-disabled,
-.smdp-help-btn:disabled,
+.smdp-help-btn:disabled {
+  background-color: <?php echo esc_attr($all_help_styles['help']['disabled_bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['help']['disabled_text_color']); ?> !important;
+}
+
+/* Request Bill Button */
+.smdp-bill-btn {
+  background-color: <?php echo esc_attr($all_help_styles['bill']['bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['bill']['text_color']); ?> !important;
+  border: <?php echo esc_attr($all_help_styles['bill']['border_width']); ?>px solid <?php echo esc_attr($all_help_styles['bill']['border_color']); ?> !important;
+  font-size: <?php echo esc_attr($all_help_styles['bill']['font_size']); ?>px !important;
+  padding: <?php echo esc_attr($all_help_styles['bill']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['bill']['padding_horizontal']); ?>px !important;
+  border-radius: <?php echo esc_attr($all_help_styles['bill']['border_radius']); ?>px !important;
+  font-weight: <?php echo esc_attr($all_help_styles['bill']['font_weight']); ?> !important;
+  <?php if (!empty($all_help_styles['bill']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['bill']['font_family']); ?> !important;<?php endif; ?>
+}
+.smdp-bill-btn:hover {
+  background-color: <?php echo esc_attr($all_help_styles['bill']['hover_bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['bill']['hover_text_color']); ?> !important;
+  border-color: <?php echo esc_attr($all_help_styles['bill']['hover_border_color']); ?> !important;
+}
 .smdp-bill-btn.smdp-bill-disabled,
 .smdp-bill-btn:disabled {
-  background-color: <?php echo esc_attr($help_styles['disabled_bg_color']); ?> !important;
-  color: <?php echo esc_attr($help_styles['disabled_text_color']); ?> !important;
+  background-color: <?php echo esc_attr($all_help_styles['bill']['disabled_bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['bill']['disabled_text_color']); ?> !important;
+}
+
+/* View Bill Button */
+.smdp-view-bill-btn {
+  background-color: <?php echo esc_attr($all_help_styles['view_bill']['bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['view_bill']['text_color']); ?> !important;
+  border: <?php echo esc_attr($all_help_styles['view_bill']['border_width']); ?>px solid <?php echo esc_attr($all_help_styles['view_bill']['border_color']); ?> !important;
+  font-size: <?php echo esc_attr($all_help_styles['view_bill']['font_size']); ?>px !important;
+  padding: <?php echo esc_attr($all_help_styles['view_bill']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['view_bill']['padding_horizontal']); ?>px !important;
+  border-radius: <?php echo esc_attr($all_help_styles['view_bill']['border_radius']); ?>px !important;
+  font-weight: <?php echo esc_attr($all_help_styles['view_bill']['font_weight']); ?> !important;
+  <?php if (!empty($all_help_styles['view_bill']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['view_bill']['font_family']); ?> !important;<?php endif; ?>
+}
+.smdp-view-bill-btn:hover {
+  background-color: <?php echo esc_attr($all_help_styles['view_bill']['hover_bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['view_bill']['hover_text_color']); ?> !important;
+  border-color: <?php echo esc_attr($all_help_styles['view_bill']['hover_border_color']); ?> !important;
+}
+
+/* Table Badge */
+#smdp-table-badge {
+  background-color: <?php echo esc_attr($all_help_styles['table_badge']['bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['table_badge']['text_color']); ?> !important;
+  border: <?php echo esc_attr($all_help_styles['table_badge']['border_width']); ?>px solid <?php echo esc_attr($all_help_styles['table_badge']['border_color']); ?> !important;
+  font-size: <?php echo esc_attr($all_help_styles['table_badge']['font_size']); ?>px !important;
+  padding: <?php echo esc_attr($all_help_styles['table_badge']['padding_vertical']); ?>px <?php echo esc_attr($all_help_styles['table_badge']['padding_horizontal']); ?>px !important;
+  border-radius: <?php echo esc_attr($all_help_styles['table_badge']['border_radius']); ?>px !important;
+  font-weight: <?php echo esc_attr($all_help_styles['table_badge']['font_weight']); ?> !important;
+  <?php if (!empty($all_help_styles['table_badge']['font_family'])): ?>font-family: <?php echo esc_attr($all_help_styles['table_badge']['font_family']); ?> !important;<?php endif; ?>
+}
+#smdp-table-badge:hover {
+  background-color: <?php echo esc_attr($all_help_styles['table_badge']['hover_bg_color']); ?> !important;
+  color: <?php echo esc_attr($all_help_styles['table_badge']['hover_text_color']); ?> !important;
+  border-color: <?php echo esc_attr($all_help_styles['table_badge']['hover_border_color']); ?> !important;
+}
+</style>
+<?php
+    }
+
+    // Get saved background colors
+    $bg_colors = get_option(self::OPT_BG_COLORS, array());
+
+    // If custom background colors are saved, output them
+    if (!empty($bg_colors)) {
+      // Default values
+      $bg_defaults = array(
+        'main_bg' => '#ffffff',
+        'category_bar_bg' => '#ffffff',
+        'content_area_bg' => '#ffffff',
+        'item_card_bg' => '#ffffff',
+      );
+
+      $bg_colors = array_merge($bg_defaults, $bg_colors);
+
+      // Generate CSS for background colors
+      ?>
+<style id="smdp-custom-background-colors">
+/* Custom Background Colors from Menu App Builder */
+
+/* Main container background */
+.smdp-menu-app-fe {
+  background-color: <?php echo esc_attr($bg_colors['main_bg']); ?> !important;
+}
+
+/* Category bar background */
+.smdp-cat-bar {
+  background-color: <?php echo esc_attr($bg_colors['category_bar_bg']); ?> !important;
+}
+
+/* Content area background */
+.smdp-app-sections {
+  background-color: <?php echo esc_attr($bg_colors['content_area_bg']); ?> !important;
+}
+
+/* Item card background */
+.smdp-item-card {
+  background-color: <?php echo esc_attr($bg_colors['item_card_bg']); ?> !important;
 }
 </style>
 <?php
@@ -731,8 +894,13 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtab: Background Colors -->
         <div id="style-background" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
-          <h3>Background Colors</h3>
-          <p class="description">Customize background colors for different sections (coming soon in Phase 2)</p>
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_bg_colors_group'); ?>
+            <h3>Background Colors</h3>
+            <p class="description">Customize background colors for different sections of the menu app</p>
+            <?php self::field_background_colors(); ?>
+            <?php submit_button('Save Background Colors'); ?>
+          </form>
         </div>
 
         <!-- Subtab: Item Cards -->
@@ -1570,105 +1738,152 @@ class SMDP_Menu_App_Builder {
   }
 
   public static function field_help_button_styles() {
-    $styles = get_option(self::OPT_HELP_BTN_STYLES, array());
+    $all_styles = get_option(self::OPT_HELP_BTN_STYLES, array());
     $name = self::OPT_HELP_BTN_STYLES;
 
-    // Default values based on current hardcoded styles
+    // Default values for each button type based on hardcoded CSS
     $defaults = array(
-      'bg_color' => '#e74c3c',
-      'text_color' => '#ffffff',
-      'border_color' => '#e74c3c',
-      'hover_bg_color' => '#c0392b',
-      'hover_text_color' => '#ffffff',
-      'hover_border_color' => '#c0392b',
-      'disabled_bg_color' => '#c0392b',
-      'disabled_text_color' => '#ffffff',
-      'font_size' => 16,
-      'padding_vertical' => 16,
-      'padding_horizontal' => 24,
-      'border_radius' => 8,
-      'border_width' => 0,
-      'font_weight' => 'normal',
-      'font_family' => '',
+      'help' => array(
+        'bg_color' => '#e74c3c',
+        'text_color' => '#ffffff',
+        'border_color' => '#e74c3c',
+        'hover_bg_color' => '#c0392b',
+        'hover_text_color' => '#ffffff',
+        'hover_border_color' => '#c0392b',
+        'disabled_bg_color' => '#c0392b',
+        'disabled_text_color' => '#ffffff',
+        'font_size' => 16,
+        'padding_vertical' => 16,
+        'padding_horizontal' => 24,
+        'border_radius' => 8,
+        'border_width' => 0,
+        'font_weight' => '600',
+        'font_family' => '',
+      ),
+      'bill' => array(
+        'bg_color' => '#27ae60',
+        'text_color' => '#ffffff',
+        'border_color' => '#27ae60',
+        'hover_bg_color' => '#1e8449',
+        'hover_text_color' => '#ffffff',
+        'hover_border_color' => '#1e8449',
+        'disabled_bg_color' => '#1e8449',
+        'disabled_text_color' => '#ffffff',
+        'font_size' => 16,
+        'padding_vertical' => 16,
+        'padding_horizontal' => 24,
+        'border_radius' => 8,
+        'border_width' => 0,
+        'font_weight' => '600',
+        'font_family' => '',
+      ),
+      'view_bill' => array(
+        'bg_color' => '#9b59b6',
+        'text_color' => '#ffffff',
+        'border_color' => '#9b59b6',
+        'hover_bg_color' => '#8e44ad',
+        'hover_text_color' => '#ffffff',
+        'hover_border_color' => '#8e44ad',
+        'font_size' => 14,
+        'padding_vertical' => 12,
+        'padding_horizontal' => 16,
+        'border_radius' => 8,
+        'border_width' => 0,
+        'font_weight' => '600',
+        'font_family' => '',
+      ),
+      'table_badge' => array(
+        'bg_color' => '#3498db',
+        'text_color' => '#ffffff',
+        'border_color' => '#3498db',
+        'hover_bg_color' => '#2980b9',
+        'hover_text_color' => '#ffffff',
+        'hover_border_color' => '#2980b9',
+        'font_size' => 14,
+        'padding_vertical' => 12,
+        'padding_horizontal' => 16,
+        'border_radius' => 8,
+        'border_width' => 0,
+        'font_weight' => '600',
+        'font_family' => '',
+      ),
     );
-    $styles = array_merge($defaults, $styles);
-    ?>
-    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 15px; align-items: start;">
-      <!-- Left Column: Form Controls -->
-      <div class="smdp-help-style-controls">
 
-        <h3>Default Button Style</h3>
-        <table class="form-table">
+    // Merge with saved values
+    foreach ($defaults as $type => $default_values) {
+      if (!isset($all_styles[$type]) || !is_array($all_styles[$type])) {
+        $all_styles[$type] = array();
+      }
+      $all_styles[$type] = array_merge($default_values, $all_styles[$type]);
+    }
+
+    // Helper function to render button style fields
+    $render_button_fields = function($button_type, $styles, $include_disabled = false) use ($name) {
+      $type_name = ucwords(str_replace('_', ' ', $button_type));
+      ?>
+      <h3><?php echo esc_html($type_name); ?> Button</h3>
+      <table class="form-table">
         <tr>
           <th>Background Color</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[bg_color]" value="<?php echo esc_attr($styles['bg_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][bg_color]" value="<?php echo esc_attr($styles['bg_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="bg_color" />
           </td>
         </tr>
         <tr>
           <th>Text Color</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[text_color]" value="<?php echo esc_attr($styles['text_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][text_color]" value="<?php echo esc_attr($styles['text_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="text_color" />
           </td>
         </tr>
         <tr>
           <th>Border Color</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[border_color]" value="<?php echo esc_attr($styles['border_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][border_color]" value="<?php echo esc_attr($styles['border_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="border_color" />
           </td>
         </tr>
-      </table>
-
-      <h3>Hover State</h3>
-      <table class="form-table">
         <tr>
           <th>Hover Background</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[hover_bg_color]" value="<?php echo esc_attr($styles['hover_bg_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][hover_bg_color]" value="<?php echo esc_attr($styles['hover_bg_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="hover_bg_color" />
           </td>
         </tr>
         <tr>
           <th>Hover Text Color</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[hover_text_color]" value="<?php echo esc_attr($styles['hover_text_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][hover_text_color]" value="<?php echo esc_attr($styles['hover_text_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="hover_text_color" />
           </td>
         </tr>
         <tr>
           <th>Hover Border Color</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[hover_border_color]" value="<?php echo esc_attr($styles['hover_border_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][hover_border_color]" value="<?php echo esc_attr($styles['hover_border_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="hover_border_color" />
           </td>
         </tr>
-      </table>
-
-      <h3>Disabled State (Help Requested)</h3>
-      <table class="form-table">
+        <?php if ($include_disabled): ?>
         <tr>
           <th>Disabled Background</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[disabled_bg_color]" value="<?php echo esc_attr($styles['disabled_bg_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][disabled_bg_color]" value="<?php echo esc_attr($styles['disabled_bg_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="disabled_bg_color" />
+            <p class="description">When button shows "Already Requested"</p>
           </td>
         </tr>
         <tr>
           <th>Disabled Text Color</th>
           <td>
-            <input type="text" name="<?php echo esc_attr($name); ?>[disabled_text_color]" value="<?php echo esc_attr($styles['disabled_text_color']); ?>" class="smdp-color-picker" />
+            <input type="text" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][disabled_text_color]" value="<?php echo esc_attr($styles['disabled_text_color']); ?>" class="smdp-color-picker smdp-<?php echo esc_attr($button_type); ?>-field" data-style="disabled_text_color" />
           </td>
         </tr>
-      </table>
-
-      <h3>Typography & Spacing</h3>
-      <table class="form-table">
+        <?php endif; ?>
         <tr>
           <th>Font Size (px)</th>
           <td>
-            <input type="number" name="<?php echo esc_attr($name); ?>[font_size]" value="<?php echo esc_attr($styles['font_size']); ?>" min="10" max="32" style="width: 80px;" />
+            <input type="number" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][font_size]" value="<?php echo esc_attr($styles['font_size']); ?>" min="10" max="32" style="width: 80px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="font_size" />
           </td>
         </tr>
         <tr>
           <th>Font Weight</th>
           <td>
-            <select name="<?php echo esc_attr($name); ?>[font_weight]">
+            <select name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][font_weight]" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="font_weight">
               <option value="normal" <?php selected($styles['font_weight'], 'normal'); ?>>Normal</option>
               <option value="bold" <?php selected($styles['font_weight'], 'bold'); ?>>Bold</option>
               <option value="600" <?php selected($styles['font_weight'], '600'); ?>>Semi-Bold (600)</option>
@@ -1679,232 +1894,180 @@ class SMDP_Menu_App_Builder {
         <tr>
           <th>Font Family</th>
           <td>
-            <select name="<?php echo esc_attr($name); ?>[font_family]" style="width: 250px;">
+            <select name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][font_family]" style="width: 250px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="font_family">
               <option value="">Inherit from theme</option>
               <optgroup label="System Fonts">
                 <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" <?php selected($styles['font_family'], "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"); ?>>System Default</option>
                 <option value="Arial, sans-serif" <?php selected($styles['font_family'], 'Arial, sans-serif'); ?>>Arial</option>
                 <option value="'Helvetica Neue', Helvetica, Arial, sans-serif" <?php selected($styles['font_family'], "'Helvetica Neue', Helvetica, Arial, sans-serif"); ?>>Helvetica</option>
-                <option value="Georgia, serif" <?php selected($styles['font_family'], 'Georgia, serif'); ?>>Georgia</option>
-                <option value="'Times New Roman', Times, serif" <?php selected($styles['font_family'], "'Times New Roman', Times, serif"); ?>>Times New Roman</option>
-                <option value="'Courier New', Courier, monospace" <?php selected($styles['font_family'], "'Courier New', Courier, monospace"); ?>>Courier New</option>
-                <option value="Verdana, sans-serif" <?php selected($styles['font_family'], 'Verdana, sans-serif'); ?>>Verdana</option>
-                <option value="Tahoma, sans-serif" <?php selected($styles['font_family'], 'Tahoma, sans-serif'); ?>>Tahoma</option>
-              </optgroup>
-              <optgroup label="Google Fonts (Common)">
-                <option value="'Roboto', sans-serif" <?php selected($styles['font_family'], "'Roboto', sans-serif"); ?>>Roboto</option>
-                <option value="'Open Sans', sans-serif" <?php selected($styles['font_family'], "'Open Sans', sans-serif"); ?>>Open Sans</option>
-                <option value="'Lato', sans-serif" <?php selected($styles['font_family'], "'Lato', sans-serif"); ?>>Lato</option>
-                <option value="'Montserrat', sans-serif" <?php selected($styles['font_family'], "'Montserrat', sans-serif"); ?>>Montserrat</option>
-                <option value="'Raleway', sans-serif" <?php selected($styles['font_family'], "'Raleway', sans-serif"); ?>>Raleway</option>
-                <option value="'Poppins', sans-serif" <?php selected($styles['font_family'], "'Poppins', sans-serif"); ?>>Poppins</option>
-                <option value="'Playfair Display', serif" <?php selected($styles['font_family'], "'Playfair Display', serif"); ?>>Playfair Display</option>
-                <option value="'Merriweather', serif" <?php selected($styles['font_family'], "'Merriweather', serif"); ?>>Merriweather</option>
               </optgroup>
             </select>
-            <p class="description">Note: Google Fonts must be loaded separately by your theme or another plugin</p>
           </td>
         </tr>
         <tr>
           <th>Padding Vertical (px)</th>
           <td>
-            <input type="number" name="<?php echo esc_attr($name); ?>[padding_vertical]" value="<?php echo esc_attr($styles['padding_vertical']); ?>" min="0" max="50" style="width: 80px;" />
+            <input type="number" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][padding_vertical]" value="<?php echo esc_attr($styles['padding_vertical']); ?>" min="0" max="50" style="width: 80px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="padding_vertical" />
           </td>
         </tr>
         <tr>
           <th>Padding Horizontal (px)</th>
           <td>
-            <input type="number" name="<?php echo esc_attr($name); ?>[padding_horizontal]" value="<?php echo esc_attr($styles['padding_horizontal']); ?>" min="0" max="100" style="width: 80px;" />
+            <input type="number" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][padding_horizontal]" value="<?php echo esc_attr($styles['padding_horizontal']); ?>" min="0" max="100" style="width: 80px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="padding_horizontal" />
           </td>
         </tr>
-      </table>
-
-      <h3>Border & Shape</h3>
-      <table class="form-table">
         <tr>
           <th>Border Width (px)</th>
           <td>
-            <input type="number" name="<?php echo esc_attr($name); ?>[border_width]" value="<?php echo esc_attr($styles['border_width']); ?>" min="0" max="10" style="width: 80px;" />
+            <input type="number" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][border_width]" value="<?php echo esc_attr($styles['border_width']); ?>" min="0" max="10" style="width: 80px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="border_width" />
           </td>
         </tr>
         <tr>
           <th>Border Radius (px)</th>
           <td>
-            <input type="number" name="<?php echo esc_attr($name); ?>[border_radius]" value="<?php echo esc_attr($styles['border_radius']); ?>" min="0" max="999" style="width: 80px;" />
-            <p class="description">Use 999 for pill-shaped buttons, 0 for square, or 8-12 for rounded corners</p>
+            <input type="number" name="<?php echo esc_attr($name); ?>[<?php echo esc_attr($button_type); ?>][border_radius]" value="<?php echo esc_attr($styles['border_radius']); ?>" min="0" max="999" style="width: 80px;" class="smdp-<?php echo esc_attr($button_type); ?>-field" data-style="border_radius" />
+          </td>
+        </tr>
+      </table>
+      <?php
+    };
+
+    ?>
+    <div style="max-width: 1200px;">
+      <p class="description" style="margin-bottom: 20px;">Customize each action button individually. Styles are applied separately to each button type.</p>
+
+      <!-- Request Help Button -->
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <?php $render_button_fields('help', $all_styles['help'], true); ?>
+      </div>
+
+      <!-- Request Bill Button -->
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <?php $render_button_fields('bill', $all_styles['bill'], true); ?>
+      </div>
+
+      <!-- View Bill Button -->
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <?php $render_button_fields('view_bill', $all_styles['view_bill'], false); ?>
+      </div>
+
+      <!-- Table Badge -->
+      <div style="background: #fff; padding: 20px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px;">
+        <?php $render_button_fields('table_badge', $all_styles['table_badge'], false); ?>
+      </div>
+    </div>
+    <?php
+  }
+  public static function field_background_colors() {
+    $colors = get_option(self::OPT_BG_COLORS, array());
+    $name = self::OPT_BG_COLORS;
+
+    // Default values
+    $defaults = array(
+      'main_bg' => '#ffffff',
+      'category_bar_bg' => '#ffffff',
+      'content_area_bg' => '#ffffff',
+      'item_card_bg' => '#ffffff',
+    );
+    $colors = array_merge($defaults, $colors);
+    ?>
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 15px; align-items: start;">
+      <!-- Left Column: Form Controls -->
+      <div class="smdp-bg-color-controls">
+
+        <h3>Background Colors</h3>
+        <table class="form-table">
+        <tr>
+          <th>Main Container Background</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[main_bg]" value="<?php echo esc_attr($colors['main_bg']); ?>" class="smdp-color-picker" />
+            <p class="description">Background for the entire menu app container (<code>.smdp-menu-app-fe</code>)</p>
+          </td>
+        </tr>
+        <tr>
+          <th>Category Bar Background</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[category_bar_bg]" value="<?php echo esc_attr($colors['category_bar_bg']); ?>" class="smdp-color-picker" />
+            <p class="description">Background for the category button area (<code>.smdp-cat-bar</code>)</p>
+          </td>
+        </tr>
+        <tr>
+          <th>Content Area Background</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[content_area_bg]" value="<?php echo esc_attr($colors['content_area_bg']); ?>" class="smdp-color-picker" />
+            <p class="description">Background for the menu items section (<code>.smdp-app-sections</code>)</p>
+          </td>
+        </tr>
+        <tr>
+          <th>Item Card Background</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[item_card_bg]" value="<?php echo esc_attr($colors['item_card_bg']); ?>" class="smdp-color-picker" />
+            <p class="description">Background for individual menu item cards (<code>.smdp-item-card</code>)</p>
           </td>
         </tr>
       </table>
 
       </div>
 
-      <!-- Right Column: Live Preview (Sticky) -->
-      <div class="smdp-help-button-preview" style="position: sticky; top: 32px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">
-        <h3 style="margin-top: 0;">Live Preview</h3>
-        <p class="description" style="margin-bottom: 15px;">Styles apply to all action buttons</p>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div>
-            <small style="color: #666; display: block; margin-bottom: 4px;">Request Help Button:</small>
-            <button type="button" class="smdp-help-preview-btn smdp-help-btn-type" style="
-              background: <?php echo esc_attr($styles['bg_color']); ?>;
-              color: <?php echo esc_attr($styles['text_color']); ?>;
-              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
-              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-              font-family: <?php echo esc_attr($styles['font_family']); ?>;
-              cursor: pointer;
-              transition: all 0.3s ease;
-            ">Request Help</button>
-          </div>
+      <!-- Right Column: Visual Guide -->
+      <div class="smdp-bg-preview" style="position: sticky; top: 32px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Visual Guide</h3>
+        <p class="description" style="margin-bottom: 15px;">Shows which areas each color affects</p>
 
-          <div>
-            <small style="color: #666; display: block; margin-bottom: 4px;">Request Bill Button:</small>
-            <button type="button" class="smdp-help-preview-btn smdp-bill-btn-type" style="
-              background: <?php echo esc_attr($styles['bg_color']); ?>;
-              color: <?php echo esc_attr($styles['text_color']); ?>;
-              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
-              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-              font-family: <?php echo esc_attr($styles['font_family']); ?>;
-              cursor: pointer;
-              transition: all 0.3s ease;
-            ">Request Bill</button>
-          </div>
+        <div style="border: 2px dashed #999; padding: 8px; border-radius: 8px; background: #fff;">
+          <small style="color: #666; display: block; margin-bottom: 4px; font-weight: bold;">Main Container</small>
+          <div style="background: <?php echo esc_attr($colors['main_bg']); ?>; padding: 12px; border: 1px solid #ddd; border-radius: 4px; min-height: 40px;">
 
-          <div>
-            <small style="color: #666; display: block; margin-bottom: 4px;">View Bill Button:</small>
-            <button type="button" class="smdp-help-preview-btn smdp-view-bill-btn-type" style="
-              background: <?php echo esc_attr($styles['bg_color']); ?>;
-              color: <?php echo esc_attr($styles['text_color']); ?>;
-              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
-              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-              font-family: <?php echo esc_attr($styles['font_family']); ?>;
-              cursor: pointer;
-              transition: all 0.3s ease;
-            ">View Bill</button>
-          </div>
+            <small style="color: #666; display: block; margin-bottom: 4px; font-weight: bold;">Category Bar</small>
+            <div style="background: <?php echo esc_attr($colors['category_bar_bg']); ?>; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 8px; min-height: 30px;" class="smdp-bg-cat-bar-preview">
+              <small style="font-size: 10px; color: #666;">Category Buttons Here</small>
+            </div>
 
-          <div>
-            <small style="color: #666; display: block; margin-bottom: 4px;">Table Badge:</small>
-            <button type="button" class="smdp-help-preview-btn smdp-table-badge-type" style="
-              background: <?php echo esc_attr($styles['bg_color']); ?>;
-              color: <?php echo esc_attr($styles['text_color']); ?>;
-              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
-              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-              font-family: <?php echo esc_attr($styles['font_family']); ?>;
-              cursor: pointer;
-              transition: all 0.3s ease;
-            ">Table 5</button>
-          </div>
+            <small style="color: #666; display: block; margin-bottom: 4px; font-weight: bold;">Content Area</small>
+            <div style="background: <?php echo esc_attr($colors['content_area_bg']); ?>; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" class="smdp-bg-content-preview">
+              <small style="color: #666; display: block; margin-bottom: 4px; font-size: 10px;">Item Cards:</small>
+              <div style="background: <?php echo esc_attr($colors['item_card_bg']); ?>; padding: 6px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 4px;" class="smdp-bg-card-preview">
+                <small style="font-size: 9px; color: #666;">Item 1</small>
+              </div>
+              <div style="background: <?php echo esc_attr($colors['item_card_bg']); ?>; padding: 6px; border: 1px solid #ddd; border-radius: 3px; margin-bottom: 4px;" class="smdp-bg-card-preview">
+                <small style="font-size: 9px; color: #666;">Item 2</small>
+              </div>
+              <div style="background: <?php echo esc_attr($colors['item_card_bg']); ?>; padding: 6px; border: 1px solid #ddd; border-radius: 3px;" class="smdp-bg-card-preview">
+                <small style="font-size: 9px; color: #666;">Item 3</small>
+              </div>
+            </div>
 
-          <div style="margin-top: 8px; padding-top: 12px; border-top: 1px solid #ddd;">
-            <small style="color: #666; display: block; margin-bottom: 4px;">Hover State (all buttons):</small>
-            <button type="button" class="smdp-help-preview-btn smdp-help-preview-hover" style="
-              background: <?php echo esc_attr($styles['hover_bg_color']); ?>;
-              color: <?php echo esc_attr($styles['hover_text_color']); ?>;
-              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['hover_border_color']); ?>;
-              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-              font-family: <?php echo esc_attr($styles['font_family']); ?>;
-              cursor: pointer;
-              transition: all 0.3s ease;
-            ">Hover Preview</button>
           </div>
+        </div>
 
-          <div>
-            <small style="color: #666; display: block; margin-bottom: 4px;">Disabled State (Help/Bill only):</small>
-            <button type="button" class="smdp-help-preview-btn smdp-help-preview-disabled" style="
-              background: <?php echo esc_attr($styles['disabled_bg_color']); ?>;
-              color: <?php echo esc_attr($styles['disabled_text_color']); ?>;
-              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['disabled_bg_color']); ?>;
-              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
-              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
-              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
-              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
-              font-family: <?php echo esc_attr($styles['font_family']); ?>;
-              cursor: not-allowed;
-              opacity: 0.8;
-              transition: all 0.3s ease;
-            ">Already Requested</button>
-          </div>
+        <div style="margin-top: 12px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+          <small style="font-size: 11px; color: #856404;">
+            <strong>Tip:</strong> Use contrasting colors for visual hierarchy. The content area typically looks best slightly lighter or darker than the main container.
+          </small>
         </div>
       </div>
     </div>
 
     <script>
     jQuery(document).ready(function($){
-      function updateHelpPreview() {
-        var $preview = $('.smdp-help-button-preview');
-        var bgColor = $('input[name="<?php echo esc_js($name); ?>[bg_color]"]').val();
-        var textColor = $('input[name="<?php echo esc_js($name); ?>[text_color]"]').val();
-        var borderColor = $('input[name="<?php echo esc_js($name); ?>[border_color]"]').val();
-        var hoverBg = $('input[name="<?php echo esc_js($name); ?>[hover_bg_color]"]').val();
-        var hoverText = $('input[name="<?php echo esc_js($name); ?>[hover_text_color]"]').val();
-        var hoverBorder = $('input[name="<?php echo esc_js($name); ?>[hover_border_color]"]').val();
-        var disabledBg = $('input[name="<?php echo esc_js($name); ?>[disabled_bg_color]"]').val();
-        var disabledText = $('input[name="<?php echo esc_js($name); ?>[disabled_text_color]"]').val();
-        var fontSize = $('input[name="<?php echo esc_js($name); ?>[font_size]"]').val();
-        var paddingV = $('input[name="<?php echo esc_js($name); ?>[padding_vertical]"]').val();
-        var paddingH = $('input[name="<?php echo esc_js($name); ?>[padding_horizontal]"]').val();
-        var borderRadius = $('input[name="<?php echo esc_js($name); ?>[border_radius]"]').val();
-        var borderWidth = $('input[name="<?php echo esc_js($name); ?>[border_width]"]').val();
-        var fontWeight = $('select[name="<?php echo esc_js($name); ?>[font_weight]"]').val();
-        var fontFamily = $('select[name="<?php echo esc_js($name); ?>[font_family]"]').val();
+      function updateBgPreview() {
+        var mainBg = $('input[name="<?php echo esc_js($name); ?>[main_bg]"]').val();
+        var catBarBg = $('input[name="<?php echo esc_js($name); ?>[category_bar_bg]"]').val();
+        var contentBg = $('input[name="<?php echo esc_js($name); ?>[content_area_bg]"]').val();
+        var cardBg = $('input[name="<?php echo esc_js($name); ?>[item_card_bg]"]').val();
 
-        // Update default state
-        $preview.find('.smdp-help-preview-btn').not('.smdp-help-preview-hover, .smdp-help-preview-disabled').css({
-          'background-color': bgColor,
-          'color': textColor,
-          'border': borderWidth + 'px solid ' + borderColor,
-          'font-size': fontSize + 'px',
-          'padding': paddingV + 'px ' + paddingH + 'px',
-          'border-radius': borderRadius + 'px',
-          'font-weight': fontWeight,
-          'font-family': fontFamily
-        });
-
-        // Update hover state
-        $preview.find('.smdp-help-preview-hover').css({
-          'background-color': hoverBg,
-          'color': hoverText,
-          'border': borderWidth + 'px solid ' + hoverBorder,
-          'font-size': fontSize + 'px',
-          'padding': paddingV + 'px ' + paddingH + 'px',
-          'border-radius': borderRadius + 'px',
-          'font-weight': fontWeight,
-          'font-family': fontFamily
-        });
-
-        // Update disabled state
-        $preview.find('.smdp-help-preview-disabled').css({
-          'background-color': disabledBg,
-          'color': disabledText,
-          'border': borderWidth + 'px solid ' + disabledBg,
-          'font-size': fontSize + 'px',
-          'padding': paddingV + 'px ' + paddingH + 'px',
-          'border-radius': borderRadius + 'px',
-          'font-weight': fontWeight,
-          'font-family': fontFamily
-        });
+        // Update preview
+        $('.smdp-bg-preview > div > div').css('background-color', mainBg);
+        $('.smdp-bg-cat-bar-preview').css('background-color', catBarBg);
+        $('.smdp-bg-content-preview').css('background-color', contentBg);
+        $('.smdp-bg-card-preview').css('background-color', cardBg);
       }
 
       // Update preview on any input change
-      $('.smdp-help-style-controls input, .smdp-help-style-controls select').on('change keyup input', updateHelpPreview);
+      $('.smdp-bg-color-controls input').on('change keyup input', updateBgPreview);
 
       // Listen for color picker changes from external script
-      $(document).on('smdp-color-changed', updateHelpPreview);
+      $(document).on('smdp-color-changed', updateBgPreview);
     });
     </script>
     <?php
