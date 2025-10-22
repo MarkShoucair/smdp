@@ -18,7 +18,11 @@
       "Bash(move:*)",
       "Bash(cat:*)",
       "Bash(python3:*)",
-      "Bash(php -r:*)"
+      "Bash(php -r:*)",
+      "Bash(for file in *.md)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(tail:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

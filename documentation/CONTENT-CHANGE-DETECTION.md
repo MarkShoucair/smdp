@@ -307,3 +307,7 @@ This intelligent content change detection system solves the user's request:
 - Automatic full refresh when content actually changes
 - Menu always displays latest data after sync
 - Works seamlessly across category switches
+
+---
+
+**Note**: All technical documentation is AI-generated for reference and development purposes.

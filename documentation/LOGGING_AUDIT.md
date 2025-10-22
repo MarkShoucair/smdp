@@ -204,3 +204,7 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
 
 **Verbosity Score:** 🟡 **MODERATE** (could benefit from reducing log spam, but not a security concern)
 
+---
+
+**Note**: All technical documentation is AI-generated for reference and development purposes.
+

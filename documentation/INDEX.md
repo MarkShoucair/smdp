@@ -2,7 +2,7 @@
 
 **Square Menu Display Premium Deluxe Pro v3.1**
 
-> **Note**: All documentation in this folder was AI-generated (ChatGPT & Claude) for reference and development purposes. While comprehensive and technically accurate, please verify critical implementation details against the actual codebase.
+> **Note**: All documentation in this folder is AI-generated for reference and development purposes.
 
 ---
 
@@ -28,6 +28,8 @@ For general plugin information, see [README.md](../README.md) in the root direct
 |----------|-------------|
 | **[CONTENT-CHANGE-DETECTION.md](CONTENT-CHANGE-DETECTION.md)** | Technical documentation of the intelligent content change detection system that automatically detects menu updates and triggers appropriate refresh type |
 | **[FIXES-SOLD-OUT-CUSTOM-CATEGORIES.md](FIXES-SOLD-OUT-CUSTOM-CATEGORIES.md)** | Details fixes for sold-out badge styling and custom category item count issues, including new-style vs old-style mapping |
+| **[SIMPLIFIED-REFRESH-BEHAVIOR.md](SIMPLIFIED-REFRESH-BEHAVIOR.md)** | Simplified refresh strategy - only refreshes on promo dismiss, with offline detection and full PWA support |
+| ~~**[SOLD-OUT-INITIAL-LOAD-FIX.md](SOLD-OUT-INITIAL-LOAD-FIX.md)**~~ | **DEPRECATED** - Previous approach with automatic refreshes (replaced by simplified behavior) |
 | **[PWA-SCOPE-FIX.md](PWA-SCOPE-FIX.md)** | Explains how PWA install prompts were restricted to menu app pages only, preventing install buttons from appearing site-wide |
 | **[PWA-INSTALL-PROMPT-DISABLED.md](PWA-INSTALL-PROMPT-DISABLED.md)** | Disabled automatic PWA install banner to reduce user interruption while maintaining full PWA functionality |
 | **[MIXED-MAPPING-FIX.md](MIXED-MAPPING-FIX.md)** | Fix for "Undefined array key 'item_id'" errors when menu editor encounters mixed old-style and new-style mapping entries |

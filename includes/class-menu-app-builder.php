@@ -6,7 +6,8 @@ class SMDP_Menu_App_Builder {
   const OPT_CSS      = 'smdp_app_custom_css';
   const OPT_CATALOG  = 'smdp_app_catalog';
   const OPT_SETTINGS = 'smdp_app_settings'; // ['layout' => 'top'|'left', 'promo_image' => url, 'promo_timeout' => seconds]
-  const OPT_STYLES   = 'smdp_app_button_styles'; // Button styles
+  const OPT_STYLES   = 'smdp_app_button_styles'; // Category button styles
+  const OPT_HELP_BTN_STYLES = 'smdp_app_help_button_styles'; // Help button styles
 
   public static function init() {
     add_action('admin_menu', array(__CLASS__, 'admin_menu'));
@@ -189,6 +190,12 @@ class SMDP_Menu_App_Builder {
         'default' => array()
     ));
 
+    // Help button styles settings (Styles tab > Help Buttons subtab) - SEPARATE GROUP
+    register_setting('smdp_menu_app_help_btn_styles_group', self::OPT_HELP_BTN_STYLES, array(
+        'sanitize_callback' => $sanitize_styles,
+        'default' => array()
+    ));
+
     add_settings_section('smdp_menu_app_section', '', '__return_false', 'smdp_menu_app_builder');
     add_settings_field(self::OPT_SETTINGS, 'App Layout', array(__CLASS__, 'field_settings'), 'smdp_menu_app_builder', 'smdp_menu_app_section');
     add_settings_field('promo_settings', 'Promo Screen', array(__CLASS__, 'field_promo_settings'), 'smdp_menu_app_builder', 'smdp_menu_app_section');
@@ -338,6 +345,73 @@ class SMDP_Menu_App_Builder {
 }
 </style>
 <?php
+
+    // Get saved Help button styles
+    $help_styles = get_option(self::OPT_HELP_BTN_STYLES, array());
+
+    // If custom Help button styles are saved, output them
+    if (!empty($help_styles)) {
+      // Default values
+      $help_defaults = array(
+        'bg_color' => '#e74c3c',
+        'text_color' => '#ffffff',
+        'border_color' => '#e74c3c',
+        'hover_bg_color' => '#c0392b',
+        'hover_text_color' => '#ffffff',
+        'hover_border_color' => '#c0392b',
+        'disabled_bg_color' => '#c0392b',
+        'disabled_text_color' => '#ffffff',
+        'font_size' => 16,
+        'padding_vertical' => 16,
+        'padding_horizontal' => 24,
+        'border_radius' => 8,
+        'border_width' => 0,
+        'font_weight' => 'normal',
+        'font_family' => '',
+      );
+
+      $help_styles = array_merge($help_defaults, $help_styles);
+
+      // Generate CSS for all Help/Bill/View Bill/Table Badge buttons
+      ?>
+<style id="smdp-custom-help-button-styles">
+/* Custom Help & Bill Button Styles from Menu App Builder */
+/* Applied to: Request Help, Request Bill, View Bill, Table Badge */
+.smdp-help-btn,
+.smdp-bill-btn,
+.smdp-view-bill-btn,
+#smdp-table-badge {
+  background-color: <?php echo esc_attr($help_styles['bg_color']); ?> !important;
+  color: <?php echo esc_attr($help_styles['text_color']); ?> !important;
+  border: <?php echo esc_attr($help_styles['border_width']); ?>px solid <?php echo esc_attr($help_styles['border_color']); ?> !important;
+  font-size: <?php echo esc_attr($help_styles['font_size']); ?>px !important;
+  padding: <?php echo esc_attr($help_styles['padding_vertical']); ?>px <?php echo esc_attr($help_styles['padding_horizontal']); ?>px !important;
+  border-radius: <?php echo esc_attr($help_styles['border_radius']); ?>px !important;
+  font-weight: <?php echo esc_attr($help_styles['font_weight']); ?> !important;
+  <?php if (!empty($help_styles['font_family'])): ?>
+  font-family: <?php echo esc_attr($help_styles['font_family']); ?> !important;
+  <?php endif; ?>
+}
+
+.smdp-help-btn:hover,
+.smdp-bill-btn:hover,
+.smdp-view-bill-btn:hover,
+#smdp-table-badge:hover {
+  background-color: <?php echo esc_attr($help_styles['hover_bg_color']); ?> !important;
+  color: <?php echo esc_attr($help_styles['hover_text_color']); ?> !important;
+  border-color: <?php echo esc_attr($help_styles['hover_border_color']); ?> !important;
+}
+
+.smdp-help-btn.smdp-btn-disabled,
+.smdp-help-btn:disabled,
+.smdp-bill-btn.smdp-bill-disabled,
+.smdp-bill-btn:disabled {
+  background-color: <?php echo esc_attr($help_styles['disabled_bg_color']); ?> !important;
+  color: <?php echo esc_attr($help_styles['disabled_text_color']); ?> !important;
+}
+</style>
+<?php
+    }
   }
 
   public static function render_admin_page() {
@@ -646,8 +720,13 @@ class SMDP_Menu_App_Builder {
 
         <!-- Subtab: Help Buttons -->
         <div id="style-help-buttons" class="smdp-style-subtab-content" style="display:none; margin-top:20px;">
-          <h3>Help & Bill Button Styles</h3>
-          <p class="description">Customize the Help and Bill request buttons (coming soon in Phase 2)</p>
+          <form method="post" action="options.php">
+            <?php settings_fields('smdp_menu_app_help_btn_styles_group'); ?>
+            <h3>Action Button Styles</h3>
+            <p class="description">These styles apply to: Request Help, Request Bill, View Bill, and Table Badge buttons</p>
+            <?php self::field_help_button_styles(); ?>
+            <?php submit_button('Save Action Button Styles'); ?>
+          </form>
         </div>
 
         <!-- Subtab: Background Colors -->
@@ -1485,6 +1564,347 @@ class SMDP_Menu_App_Builder {
 
       // Listen for color picker changes from external script
       $(document).on('smdp-color-changed', updatePreview);
+    });
+    </script>
+    <?php
+  }
+
+  public static function field_help_button_styles() {
+    $styles = get_option(self::OPT_HELP_BTN_STYLES, array());
+    $name = self::OPT_HELP_BTN_STYLES;
+
+    // Default values based on current hardcoded styles
+    $defaults = array(
+      'bg_color' => '#e74c3c',
+      'text_color' => '#ffffff',
+      'border_color' => '#e74c3c',
+      'hover_bg_color' => '#c0392b',
+      'hover_text_color' => '#ffffff',
+      'hover_border_color' => '#c0392b',
+      'disabled_bg_color' => '#c0392b',
+      'disabled_text_color' => '#ffffff',
+      'font_size' => 16,
+      'padding_vertical' => 16,
+      'padding_horizontal' => 24,
+      'border_radius' => 8,
+      'border_width' => 0,
+      'font_weight' => 'normal',
+      'font_family' => '',
+    );
+    $styles = array_merge($defaults, $styles);
+    ?>
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 15px; align-items: start;">
+      <!-- Left Column: Form Controls -->
+      <div class="smdp-help-style-controls">
+
+        <h3>Default Button Style</h3>
+        <table class="form-table">
+        <tr>
+          <th>Background Color</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[bg_color]" value="<?php echo esc_attr($styles['bg_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+        <tr>
+          <th>Text Color</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[text_color]" value="<?php echo esc_attr($styles['text_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+        <tr>
+          <th>Border Color</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[border_color]" value="<?php echo esc_attr($styles['border_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+      </table>
+
+      <h3>Hover State</h3>
+      <table class="form-table">
+        <tr>
+          <th>Hover Background</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[hover_bg_color]" value="<?php echo esc_attr($styles['hover_bg_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+        <tr>
+          <th>Hover Text Color</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[hover_text_color]" value="<?php echo esc_attr($styles['hover_text_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+        <tr>
+          <th>Hover Border Color</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[hover_border_color]" value="<?php echo esc_attr($styles['hover_border_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+      </table>
+
+      <h3>Disabled State (Help Requested)</h3>
+      <table class="form-table">
+        <tr>
+          <th>Disabled Background</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[disabled_bg_color]" value="<?php echo esc_attr($styles['disabled_bg_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+        <tr>
+          <th>Disabled Text Color</th>
+          <td>
+            <input type="text" name="<?php echo esc_attr($name); ?>[disabled_text_color]" value="<?php echo esc_attr($styles['disabled_text_color']); ?>" class="smdp-color-picker" />
+          </td>
+        </tr>
+      </table>
+
+      <h3>Typography & Spacing</h3>
+      <table class="form-table">
+        <tr>
+          <th>Font Size (px)</th>
+          <td>
+            <input type="number" name="<?php echo esc_attr($name); ?>[font_size]" value="<?php echo esc_attr($styles['font_size']); ?>" min="10" max="32" style="width: 80px;" />
+          </td>
+        </tr>
+        <tr>
+          <th>Font Weight</th>
+          <td>
+            <select name="<?php echo esc_attr($name); ?>[font_weight]">
+              <option value="normal" <?php selected($styles['font_weight'], 'normal'); ?>>Normal</option>
+              <option value="bold" <?php selected($styles['font_weight'], 'bold'); ?>>Bold</option>
+              <option value="600" <?php selected($styles['font_weight'], '600'); ?>>Semi-Bold (600)</option>
+              <option value="500" <?php selected($styles['font_weight'], '500'); ?>>Medium (500)</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <th>Font Family</th>
+          <td>
+            <select name="<?php echo esc_attr($name); ?>[font_family]" style="width: 250px;">
+              <option value="">Inherit from theme</option>
+              <optgroup label="System Fonts">
+                <option value="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" <?php selected($styles['font_family'], "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"); ?>>System Default</option>
+                <option value="Arial, sans-serif" <?php selected($styles['font_family'], 'Arial, sans-serif'); ?>>Arial</option>
+                <option value="'Helvetica Neue', Helvetica, Arial, sans-serif" <?php selected($styles['font_family'], "'Helvetica Neue', Helvetica, Arial, sans-serif"); ?>>Helvetica</option>
+                <option value="Georgia, serif" <?php selected($styles['font_family'], 'Georgia, serif'); ?>>Georgia</option>
+                <option value="'Times New Roman', Times, serif" <?php selected($styles['font_family'], "'Times New Roman', Times, serif"); ?>>Times New Roman</option>
+                <option value="'Courier New', Courier, monospace" <?php selected($styles['font_family'], "'Courier New', Courier, monospace"); ?>>Courier New</option>
+                <option value="Verdana, sans-serif" <?php selected($styles['font_family'], 'Verdana, sans-serif'); ?>>Verdana</option>
+                <option value="Tahoma, sans-serif" <?php selected($styles['font_family'], 'Tahoma, sans-serif'); ?>>Tahoma</option>
+              </optgroup>
+              <optgroup label="Google Fonts (Common)">
+                <option value="'Roboto', sans-serif" <?php selected($styles['font_family'], "'Roboto', sans-serif"); ?>>Roboto</option>
+                <option value="'Open Sans', sans-serif" <?php selected($styles['font_family'], "'Open Sans', sans-serif"); ?>>Open Sans</option>
+                <option value="'Lato', sans-serif" <?php selected($styles['font_family'], "'Lato', sans-serif"); ?>>Lato</option>
+                <option value="'Montserrat', sans-serif" <?php selected($styles['font_family'], "'Montserrat', sans-serif"); ?>>Montserrat</option>
+                <option value="'Raleway', sans-serif" <?php selected($styles['font_family'], "'Raleway', sans-serif"); ?>>Raleway</option>
+                <option value="'Poppins', sans-serif" <?php selected($styles['font_family'], "'Poppins', sans-serif"); ?>>Poppins</option>
+                <option value="'Playfair Display', serif" <?php selected($styles['font_family'], "'Playfair Display', serif"); ?>>Playfair Display</option>
+                <option value="'Merriweather', serif" <?php selected($styles['font_family'], "'Merriweather', serif"); ?>>Merriweather</option>
+              </optgroup>
+            </select>
+            <p class="description">Note: Google Fonts must be loaded separately by your theme or another plugin</p>
+          </td>
+        </tr>
+        <tr>
+          <th>Padding Vertical (px)</th>
+          <td>
+            <input type="number" name="<?php echo esc_attr($name); ?>[padding_vertical]" value="<?php echo esc_attr($styles['padding_vertical']); ?>" min="0" max="50" style="width: 80px;" />
+          </td>
+        </tr>
+        <tr>
+          <th>Padding Horizontal (px)</th>
+          <td>
+            <input type="number" name="<?php echo esc_attr($name); ?>[padding_horizontal]" value="<?php echo esc_attr($styles['padding_horizontal']); ?>" min="0" max="100" style="width: 80px;" />
+          </td>
+        </tr>
+      </table>
+
+      <h3>Border & Shape</h3>
+      <table class="form-table">
+        <tr>
+          <th>Border Width (px)</th>
+          <td>
+            <input type="number" name="<?php echo esc_attr($name); ?>[border_width]" value="<?php echo esc_attr($styles['border_width']); ?>" min="0" max="10" style="width: 80px;" />
+          </td>
+        </tr>
+        <tr>
+          <th>Border Radius (px)</th>
+          <td>
+            <input type="number" name="<?php echo esc_attr($name); ?>[border_radius]" value="<?php echo esc_attr($styles['border_radius']); ?>" min="0" max="999" style="width: 80px;" />
+            <p class="description">Use 999 for pill-shaped buttons, 0 for square, or 8-12 for rounded corners</p>
+          </td>
+        </tr>
+      </table>
+
+      </div>
+
+      <!-- Right Column: Live Preview (Sticky) -->
+      <div class="smdp-help-button-preview" style="position: sticky; top: 32px; padding: 20px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">
+        <h3 style="margin-top: 0;">Live Preview</h3>
+        <p class="description" style="margin-bottom: 15px;">Styles apply to all action buttons</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">Request Help Button:</small>
+            <button type="button" class="smdp-help-preview-btn smdp-help-btn-type" style="
+              background: <?php echo esc_attr($styles['bg_color']); ?>;
+              color: <?php echo esc_attr($styles['text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">Request Help</button>
+          </div>
+
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">Request Bill Button:</small>
+            <button type="button" class="smdp-help-preview-btn smdp-bill-btn-type" style="
+              background: <?php echo esc_attr($styles['bg_color']); ?>;
+              color: <?php echo esc_attr($styles['text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">Request Bill</button>
+          </div>
+
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">View Bill Button:</small>
+            <button type="button" class="smdp-help-preview-btn smdp-view-bill-btn-type" style="
+              background: <?php echo esc_attr($styles['bg_color']); ?>;
+              color: <?php echo esc_attr($styles['text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">View Bill</button>
+          </div>
+
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">Table Badge:</small>
+            <button type="button" class="smdp-help-preview-btn smdp-table-badge-type" style="
+              background: <?php echo esc_attr($styles['bg_color']); ?>;
+              color: <?php echo esc_attr($styles['text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">Table 5</button>
+          </div>
+
+          <div style="margin-top: 8px; padding-top: 12px; border-top: 1px solid #ddd;">
+            <small style="color: #666; display: block; margin-bottom: 4px;">Hover State (all buttons):</small>
+            <button type="button" class="smdp-help-preview-btn smdp-help-preview-hover" style="
+              background: <?php echo esc_attr($styles['hover_bg_color']); ?>;
+              color: <?php echo esc_attr($styles['hover_text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['hover_border_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            ">Hover Preview</button>
+          </div>
+
+          <div>
+            <small style="color: #666; display: block; margin-bottom: 4px;">Disabled State (Help/Bill only):</small>
+            <button type="button" class="smdp-help-preview-btn smdp-help-preview-disabled" style="
+              background: <?php echo esc_attr($styles['disabled_bg_color']); ?>;
+              color: <?php echo esc_attr($styles['disabled_text_color']); ?>;
+              border: <?php echo esc_attr($styles['border_width']); ?>px solid <?php echo esc_attr($styles['disabled_bg_color']); ?>;
+              font-size: <?php echo esc_attr($styles['font_size']); ?>px;
+              padding: <?php echo esc_attr($styles['padding_vertical']); ?>px <?php echo esc_attr($styles['padding_horizontal']); ?>px;
+              border-radius: <?php echo esc_attr($styles['border_radius']); ?>px;
+              font-weight: <?php echo esc_attr($styles['font_weight']); ?>;
+              font-family: <?php echo esc_attr($styles['font_family']); ?>;
+              cursor: not-allowed;
+              opacity: 0.8;
+              transition: all 0.3s ease;
+            ">Already Requested</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    jQuery(document).ready(function($){
+      function updateHelpPreview() {
+        var $preview = $('.smdp-help-button-preview');
+        var bgColor = $('input[name="<?php echo esc_js($name); ?>[bg_color]"]').val();
+        var textColor = $('input[name="<?php echo esc_js($name); ?>[text_color]"]').val();
+        var borderColor = $('input[name="<?php echo esc_js($name); ?>[border_color]"]').val();
+        var hoverBg = $('input[name="<?php echo esc_js($name); ?>[hover_bg_color]"]').val();
+        var hoverText = $('input[name="<?php echo esc_js($name); ?>[hover_text_color]"]').val();
+        var hoverBorder = $('input[name="<?php echo esc_js($name); ?>[hover_border_color]"]').val();
+        var disabledBg = $('input[name="<?php echo esc_js($name); ?>[disabled_bg_color]"]').val();
+        var disabledText = $('input[name="<?php echo esc_js($name); ?>[disabled_text_color]"]').val();
+        var fontSize = $('input[name="<?php echo esc_js($name); ?>[font_size]"]').val();
+        var paddingV = $('input[name="<?php echo esc_js($name); ?>[padding_vertical]"]').val();
+        var paddingH = $('input[name="<?php echo esc_js($name); ?>[padding_horizontal]"]').val();
+        var borderRadius = $('input[name="<?php echo esc_js($name); ?>[border_radius]"]').val();
+        var borderWidth = $('input[name="<?php echo esc_js($name); ?>[border_width]"]').val();
+        var fontWeight = $('select[name="<?php echo esc_js($name); ?>[font_weight]"]').val();
+        var fontFamily = $('select[name="<?php echo esc_js($name); ?>[font_family]"]').val();
+
+        // Update default state
+        $preview.find('.smdp-help-preview-btn').not('.smdp-help-preview-hover, .smdp-help-preview-disabled').css({
+          'background-color': bgColor,
+          'color': textColor,
+          'border': borderWidth + 'px solid ' + borderColor,
+          'font-size': fontSize + 'px',
+          'padding': paddingV + 'px ' + paddingH + 'px',
+          'border-radius': borderRadius + 'px',
+          'font-weight': fontWeight,
+          'font-family': fontFamily
+        });
+
+        // Update hover state
+        $preview.find('.smdp-help-preview-hover').css({
+          'background-color': hoverBg,
+          'color': hoverText,
+          'border': borderWidth + 'px solid ' + hoverBorder,
+          'font-size': fontSize + 'px',
+          'padding': paddingV + 'px ' + paddingH + 'px',
+          'border-radius': borderRadius + 'px',
+          'font-weight': fontWeight,
+          'font-family': fontFamily
+        });
+
+        // Update disabled state
+        $preview.find('.smdp-help-preview-disabled').css({
+          'background-color': disabledBg,
+          'color': disabledText,
+          'border': borderWidth + 'px solid ' + disabledBg,
+          'font-size': fontSize + 'px',
+          'padding': paddingV + 'px ' + paddingH + 'px',
+          'border-radius': borderRadius + 'px',
+          'font-weight': fontWeight,
+          'font-family': fontFamily
+        });
+      }
+
+      // Update preview on any input change
+      $('.smdp-help-style-controls input, .smdp-help-style-controls select').on('change keyup input', updateHelpPreview);
+
+      // Listen for color picker changes from external script
+      $(document).on('smdp-color-changed', updateHelpPreview);
     });
     </script>
     <?php

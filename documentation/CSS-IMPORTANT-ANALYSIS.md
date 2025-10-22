@@ -360,3 +360,7 @@ The use of `!important` in this plugin is **intentional and mostly justified**. 
 - ✅ **Production ready as-is**
 
 No action required unless you want to undertake optional CSS optimization.
+
+---
+
+**Note**: All technical documentation is AI-generated for reference and development purposes.

@@ -285,23 +285,17 @@
       }
       scrollToSectionTop(root, targetSection);
 
-      // Trigger refresh for this category's menu container (unless it's the initial load)
-      if (!skipRefresh && targetSection && window.smdpRefreshMenu && typeof jQuery !== 'undefined') {
-        var container = targetSection.querySelector('.smdp-menu-container');
-        if (container) {
-          window.smdpRefreshMenu(jQuery(container));
-        }
-      }
+      // No automatic refresh on category switch - only refresh on promo dismiss
     }
 
     var initial = buttons[0].getAttribute('data-slug');
     buttons.forEach(function(btn) {
       btn.addEventListener('click', function(e) {
         e.preventDefault();
-        show(btn.getAttribute('data-slug')); // Will refresh on click
+        show(btn.getAttribute('data-slug'));
       });
     });
-    show(initial, true); // Skip refresh on initial load - refresh.js handles it
+    show(initial, true); // Show initial category
     
     try {
       if (root.getAttribute('data-promo-enabled') === '1' && 

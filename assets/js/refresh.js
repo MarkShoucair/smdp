@@ -517,39 +517,19 @@ if (typeof jQuery === 'undefined') {
       return;
     }
 
-    // Refresh sold-out status on page load (lightweight, no double-load effect)
-    setTimeout(function() {
-      log('📋 Performing initial sold-out status check for visible containers...');
-
-      // Check if we're in a menu app
-      var $menuApp = $('.smdp-menu-app-fe');
-      if ($menuApp.length) {
-        // Menu app - refresh only the visible section
-        var $visibleSection = $menuApp.find('.smdp-app-section').filter(function() {
-          return $(this).css('display') !== 'none';
-        });
-        if ($visibleSection.length) {
-          var $container = $visibleSection.find('.smdp-menu-container');
-          if ($container.length) {
-            refreshSoldOutStatus($container, true); // Silent on initial load
-          }
-        }
-      } else {
-        // Standalone shortcode(s) - refresh all visible containers
-        $('.smdp-menu-container').each(function() {
-          refreshSoldOutStatus($(this), true); // Silent on initial load
-        });
-      }
-    }, 2000);
-
-    log('✅ Initialization complete - will refresh on category switch and promo dismiss');
+    log('✅ Initialization complete - will refresh only on promo dismiss');
   });
 
-  // Expose refresh functions globally
-  window.smdpRefreshMenu = refreshSoldOutStatus; // Lightweight sold-out update for category switching
-  window.smdpRefreshMenuFull = refreshSingleMenu; // Full reload (rarely used)
+  // Expose refresh functions globally (for manual use if needed)
+  window.smdpRefreshMenuFull = refreshSingleMenu; // Full container reload
 
   window.smdpRefreshOnPromoDismiss = function() {
+    // Check if online - skip refresh if offline
+    if (!navigator.onLine) {
+      log('⚠️ Offline mode - skipping refresh on promo dismiss');
+      return;
+    }
+
     log('🎯 Promo dismissed - fetching fresh cache version from server...');
 
     // Fetch fresh cache version from server, then check and refresh
@@ -560,7 +540,7 @@ if (typeof jQuery === 'undefined') {
         return;
       }
 
-      // No version change - refresh visible menu
+      // No version change - do full container refresh of visible menu
       var $menuApp = $('.smdp-menu-app-fe');
       if ($menuApp.length) {
         var $visibleSection = $menuApp.find('.smdp-app-section').filter(function() {
@@ -569,12 +549,12 @@ if (typeof jQuery === 'undefined') {
         if ($visibleSection.length) {
           var $container = $visibleSection.find('.smdp-menu-container');
           if ($container.length) {
-            refreshSingleMenu($container);
+            refreshSingleMenu($container); // Full container refresh
           }
         }
       } else {
         $('.smdp-menu-container').each(function() {
-          refreshSingleMenu($(this));
+          refreshSingleMenu($(this)); // Full container refresh
         });
       }
     });

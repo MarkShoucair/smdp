@@ -369,3 +369,7 @@ For support or questions about this feature:
 - See [CONTENT-CHANGE-DETECTION.md](CONTENT-CHANGE-DETECTION.md) for technical details
 - See [PRODUCTION-READY.md](PRODUCTION-READY.md) for deployment checklist
 - Review debug logs in browser console with prefix `[SMDP Refresh]`
+
+---
+
+**Note**: All technical documentation is AI-generated for reference and development purposes.

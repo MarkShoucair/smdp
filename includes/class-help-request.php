@@ -14,7 +14,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class SMDP_Help_Request {
   /*  Option keys  */
-  private string $opt_tables = 'smdp_help_tables';
   private string $opt_help   = 'smdp_help_item_id';
   private string $opt_bill   = 'smdp_bill_item_id';
   private string $opt_loc    = 'smdp_location_id';
@@ -39,7 +38,6 @@ class SMDP_Help_Request {
     add_action( 'wp_ajax_smdp_get_bill',            [ $this, 'ajax_get_bill' ] );
     add_action( 'wp_ajax_nopriv_smdp_get_bill',     [ $this, 'ajax_get_bill' ] );
     add_action( 'wp_ajax_smdp_sync_locations',      [ $this, 'ajax_sync_locations' ] );
-    add_action( 'wp_ajax_smdp_add_table',           [ $this, 'ajax_add_table' ] );
     add_action( 'wp_ajax_smdp_add_table_item',      [ $this, 'ajax_add_table_item' ] );
 
     // admin
@@ -228,23 +226,14 @@ class SMDP_Help_Request {
 
     $token = smdp_get_access_token(); // Use encrypted token helper
     $loc   = get_option($this->opt_loc);
-    
+
     if (empty($token) || empty($loc)) {
         wp_send_json_error('Square not configured');
     }
-    
-    // Get lookup method
-    $lookup_method = get_option($this->opt_bill_lookup_method, 'customer');
-    
-    error_log("[SMDP Bill] Using lookup method: {$lookup_method} for table {$table}");
-    
-    if ($lookup_method === 'item') {
-        // Lookup by table item on the order
-        $this->get_bill_by_item($table, $token, $loc);
-    } else {
-        // Original: Lookup by customer ID
-        $this->get_bill_by_customer($table, $token, $loc);
-    }
+
+    // Only use table item method
+    error_log("[SMDP Bill] Using table item method for table {$table}");
+    $this->get_bill_by_item($table, $token, $loc);
   }
   
   /* ══════════════════  Bill Lookup Methods  ══════════════════ */
@@ -325,63 +314,6 @@ class SMDP_Help_Request {
     $matching_order['line_items'] = array_values($filtered_line_items);
     
     wp_send_json_success($matching_order);
-  }
-  
-  // Original customer lookup method
-  private function get_bill_by_customer($table, $token, $loc) {
-    $tables = (array)get_option($this->opt_tables, []);
-    
-    if (!isset($tables[$table])) {
-        wp_send_json_error("Table {$table} not configured with a customer ID");
-    }
-    
-    $customer_id = $tables[$table];
-    
-    // Search orders by customer ID and location
-    $search_body = [
-        'location_ids' => [$loc],
-        'query' => [
-            'filter' => [
-                'customer_filter' => [
-                    'customer_ids' => [$customer_id]
-                ],
-                'source_filter' => [
-                    'source_names' => ['Point of Sale']
-                ],
-                'state_filter' => [
-                    'states' => ['OPEN']
-                ]
-            ]
-        ],
-        'limit' => 10
-    ];
-    
-    $response = wp_remote_post('https://connect.squareup.com/v2/orders/search', [
-        'headers' => [
-            'Authorization'  => "Bearer {$token}",
-            'Content-Type'   => 'application/json',
-            'Square-Version' => '2025-04-22',
-        ],
-        'body' => wp_json_encode($search_body),
-        'timeout' => 15
-    ]);
-    
-    if (is_wp_error($response)) {
-        wp_send_json_error('Connection error: ' . $response->get_error_message());
-    }
-    
-    $data = json_decode(wp_remote_retrieve_body($response), true);
-
-    $orders = $data['orders'] ?? [];
-
-    if (empty($orders)) {
-        wp_send_json_error("No open orders found for Table {$table}. Make sure the customer 'Table {$table}' is attached to the order in Square POS.");
-    }
-
-    // Return the most recent order
-    $order = $orders[0];
-
-    wp_send_json_success($order);
   }
 
   /* ══════════════════  Admin page  ══════════════════ */
@@ -472,38 +404,6 @@ class SMDP_Help_Request {
         'message' => 'Successfully synced ' . count($locations) . ' location(s)',
         'count' => count($locations),
         'locations' => $locations
-    ]);
-  }
-
-  /**
-   * AJAX handler to add table with customer ID
-   */
-  public function ajax_add_table(): void {
-    check_ajax_referer('smdp_add_table', 'nonce');
-
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Insufficient permissions');
-        return;
-    }
-
-    $table_num = smdp_sanitize_text_field($_POST['table_number'] ?? '', 10);
-    $customer_id = smdp_sanitize_text_field($_POST['customer_id'] ?? '', 100);
-
-    if (empty($table_num) || empty($customer_id)) {
-        wp_send_json_error('Please provide both table number and customer ID');
-        return;
-    }
-
-    $tables = (array)get_option($this->opt_tables, []);
-    $tables[$table_num] = $customer_id;
-    update_option($this->opt_tables, $tables);
-
-    error_log('[SMDP] Added table ' . $table_num . ' with customer ID via AJAX');
-
-    wp_send_json_success([
-        'message' => 'Table ' . $table_num . ' added successfully!',
-        'table_number' => $table_num,
-        'customer_id' => $customer_id
     ]);
   }
 
@@ -668,35 +568,12 @@ class SMDP_Help_Request {
         update_option($this->opt_table_items, $table_items);
         echo '<div class="notice notice-success is-dismissible"><p>Table item deleted successfully!</p></div>';
     }
-    
-    // Handle adding new table with customer ID
-    if(!empty($_POST['new_table']) && !empty($_POST['new_table_customer'])){
-        $tables = (array)get_option($this->opt_tables, []);
-        $table_num = smdp_sanitize_text_field($_POST['new_table'], 10); // Table numbers
-        $customer_id = smdp_sanitize_text_field($_POST['new_table_customer'], 100); // Square customer IDs
-        
-        // Store as associative array: table_number => customer_id
-        $tables[$table_num] = $customer_id;
-        update_option($this->opt_tables, $tables);
-        echo '<div class="notice notice-success is-dismissible"><p>Table ' . esc_html($table_num) . ' added successfully!</p></div>';
-    }
-    
-    // Handle deleting table
-    if(!empty($_POST['delete_table'])&&is_array($_POST['delete_table'])){
-        $tables = (array)get_option($this->opt_tables, []);
-        foreach(array_keys($_POST['delete_table']) as $table_num){
-            unset($tables[sanitize_text_field($table_num)]);
-        }
-        update_option($this->opt_tables, $tables);
-        echo '<div class="notice notice-success is-dismissible"><p>Table deleted successfully!</p></div>';
-    }
   }
 
   public function render_admin(): void {
     $help=esc_attr(get_option($this->opt_help,''));
     $bill=esc_attr(get_option($this->opt_bill,''));
     $loc=esc_attr(get_option($this->opt_loc,''));
-    $tables=(array)get_option($this->opt_tables,[]);
     $lookup_method = get_option($this->opt_bill_lookup_method, 'customer');
     $table_items = (array)get_option($this->opt_table_items, []);
 
@@ -948,23 +825,11 @@ class SMDP_Help_Request {
     echo '</td></tr>';
     echo '</table>';
     
-    // Bill Lookup Method Section
+    // Bill Lookup Method - Table Item Only
     echo '<div class="smdp-lookup-section">';
     echo '<h3>View Bill Lookup Method</h3>';
-    echo '<p>Choose how the "View Bill" button should find orders:</p>';
-    
-    echo '<label class="smdp-radio-option ' . ($lookup_method === 'customer' ? 'active' : '') . '">';
-    echo '<input type="radio" name="smdp_bill_lookup_method" value="customer" ' . checked($lookup_method, 'customer', false) . '>';
-    echo '<strong>Customer ID Method</strong>';
-    echo '<div class="smdp-method-description">Orders are found by matching the customer ID assigned to each table. Configure customer IDs in the Tables section below.</div>';
-    echo '</label>';
-    
-    echo '<label class="smdp-radio-option ' . ($lookup_method === 'item' ? 'active' : '') . '">';
-    echo '<input type="radio" name="smdp_bill_lookup_method" value="item" ' . checked($lookup_method, 'item', false) . '>';
-    echo '<strong>Table Item Method</strong>';
-    echo '<div class="smdp-method-description">Orders are found by looking for a specific "Table X" item on the order. Add these table items to orders in Square POS. Configure table items in the section below.</div>';
-    echo '</label>';
-    
+    echo '<p><strong>Table Item Method:</strong> Orders are found by looking for a specific "Table X" item on the order. Add these table items to orders in Square POS. Configure table items in the section below.</p>';
+    echo '<input type="hidden" name="smdp_bill_lookup_method" value="item">';
     echo '</div>';
 
     submit_button('Save Help & Bill Settings', 'primary', 'smdp_save');
@@ -1051,52 +916,6 @@ class SMDP_Help_Request {
     }
     
     echo '<hr />';
-
-    // Original Tables section (for customer method)
-    echo '<h2>Tables (for Customer ID Lookup Method)</h2>';
-    echo '<form method="post">';
-    wp_nonce_field( $this->nonce_action, 'smdp_help_admin_nonce' );
-    
-    echo '<table class="form-table"><tr>';
-    echo '<th style="width:150px;">Table Number</th>';
-    echo '<td><input name="new_table" placeholder="Table #" style="width:100px;"></td>';
-    echo '</tr><tr>';
-    echo '<th>Customer ID</th>';
-    echo '<td><input name="new_table_customer" placeholder="Customer ID (from Square)" class="regular-text"></td>';
-    echo '</tr></table>';
-
-    submit_button('Add Table with Customer ID', 'secondary', 'add_table_button', false);
-    echo ' <span id="add-table-status" style="margin-left:10px;"></span>';
-    echo '<p class="description">Create customers in Square POS (e.g., "Table 1", "Table 2"), then paste their Customer IDs here.</p>';
-    echo '</form>';
-    
-    if(!empty($tables)){
-        echo '<table class="widefat fixed striped"><thead><tr><th style="width:100px;">Table</th><th style="width:200px;">Customer ID</th><th>Help SC</th><th>Bill SC</th><th style="width:280px;">Actions</th></tr></thead><tbody>';
-        foreach ($tables as $table_num => $customer_id) {
-            $t_esc = esc_html($table_num);
-            $cust_esc = esc_html($customer_id);
-            $help_sc = '[smdp_request_help table="'.$t_esc.'"]';
-            $bill_sc = '[smdp_request_bill table="'.$t_esc.'"]';
-            
-            echo '<tr>';
-            echo '<td><strong>'.$t_esc.'</strong></td>';
-            echo '<td><code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:11px;word-break:break-all;">'.$cust_esc.'</code></td>';
-            echo '<td><input type="text" readonly value="'.esc_attr($help_sc).'" style="width:100%;font-size:11px;"></td>';
-            echo '<td><input type="text" readonly value="'.esc_attr($bill_sc).'" style="width:100%;font-size:11px;"></td>';
-            echo '<td style="white-space:nowrap;">';
-            echo '<button type="button" class="button button-small smdp-copy-btn" data-text="'.esc_attr($help_sc).'" style="margin:2px;">Copy Help</button> ';
-            echo '<button type="button" class="button button-small smdp-copy-btn" data-text="'.esc_attr($bill_sc).'" style="margin:2px;">Copy Bill</button> ';
-            echo '<form method="post" style="display:inline;">';
-            wp_nonce_field( $this->nonce_action, 'smdp_help_admin_nonce' );
-            echo '<button type="submit" name="delete_table['.$t_esc.']" class="button button-small" style="margin:2px;" onclick="return confirm(\'Delete table '.$t_esc.'?\');">Delete</button>';
-            echo '</form>';
-            echo '</td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
-    } else {
-        echo '<p><em>No tables configured yet.</em></p>';
-    }
 
     echo '</div><!-- End Tab: Table Setup -->';
 
