@@ -202,25 +202,17 @@ body.admin-bar .smdp-menu-app-fe {
 }
 
 /* ============================================
-   HELP & BILL BUTTON DISABLED STATES (HARD-CODED)
+   HELP & BILL BUTTON DISABLED STATES
    ============================================ */
 
-/* Disabled "Help Requested" state */
-.smdp-help-btn.smdp-btn-disabled,
-.smdp-help-btn:disabled {
-	background-color: #c0392b !important;
-	color: #ffffff !important;
-	cursor: not-allowed !important;
-	opacity: 0.8 !important;
-}
+/* Disabled states are now controlled via Menu App Builder → Styles & Customization → Help Buttons
+   The cursor and basic disabled state handling is below, colors come from admin settings */
 
-/* Disabled "Bill Requested" state */
+.smdp-help-btn.smdp-btn-disabled,
+.smdp-help-btn:disabled,
 .smdp-bill-btn.smdp-bill-disabled,
 .smdp-bill-btn:disabled {
-	background-color: #1e8449 !important;
-	color: #ffffff !important;
 	cursor: not-allowed !important;
-	opacity: 0.8 !important;
 }
 
 /* ============================================

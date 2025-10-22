@@ -18,7 +18,7 @@ class SMDP_Menu_App_Builder {
     add_action('admin_init', array(__CLASS__, 'register_settings'));
     add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_admin'));
     add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend'));
-    add_action('wp_head', array(__CLASS__, 'inject_custom_styles'));
+    add_action('wp_head', array(__CLASS__, 'inject_custom_styles'), 999); // Priority 999 to run after all enqueued styles
     add_action('admin_post_smdp_save_pwa_settings', array(__CLASS__, 'handle_pwa_settings_save'));
     add_action('admin_post_smdp_reset_styles', array(__CLASS__, 'handle_reset_styles'));
     add_action('admin_init', array(__CLASS__, 'handle_flush_rewrite_rules'));
