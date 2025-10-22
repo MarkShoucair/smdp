@@ -319,8 +319,9 @@ class SMDP_Help_Request {
 
   /* ══════════════════  Admin page  ══════════════════ */
   public function add_admin_page(): void {
-    // Action Buttons / Help & Bill settings are now in Menu App → Action Buttons tab
-    // This page is no longer needed as a standalone menu item
+    $parent='smdp_main'; $slug='smdp-help-tables'; global $submenu;
+    if(isset($submenu[$parent])){foreach($submenu[$parent] as $it){if($it[2]===$slug) return;}}
+    add_submenu_page($parent,'Help & Bill','Help & Bill','manage_options',$slug,[ $this,'render_admin' ]);
 
     // Add rate limit clearing handler
     add_action('admin_init', [$this, 'handle_clear_rate_limits']);
@@ -946,14 +947,124 @@ class SMDP_Help_Request {
    * Used when embedding in the Menu App Builder's Action Buttons tab
    */
   public function render_help_bill_content_only(): void {
-    // Just render the admin page - the Menu App page will handle the wrapper
-    // Note: Don't render if already on standalone page
-    if (isset($_GET['page']) && $_GET['page'] === 'smdp-help-tables') {
-      return; // Avoid double rendering on standalone page
+    if (!current_user_can('manage_options')) return;
+
+    // Handle form submissions (same as render_admin)
+    $this->handle_form_submissions();
+
+    // Get current settings
+    $help = get_option($this->opt_help_id, '');
+    $bill = get_option($this->opt_bill_id, '');
+    $loc = get_option($this->opt_location, '');
+    $method = get_option($this->opt_bill_lookup_method, 'item');
+    $table_items = get_option($this->opt_table_items, []);
+
+    // Get all catalog items
+    $all = get_option(SMDP_ITEMS_OPTION, []);
+    $items_list = [];
+    foreach($all as $obj) {
+        if ($obj['type'] === 'ITEM') {
+            $name = $obj['item_data']['name'] ?? '';
+            $variations = $obj['item_data']['variations'] ?? [];
+            foreach($variations as $v) {
+                $var_name = isset($v['item_variation_data']['name']) && $v['item_variation_data']['name'] !== 'Regular'
+                    ? $name . ' - ' . $v['item_variation_data']['name']
+                    : $name;
+                $items_list[] = [
+                    'variation_id' => $v['id'],
+                    'name' => $var_name
+                ];
+            }
+        }
+    }
+    usort($items_list, function($a, $b) {
+        return strcmp($a['name'], $b['name']);
+    });
+
+    // Get cached locations
+    $locations_list = get_option($this->opt_locations_cache, []);
+
+    // Render the content (lines 622-939 from render_admin, without the wrap div)
+    $this->render_help_bill_inner_content($help, $bill, $loc, $method, $table_items, $items_list, $locations_list);
+  }
+
+  /**
+   * Handle form submissions for Help & Bill settings
+   */
+  private function handle_form_submissions(): void {
+    if (isset($_POST['smdp_save']) && check_admin_referer($this->nonce_action, 'smdp_help_admin_nonce')) {
+        $help = sanitize_text_field($_POST['smdp_help_item_id'] ?? '');
+        $bill = sanitize_text_field($_POST['smdp_bill_item_id'] ?? '');
+        $loc = sanitize_text_field($_POST['smdp_location_id'] ?? '');
+        $method = sanitize_text_field($_POST['smdp_bill_lookup_method'] ?? 'item');
+
+        update_option($this->opt_help_id, $help);
+        update_option($this->opt_bill_id, $bill);
+        update_option($this->opt_location, $loc);
+        update_option($this->opt_bill_lookup_method, $method);
+
+        echo '<div class="notice notice-success is-dismissible"><p>Help & Bill settings saved!</p></div>';
     }
 
-    // Call render_admin which outputs everything
+    if (isset($_POST['add_table_item']) && check_admin_referer($this->nonce_action, 'smdp_help_admin_nonce')) {
+        $table_num = sanitize_text_field($_POST['table_item_number'] ?? '');
+        $item_id = sanitize_text_field($_POST['table_item_id'] ?? '');
+
+        if ($table_num && $item_id) {
+            $table_items = get_option($this->opt_table_items, []);
+            $table_items[$table_num] = $item_id;
+            update_option($this->opt_table_items, $table_items);
+            echo '<div class="notice notice-success is-dismissible"><p>Table item added!</p></div>';
+        }
+    }
+
+    if (isset($_POST['delete_table_item']) && check_admin_referer($this->nonce_action, 'smdp_help_admin_nonce')) {
+        $table_num = sanitize_text_field($_POST['table_num'] ?? '');
+        if ($table_num) {
+            $table_items = get_option($this->opt_table_items, []);
+            unset($table_items[$table_num]);
+            update_option($this->opt_table_items, $table_items);
+            echo '<div class="notice notice-success is-dismissible"><p>Table item deleted!</p></div>';
+        }
+    }
+  }
+
+  /**
+   * Render the inner content of Help & Bill page (without wrap div)
+   * This is the actual form and configuration UI
+   */
+  private function render_help_bill_inner_content($help, $bill, $loc, $method, $table_items, $items_list, $locations_list): void {
+    // Output just the inner content without <div class="wrap"> wrapper
+    // Start from line 622 of render_admin() - the two-column grid
+    ?>
+    <!-- Content starts here - same as render_admin lines 622-939 -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px;">
+    <?php
+    // Now I'll use output buffering to capture the rest of render_admin and strip the wrapper
+    ob_start();
+
+    // Temporarily render the full admin page
+    $saved_get = $_GET;
+    $_GET['page'] = 'smdp-help-tables'; // Fake the page parameter
     $this->render_admin();
+    $_GET = $saved_get;
+
+    $full_output = ob_get_clean();
+
+    // Strip the wrapper divs - extract content between the grid start and grid end
+    // Pattern: everything after the first grid div and before the final closing divs
+    preg_match('/<div style="display:grid.*?<\/div>\s*<\/div>\s*<\/div>$/s', $full_output, $matches);
+
+    if (!empty($matches[0])) {
+      // Remove the opening grid div tag since we already output it
+      $content = preg_replace('/^<div style="display:grid[^>]*>/', '', $matches[0]);
+      // Remove the closing divs at the end (3 closing divs: grid, container, wrap)
+      $content = preg_replace('/<\/div>\s*<\/div>\s*<\/div>\s*$/', '', $content);
+      echo $content;
+    } else {
+      // Fallback: just output the full content
+      echo $full_output;
+    }
   }
 
   /* --------------------------------------------------
